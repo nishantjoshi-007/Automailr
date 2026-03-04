@@ -1,0 +1,299 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+
+    --primary: 263 70% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 93%;
+    --secondary-foreground: 240 10% 10%;
+
+    --muted: 240 5% 93%;
+    --muted-foreground: 240 5% 40%;
+
+    --accent: 263 70% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 85%;
+    --input: 240 6% 85%;
+    --ring: 263 70% 58%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 10% 10%;
+    --sidebar-primary: 263 70% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 93%;
+    --sidebar-accent-foreground: 240 10% 10%;
+    --sidebar-border: 240 6% 85%;
+    --sidebar-ring: 263 70% 58%;
+
+    --white-gradient: repeating-linear-gradient(
+      100deg,
+      #ffffff 0%,
+      #ffffff 7%,
+      transparent 10%,
+      transparent 12%,
+      #ffffff 16%
+    );
+    --dark-gradient: repeating-linear-gradient(
+      100deg,
+      #000000 0%,
+      #000000 7%,
+      transparent 10%,
+      transparent 12%,
+      #000000 16%
+    );
+    --aurora: repeating-linear-gradient(100deg, #8b5cf6 10%, #3b82f6 15%, #8b5cf6 20%, #3b82f6 25%, #8b5cf6 30%);
+  }
+
+  .dark {
+    --background: 240 20% 3.5%;
+    --foreground: 210 40% 96%;
+
+    --card: 240 18% 7.5%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 240 18% 7.5%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 263 70% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 12% 14%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 240 12% 14%;
+    --muted-foreground: 240 5% 55%;
+
+    --accent: 263 70% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 5% 18%;
+    --input: 240 5% 18%;
+    --ring: 263 70% 58%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 240 18% 7.5%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 263 70% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 12% 14%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 240 5% 18%;
+    --sidebar-ring: 263 70% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: "Plus Jakarta Sans", sans-serif;
+  }
+}
+
+/* Glass effect utility */
+.glass {
+  background: hsl(0 0% 100% / 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid hsl(0 0% 0% / 0.08);
+}
+
+.dark .glass {
+  background: hsl(240 18% 7.5% / 0.6);
+  border: 1px solid hsl(0 0% 100% / 0.07);
+}
+
+/* TipTap editor styles */
+.tiptap-editor .ProseMirror {
+  @apply min-h-[200px] p-4 outline-none text-foreground;
+}
+
+.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-muted-foreground pointer-events-none float-left h-0;
+  content: attr(data-placeholder);
+}
+
+.tiptap-editor .ProseMirror p {
+  @apply mb-2;
+}
+
+.tiptap-editor .ProseMirror ul {
+  @apply list-disc pl-6 mb-2;
+}
+
+.tiptap-editor .ProseMirror ol {
+  @apply list-decimal pl-6 mb-2;
+}
+
+.tiptap-editor .ProseMirror strong {
+  @apply font-bold;
+}
+
+.tiptap-editor .ProseMirror em {
+  @apply italic;
+}
+
+/* Pulse animation for stepper */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 hsl(263 70% 58% / 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 8px hsl(263 70% 58% / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 hsl(263 70% 58% / 0);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s infinite;
+}
+
+/* Step transition animations */
+@keyframes step-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes step-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.step-enter {
+  animation: step-fade-in 0.3s ease-out forwards;
+}
+
+.step-exit {
+  animation: step-fade-out 0.2s ease-in forwards;
+}
+
+/* ── Success checkmark animation ─────────────────── */
+.success-checkmark-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: success-scale-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes success-scale-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-checkmark {
+  color: hsl(var(--primary));
+}
+
+.success-checkmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: success-circle-draw 0.8s 0.3s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+@keyframes success-circle-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.success-checkmark-check {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: success-check-draw 0.4s 0.9s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+@keyframes success-check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Fade-in with delay for the "All emails sent!" text */
+@keyframes fade-in-up-delay {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up-delay {
+  opacity: 0;
+  animation: fade-in-up-delay 0.5s 1.2s ease-out forwards;
+}
+
+/* ── Stepper completed state animations ─────────── */
+@keyframes stepper-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.stepper-completed-pop {
+  animation: stepper-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.stepper-completed-label {
+  opacity: 0;
+  animation: fade-in-up-delay 0.4s 0.35s ease-out forwards;
+}

@@ -1,6 +1,0 @@
-recipient,recipient_email,education_level,major,graduation_date,job_title,company,skills,related_experiences,additional_relevant_projects
-John Doe,john.doe@example.com,"undergraduate","Computer Science","December 2024","Software Engineer","TechCorp","Python, Java, C++","Web Development, Data Structures, Software Engineering","Machine Learning Project, Web App Development"
-Jane Smith,jane.smith@example.com,"graduate","Data Science","May 2023","Data Analyst","DataInc","SQL, Python, R","Data Analysis, Data Visualization","Data Mining Project, Machine Learning Model"
-Michael Jones,michael.jones@example.com,"undergraduate","Mechanical Engineering","June 2025","Mechanical Engineer","MechWorks","CAD, SolidWorks, MATLAB","Product Design, Thermal Analysis","3D Printing Project, Robotics Development"
-Emily Brown,emily.brown@example.com,"graduate","Business Administration","August 2023","Marketing Manager","MarketGuru","SEO, SEM, Social Media Marketing","Marketing Campaigns, Market Analysis","Brand Launch Project, Customer Insights Study"
-David Wilson,david.wilson@example.com,"undergraduate","Electrical Engineering","December 2024","Electrical Engineer","ElecTech","Circuit Design, PCB Layout, Embedded Systems","Power Systems, Signal Processing","IoT Development, Automation Project"

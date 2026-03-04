@@ -1,6 +1,0 @@
-recipient,recipient_email,product,company,features,use_case,discount_code
-John Doe,john.doe@example.com,"Smart Home Assistant","TechCorp","Voice Control, Smart Home Integration","Home Automation","SHADISC20"
-Jane Smith,jane.smith@example.com,"Data Analysis Tool","DataInc","Real-Time Analytics, Customizable Dashboards","Data Analysis","DATADISC30"
-Michael Jones,michael.jones@example.com,"3D Printer","MechWorks","High Precision, Fast Printing","Prototyping","3DPRINT15"
-Emily Brown,emily.brown@example.com,"Marketing Analytics Platform","MarketGuru","SEO Optimization, Social Media Insights","Digital Marketing","MARKETDISC25"
-David Wilson,david.wilson@example.com,"IoT Development Kit","ElecTech","Wireless Connectivity, Easy Integration","IoT Projects","IoTDISC10"

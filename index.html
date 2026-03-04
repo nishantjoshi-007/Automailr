@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Automailr — Personalized emails, sent at scale</title>
+    <meta
+      name="description"
+      content="Automailr is a free, client-side mail-merge tool that sends personalized emails at scale via Gmail. No servers, no sign-ups — just your browser."
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" />
+
+    <!-- Open Graph (Facebook, LinkedIn, Discord, etc.) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://automailr.nishantjoshi.me/" />
+    <meta property="og:title" content="Automailr — Personalized Emails, Sent at Scale" />
+    <meta
+      property="og:description"
+      content="Free, open-source mail merge for Gmail. Upload a CSV, compose with placeholders, preview every message, and send — all from your browser."
+    />
+    <meta property="og:image" content="https://automailr.nishantjoshi.me/og-image.png" />
+    <meta property="og:site_name" content="Automailr" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Automailr — Personalized Emails, Sent at Scale" />
+    <meta
+      name="twitter:description"
+      content="Free, open-source mail merge for Gmail. Upload a CSV, compose with placeholders, preview every message, and send — all from your browser."
+    />
+    <meta name="twitter:image" content="https://automailr.nishantjoshi.me/og-image.png" />
+
+    <!-- Additional SEO -->
+    <meta name="author" content="Nishant Joshi" />
+    <meta name="theme-color" content="#6D28D9" />
+    <link rel="canonical" href="https://automailr.nishantjoshi.me/" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <script>
+      try {
+        var t = localStorage.getItem("automailr_theme");
+        document.documentElement.classList.add(t === "light" ? "light" : "dark");
+      } catch (e) {
+        document.documentElement.classList.add("dark");
+      }
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
