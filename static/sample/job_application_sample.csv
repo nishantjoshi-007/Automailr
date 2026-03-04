@@ -1,6 +1,0 @@
-recipient,recipient_email,major,job_title,company,skills,related_experiences
-John Doe,john.doe@example.com,"Computer Science","Software Engineer","TechCorp","Python, Java, C++","Web Development, Data Structures, Software Engineering"
-Jane Smith,jane.smith@example.com,"Data Science","Data Analyst","DataInc","SQL, Python, R","Data Analysis, Data Visualization"
-Michael Jones,michael.jones@example.com,"Mechanical Engineering","Mechanical Engineer","MechWorks","CAD, SolidWorks, MATLAB","Product Design, Thermal Analysis"
-Emily Brown,emily.brown@example.com,"Business Administration","Marketing Manager","MarketGuru","SEO, SEM, Social Media Marketing","Marketing Campaigns, Market Analysis"
-David Wilson,david.wilson@example.com,"Electrical Engineering","Electrical Engineer","ElecTech","Circuit Design, PCB Layout, Embedded Systems","Power Systems, Signal Processing"
