@@ -25,3 +25,15 @@ dist-ssr
 
 
 .env
+client_secret.json
+client_secret_localhost.json
+.env
+
+venv/
+
+__pycache__
+*pyc
+
+MailBlast Demo.mp4
+
+keys/*
