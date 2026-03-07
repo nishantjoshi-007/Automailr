@@ -24,7 +24,7 @@ export default function TermsOfService() {
           <article className="glass rounded-2xl p-6 sm:p-10 space-y-8 text-sm text-muted-foreground leading-relaxed">
             <header>
               <h1 className="text-2xl font-extrabold text-foreground mb-2">Terms of Service</h1>
-              <p className="text-xs">Effective Date: March 3, 2026 &middot; Last Updated: March 3, 2026</p>
+              <p className="text-xs">Effective Date: March 3, 2026 &middot; Last Updated: March 6, 2026</p>
             </header>
 
             <section className="space-y-3">
@@ -40,11 +40,19 @@ export default function TermsOfService() {
             <section className="space-y-3">
               <h2 className="text-lg font-semibold text-foreground">1. Description of the Service</h2>
               <p>
-                Automailr is a free, open-source, fully client-side web application that enables users to perform mail
-                merge operations — composing personalized emails from CSV data and sending them through the Gmail API
-                using the user's own Google account. The Service has no backend server, no database, and no cloud
-                processing. All computation, data parsing, email composition, and API communication occurs exclusively
-                within the user's web browser.
+                Automailr is a free, open-source, <strong className="text-foreground">non-commercial</strong>, fully
+                client-side web application that enables users to perform mail merge operations — composing
+                personalized emails from CSV data and sending them through the Gmail API using the user's own Google
+                account. The Service has no backend server, no database, and no cloud processing. All computation,
+                data parsing, email composition, and API communication occurs exclusively within the user's web
+                browser.
+              </p>
+              <p>
+                The Service is released under the{" "}
+                <strong className="text-foreground">MIT Non-Commercial License</strong> and is provided for{" "}
+                <strong className="text-foreground">personal, educational, and research use only</strong>. Commercial
+                and business use of any kind is strictly prohibited. See Sections 4 and 10 for complete details on
+                prohibited uses and licensing terms.
               </p>
             </section>
 
@@ -123,6 +131,26 @@ export default function TermsOfService() {
                 </li>
                 <li>
                   Use the Service to exceed Gmail's sending limits or otherwise abuse the Gmail API rate limits.
+                </li>
+                <li>
+                  Use the Service for any <strong className="text-foreground">commercial purpose</strong>, including
+                  but not limited to selling, licensing, or sublicensing the Software; offering paid services that
+                  incorporate the Software; or using the Software in a product or service that is sold or offered for
+                  a fee.
+                </li>
+                <li>
+                  Use the Service on behalf of, for the benefit of, or in association with any{" "}
+                  <strong className="text-foreground">
+                    business, company, corporation, partnership, organization, non-profit, government entity, or team
+                  </strong>{" "}
+                  — even as an internal tool, workflow aid, or operational resource, regardless of whether such use is
+                  customer-facing or revenue-generating. If your use of the Service can be associated with any entity
+                  other than yourself as a private individual, it is prohibited.
+                </li>
+                <li>
+                  Use the Service to send emails in any professional, corporate, organizational, or business capacity.
+                  The Service is intended exclusively for individuals acting in a{" "}
+                  <strong className="text-foreground">purely personal capacity</strong>.
                 </li>
               </ul>
             </section>
@@ -268,20 +296,50 @@ export default function TermsOfService() {
 
             {/* 10 */}
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold text-foreground">10. Intellectual Property</h2>
+              <h2 className="text-lg font-semibold text-foreground">10. Intellectual Property &amp; License</h2>
               <p>
-                Automailr is open-source software. The source code is available under the terms of the license
-                specified in the project's{" "}
+                Automailr is open-source software released under the{" "}
+                <strong className="text-foreground">MIT Non-Commercial License</strong>. The full text of the license
+                is available in the project's{" "}
                 <a
-                  href="https://github.com/nishantjoshi-007/Automailr"
+                  href="https://github.com/nishantjoshi-007/Automailr/blob/main/LICENSE"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary underline"
                 >
                   GitHub repository
                 </a>
-                . Subject to that license:
+                . By using the Service, you agree to comply with all terms of that license, which include the
+                following key provisions:
               </p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>
+                  <strong className="text-foreground">Permitted Use:</strong> You may use, copy, modify, merge,
+                  publish, and distribute the Software for personal, educational, research, and non-commercial
+                  open-source purposes only.
+                </li>
+                <li>
+                  <strong className="text-foreground">Prohibited Commercial Use:</strong> The Software shall not be
+                  used for any commercial purpose. "Commercial purpose" means any use intended for or directed toward
+                  commercial advantage or monetary compensation, including selling the Software, offering paid
+                  services that incorporate the Software, or using the Software in a product or service that is sold
+                  or offered for a fee.
+                </li>
+                <li>
+                  <strong className="text-foreground">Prohibited Business &amp; Organizational Use:</strong> The
+                  Software shall not be used by, on behalf of, or in association with any business, company,
+                  corporation, partnership, organization, non-profit, government entity, or team. This includes use as
+                  an internal tool, workflow aid, or operational resource within any organization — regardless of
+                  whether such use is customer-facing, revenue-generating, or otherwise externally visible. If your
+                  use can be associated with any entity other than yourself as a private individual, it is prohibited.
+                </li>
+                <li>
+                  <strong className="text-foreground">Personal Use Only:</strong> The Service is intended exclusively
+                  for natural persons acting in a purely personal, individual capacity. Any use in a professional,
+                  corporate, organizational, or team context is a violation of these Terms and the project license.
+                </li>
+              </ul>
+              <p>Additionally:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>
                   The "Automailr" name, logo, and visual design are the property of the project maintainers and may
@@ -290,6 +348,10 @@ export default function TermsOfService() {
                 <li>
                   You retain full ownership of all data you provide to the Service (CSV files, email content,
                   attachments). We claim no rights to your data.
+                </li>
+                <li>
+                  The copyright notice and license terms must be included in all copies or substantial portions of the
+                  Software.
                 </li>
               </ul>
             </section>

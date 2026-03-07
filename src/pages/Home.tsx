@@ -241,7 +241,9 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Open Source</span>
+              <a href="https://github.com/nishantjoshi-007/Automailr" target="_blank" rel="noopener noreferrer">
+                <span className="text-sm font-medium">Open Source</span>
+              </a>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-primary" />
@@ -322,8 +324,8 @@ export default function Home() {
           <div className="relative bg-background/10 backdrop-blur-xl rounded-[2rem] p-8 sm:p-12 text-center border border-white/20">
             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">Ready to send smarter emails?</h2>
             <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto mb-10">
-              Join thousands of users who trust Automailr for their daily communication needs. It's free and open
-              source.
+              Join thousands of users who trust Automailr for their personal communication needs. It's free, open
+              source, and licensed for personal use only.
             </p>
             <Button
               size="lg"

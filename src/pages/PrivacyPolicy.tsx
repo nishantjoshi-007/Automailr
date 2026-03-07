@@ -24,7 +24,7 @@ export default function PrivacyPolicy() {
           <article className="glass rounded-2xl p-6 sm:p-10 space-y-8 text-sm text-muted-foreground leading-relaxed">
             <header>
               <h1 className="text-2xl font-extrabold text-foreground mb-2">Privacy Policy</h1>
-              <p className="text-xs">Effective Date: March 3, 2026 &middot; Last Updated: March 3, 2026</p>
+              <p className="text-xs">Effective Date: March 3, 2026 &middot; Last Updated: March 6, 2026</p>
             </header>
 
             <section className="space-y-3">
@@ -43,6 +43,29 @@ export default function PrivacyPolicy() {
                 backend servers, databases, or cloud infrastructure that stores, processes, or transmits your data.
                 All data you provide or generate while using the Service remains on your local device and is processed
                 exclusively within your browser session.
+              </p>
+              <p>
+                Automailr is <strong className="text-foreground">open-source software</strong> released under the{" "}
+                <strong className="text-foreground">MIT Non-Commercial License</strong>. The Software is provided free
+                of charge for{" "}
+                <strong className="text-foreground">personal, educational, and research use only</strong>. Commercial
+                use of any kind is strictly prohibited — this includes use by, on behalf of, or in association with
+                any business, company, corporation, partnership, organization, or team, even as an internal tool or
+                workflow aid. The Service is intended exclusively for natural persons acting in a purely personal
+                capacity. For complete details on permitted and prohibited use, please refer to our{" "}
+                <a href="/terms" className="text-primary underline">
+                  Terms of Service
+                </a>{" "}
+                and the{" "}
+                <a
+                  href="https://github.com/nishantjoshi-007/Automailr/blob/main/LICENSE"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                >
+                  project license
+                </a>
+                .
               </p>
             </section>
 
