@@ -1,197 +1,159 @@
-import { useState, FormEvent } from "react";
-import { Link, useNavigate } from "react-router";
+import { useRef, useState, type FormEvent } from "react";
+import { AlertCircle, Check } from "lucide-react";
+import { SiteHeader } from "@/components/SiteHeader";
+import { Footer } from "@/components/Footer";
+import { Prose } from "@/components/Prose";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Footer } from "@/components/Footer";
-import { SiteHeader } from "@/components/SiteHeader";
-import { AuroraBackground } from "@/components/ui/aurora-background";
-import { motion } from "motion/react";
-import { ChevronLeft, CheckCircle2, Mail, Send } from "lucide-react";
-import { PageTransition } from "@/components/PageTransition";
 
-const FORMSPARK_FORM_ID = import.meta.env.VITE_FORMSPARK_FORM_ID || "";
+const FORMSPARK_FORM_ID = (import.meta.env.VITE_FORMSPARK_FORM_ID ?? "").trim();
+const EMAIL = "contact@nishantjoshi.me";
 
-export default function Contact() {
-  const navigate = useNavigate();
-  const [submitting, setSubmitting] = useState(false);
-  const [succeeded, setSucceeded] = useState(false);
-  const [error, setError] = useState("");
+type Status = "idle" | "sending" | "sent" | "failed";
+
+function ContactForm({ formId }: { formId: string }) {
+  const [status, setStatus] = useState<Status>("idle");
+  const sentRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const sending = status === "sending";
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
-    setSubmitting(true);
+    if (sending) return;
+    const fields = Object.fromEntries(new FormData(e.currentTarget));
+    setStatus("sending");
     try {
-      const res = await fetch(`https://submit-form.com/${FORMSPARK_FORM_ID}`, {
+      const res = await fetch("https://submit-form.com/" + formId, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(Object.fromEntries(new FormData(e.currentTarget))),
+        body: JSON.stringify(fields),
       });
-      if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
-      setSucceeded(true);
+      if (!res.ok) throw new Error(`Formspark responded ${res.status}`);
+      setStatus("sent");
+      requestAnimationFrame(() => sentRef.current?.focus());
     } catch {
-      setError("Something went wrong sending your message. Please try again or email us directly.");
-    } finally {
-      setSubmitting(false);
+      setStatus("failed");
     }
   };
 
-  return (
-    <PageTransition className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-
-      {/* Content */}
-      <div className="relative flex flex-1 pt-20">
-        <AuroraBackground
-          className="absolute inset-0 z-0 opacity-50 pointer-events-none"
-          showRadialGradient={false}
-        />
-
-        <div className="container relative z-10 flex flex-col md:flex-row items-start justify-center gap-12 px-4 py-12 md:py-24 mx-auto max-w-6xl">
-          {/* Left Column: Info */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex-1 space-y-8"
-          >
-            <div>
-              <Link
-                to="/"
-                className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 transition-colors"
-              >
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Back to Home
-              </Link>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground mb-4">
-                Get in touch
-              </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
-                Have a question, suggestion, or just want to say hi? We'd love to hear from you. Fill out the form and
-                we'll get back to you as soon as possible.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-6">
-              <div className="flex items-start gap-4 p-4 rounded-2xl bg-muted/40 border border-border/50">
-                <div className="bg-primary/10 p-3 rounded-xl text-primary">
-                  <Mail className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Email us directly</h3>
-                  <p className="text-sm text-muted-foreground mb-1">Prefer to send an email?</p>
-                  <a href="mailto:contact@nishantjoshi.me" className="text-primary font-medium hover:underline">
-                    contact@nishantjoshi.me
-                  </a>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right Column: Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex-1 w-full max-w-lg"
-          >
-            <div className="bg-card/50 backdrop-blur-xl border border-border/50 shadow-2xl rounded-3xl p-6 sm:p-10 relative overflow-hidden">
-              {succeeded ? (
-                <div className="text-center py-12 flex flex-col items-center justify-center h-full gap-6">
-                  <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-2">
-                    <CheckCircle2 className="h-10 w-10" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground">Message sent!</h2>
-                    <p className="text-muted-foreground mt-2">Thanks for reaching out. We'll be in touch shortly.</p>
-                  </div>
-                  <Button variant="outline" className="mt-4 rounded-full px-8" onClick={() => navigate("/")}>
-                    Back to Home
-                  </Button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-medium ml-1">
-                      Name
-                    </Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      placeholder="Jane Doe"
-                      required
-                      className="h-12 rounded-xl bg-background/50 border-input/60 focus:bg-background transition-all"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium ml-1">
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      name="email"
-                      placeholder="jane@example.com"
-                      required
-                      className="h-12 rounded-xl bg-background/50 border-input/60 focus:bg-background transition-all"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="subject" className="text-sm font-medium ml-1">
-                      Subject
-                    </Label>
-                    <Input
-                      id="subject"
-                      name="subject"
-                      placeholder="How can we help?"
-                      required
-                      className="h-12 rounded-xl bg-background/50 border-input/60 focus:bg-background transition-all"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="message" className="text-sm font-medium ml-1">
-                      Message
-                    </Label>
-                    <Textarea
-                      id="message"
-                      name="message"
-                      placeholder="Tell us more about your inquiry..."
-                      required
-                      className="min-h-[150px] rounded-xl bg-background/50 border-input/60 focus:bg-background transition-all resize-y"
-                    />
-                  </div>
-
-                  {error && (
-                    <p role="alert" className="text-sm text-destructive ml-1">
-                      {error}
-                    </p>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full h-12 rounded-xl text-base shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform duration-200"
-                  >
-                    {submitting ? (
-                      "Sending..."
-                    ) : (
-                      <>
-                        Send Message <Send className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                </form>
-              )}
-            </div>
-          </motion.div>
-        </div>
+  if (status === "sent") {
+    return (
+      <div
+        ref={sentRef}
+        tabIndex={-1}
+        role="status"
+        className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-md bg-surface-2 p-5 outline-none"
+      >
+        <p className="flex items-center gap-2.5 text-ink">
+          <Check aria-hidden="true" className="size-5 flex-none text-pos" strokeWidth={2.2} />
+          Sent. Expect a reply within a few days.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          className="ml-auto"
+          onClick={() => {
+            setStatus("idle");
+            requestAnimationFrame(() => nameRef.current?.focus());
+          }}
+        >
+          Send another
+        </Button>
       </div>
+    );
+  }
+
+  return (
+    <>
+      <form onSubmit={handleSubmit} className="mt-8 grid gap-5" aria-busy={sending}>
+        <div className="grid gap-2">
+          <Label htmlFor="contact-name" className="text-[14.5px]">
+            Name
+          </Label>
+          <Input
+            ref={nameRef}
+            id="contact-name"
+            name="name"
+            autoComplete="name"
+            placeholder="Your name"
+            required
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="contact-email" className="text-[14.5px]">
+            Email
+          </Label>
+          <Input
+            id="contact-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            spellCheck={false}
+            placeholder="you@example.com"
+            required
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="contact-message" className="text-[14.5px]">
+            Message
+          </Label>
+          <Textarea
+            id="contact-message"
+            name="message"
+            placeholder="What’s on your mind…"
+            required
+            className="min-h-[168px] resize-y text-base md:text-[15px]"
+          />
+        </div>
+
+        {status === "failed" && (
+          <p role="alert" className="flex items-start gap-2 text-[15px] text-neg">
+            <AlertCircle aria-hidden="true" className="mt-[3px] size-4 flex-none" strokeWidth={2.2} />
+            <span>
+              That didn&rsquo;t send. Email{" "}
+              <a href={`mailto:${EMAIL}`} className="text-neg underline underline-offset-[3px]">
+                {EMAIL}
+              </a>{" "}
+              instead.
+            </span>
+          </p>
+        )}
+
+        <div>
+          <Button type="submit" aria-busy={sending} className="max-[460px]:w-full">
+            {sending ? "Sending…" : "Send message"}
+          </Button>
+        </div>
+      </form>
+      <p className="mt-5 text-[13.5px] text-ink-3">Sent through Formspark, which emails it to the maintainer.</p>
+    </>
+  );
+}
+
+export default function Contact() {
+  return (
+    <div className="flex min-h-dvh flex-col">
+      <SiteHeader />
+      <main id="main">
+        <Prose title="Contact">
+          <p>
+            Questions, bugs or ideas: send a message here, or email <a href={`mailto:${EMAIL}`}>{EMAIL}</a>. Bugs are
+            easiest to follow as{" "}
+            <a href="https://github.com/nishantjoshi-007/Automailr/issues" target="_blank" rel="noopener">
+              GitHub issues
+            </a>
+            .
+          </p>
+          {FORMSPARK_FORM_ID && (
+            <div className="max-w-[560px]">
+              <ContactForm formId={FORMSPARK_FORM_ID} />
+            </div>
+          )}
+        </Prose>
+      </main>
       <Footer />
-    </PageTransition>
+    </div>
   );
 }
