@@ -73,8 +73,8 @@ Create a `.env` file in the project root:
 # Required — Google OAuth 2.0 Client ID
 VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 
-# Optional — Formspree form ID for the /contact page
-VITE_FORMSPREE_ID=your-formspree-id
+# Optional — Formspark form ID for the /contact page
+VITE_FORMSPARK_FORM_ID=your-formspark-form-id
 ```
 
 > **Tip:** In the Google Cloud Console, add `http://localhost:8080` to the list of authorized JavaScript origins for local development.
@@ -117,7 +117,7 @@ src/
 │   ├── Landing.tsx              #   /login — Google sign-in
 │   ├── Dashboard.tsx            #   /app/:session/:step — Mail-merge wizard
 │   ├── Help.tsx                 #   /help — FAQ (protected)
-│   ├── Contact.tsx              #   /contact — Formspree contact form
+│   ├── Contact.tsx              #   /contact — Formspark contact form
 │   ├── PrivacyPolicy.tsx        #   /privacy
 │   ├── TermsOfService.tsx       #   /terms
 │   └── NotFound.tsx             #   404
@@ -195,10 +195,10 @@ Automailr takes security seriously despite being a client-side app:
 
 ## Environment Variables
 
-| Variable                | Required | Description                            |
-| ----------------------- | -------- | -------------------------------------- |
-| `VITE_GOOGLE_CLIENT_ID` | **Yes**  | Google OAuth 2.0 Client ID             |
-| `VITE_FORMSPREE_ID`     | No       | Formspree form ID for the contact page |
+| Variable                 | Required | Description                            |
+| ------------------------ | -------- | -------------------------------------- |
+| `VITE_GOOGLE_CLIENT_ID`  | **Yes**  | Google OAuth 2.0 Client ID             |
+| `VITE_FORMSPARK_FORM_ID` | No       | Formspark form ID for the contact page |
 
 ---
 

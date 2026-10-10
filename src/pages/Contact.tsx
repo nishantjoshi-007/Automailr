@@ -1,4 +1,5 @@
-﻿import { useForm, ValidationError } from "@formspree/react";
+﻿import { useState, FormEvent } from "react";
+import { useFormspark } from "@formspark/use-formspark";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,12 +12,25 @@ import { motion } from "framer-motion";
 import { ChevronLeft, Sun, Moon, CheckCircle2, MessageSquare, Mail, Send } from "lucide-react";
 import { PageTransition } from "@/components/PageTransition";
 
-const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_ID || "";
+const FORMSPARK_FORM_ID = import.meta.env.VITE_FORMSPARK_FORM_ID || "";
 
 export default function Contact() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const [state, handleSubmit] = useForm(FORMSPREE_ID);
+  const [submit, submitting] = useFormspark({ formId: FORMSPARK_FORM_ID });
+  const [succeeded, setSucceeded] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    try {
+      await submit(Object.fromEntries(new FormData(e.currentTarget)));
+      setSucceeded(true);
+    } catch {
+      setError("Something went wrong sending your message. Please try again or email us directly.");
+    }
+  };
 
   return (
     <PageTransition className="flex min-h-screen flex-col bg-background">
@@ -97,7 +111,7 @@ export default function Contact() {
             className="flex-1 w-full max-w-lg"
           >
             <div className="bg-card/50 backdrop-blur-xl border border-border/50 shadow-2xl rounded-3xl p-6 sm:p-10 relative overflow-hidden">
-              {state.succeeded ? (
+              {succeeded ? (
                 <div className="text-center py-12 flex flex-col items-center justify-center h-full gap-6">
                   <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 mb-2">
                     <CheckCircle2 className="h-10 w-10" />
@@ -123,12 +137,6 @@ export default function Contact() {
                       required
                       className="h-12 rounded-xl bg-background/50 border-input/60 focus:bg-background transition-all"
                     />
-                    <ValidationError
-                      prefix="Name"
-                      field="name"
-                      errors={state.errors}
-                      className="text-xs text-destructive ml-1"
-                    />
                   </div>
 
                   <div className="space-y-2">
@@ -143,12 +151,6 @@ export default function Contact() {
                       required
                       className="h-12 rounded-xl bg-background/50 border-input/60 focus:bg-background transition-all"
                     />
-                    <ValidationError
-                      prefix="Email"
-                      field="email"
-                      errors={state.errors}
-                      className="text-xs text-destructive ml-1"
-                    />
                   </div>
 
                   <div className="space-y-2">
@@ -161,12 +163,6 @@ export default function Contact() {
                       placeholder="How can we help?"
                       required
                       className="h-12 rounded-xl bg-background/50 border-input/60 focus:bg-background transition-all"
-                    />
-                    <ValidationError
-                      prefix="Subject"
-                      field="subject"
-                      errors={state.errors}
-                      className="text-xs text-destructive ml-1"
                     />
                   </div>
 
@@ -181,20 +177,20 @@ export default function Contact() {
                       required
                       className="min-h-[150px] rounded-xl bg-background/50 border-input/60 focus:bg-background transition-all resize-y"
                     />
-                    <ValidationError
-                      prefix="Message"
-                      field="message"
-                      errors={state.errors}
-                      className="text-xs text-destructive ml-1"
-                    />
                   </div>
+
+                  {error && (
+                    <p role="alert" className="text-sm text-destructive ml-1">
+                      {error}
+                    </p>
+                  )}
 
                   <Button
                     type="submit"
-                    disabled={state.submitting}
+                    disabled={submitting}
                     className="w-full h-12 rounded-xl text-base shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform duration-200"
                   >
-                    {state.submitting ? (
+                    {submitting ? (
                       "Sending..."
                     ) : (
                       <>
