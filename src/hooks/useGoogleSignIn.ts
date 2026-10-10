@@ -9,7 +9,7 @@ interface UseGoogleSignInOptions {
   /**
    * The address already signed in. When set, Google skips the account
    * chooser and re-authorises that account (used before or during a long
-   * batch, when the 55-minute token is about to run out).
+   * batch, when the one-hour token is about to run out or has run out).
    */
   reauthEmail?: string;
   onSuccess?: () => void;
@@ -37,7 +37,7 @@ export function useGoogleSignIn({ reauthEmail, onSuccess, onError }: UseGoogleSi
     hint: reauthEmail,
     onSuccess: async (token) => {
       try {
-        await login(token.access_token);
+        await login(token.access_token, token.expires_in);
         setBusy(false);
         onSuccess?.();
       } catch {

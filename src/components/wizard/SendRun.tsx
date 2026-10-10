@@ -1,20 +1,59 @@
 import { useState } from "react";
+import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import { RESULTS_ROWS_SHOWN } from "./constants";
 import { outcomeOf, type RunProgress } from "./sender";
 import type { RowResult } from "./state";
 import { card, seg, segBtn } from "./ui";
 
-export function SendingView({ progress }: { progress: RunProgress }) {
+interface ReauthNoticeProps {
+  message: string;
+  /** The signed-in address, so Google skips the account chooser. */
+  email: string;
+  className?: string;
+}
+
+/** Inline "sign in again" notice with the re-auth button (M1). */
+export function ReauthNotice({ message, email, className }: ReauthNoticeProps) {
+  const [authError, setAuthError] = useState<string | null>(null);
+  const { signIn, busy } = useGoogleSignIn({
+    reauthEmail: email || undefined,
+    onSuccess: () => setAuthError(null),
+    onError: setAuthError,
+  });
+  return (
+    <div className={cn("grid gap-3 rounded-md bg-surface-2 p-4 text-[15px] text-ink-2", className)}>
+      <p role="status" className="flex items-start gap-2.5">
+        <Clock aria-hidden="true" className="mt-0.5 size-[18px] flex-none text-ink-3" strokeWidth={1.8} />
+        <span>{message}</span>
+      </p>
+      <div className="flex flex-wrap items-center gap-3 pl-7">
+        <Button variant="outline" size="sm" onClick={signIn} aria-busy={busy || undefined} disabled={busy}>
+          {busy ? "Opening Google…" : "Sign in again"}
+        </Button>
+        {authError && (
+          <p role="alert" className="text-[14px] text-neg">
+            {authError}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function SendingView({ progress, from }: { progress: RunProgress; from: string }) {
+  const { expired } = useAuth();
   const done = progress.sent + progress.failed;
   const pct = progress.total ? (done / progress.total) * 100 : 0;
   const left = progress.total - done;
   const current = progress.current;
+  const gone = progress.paused === "unauthorized" || expired;
   return (
     <section aria-label="Sending progress" className={cn(card, "mb-8 grid max-w-[720px] gap-5 p-6 max-[720px]:p-4")}>
       <p className="numeral text-[clamp(2.8rem,1.7rem+2.6vw,4.4rem)]">
@@ -22,18 +61,25 @@ export function SendingView({ progress }: { progress: RunProgress }) {
         <span className="text-ink-3"> / {progress.total.toLocaleString("en")}</span>
       </p>
       <Progress value={pct} aria-label="Sending progress" className="h-2.5" />
-      <p className="text-[15.5px] text-ink-2 [overflow-wrap:anywhere]">
-        {current ? (
-          <>
-            Sending to <span className="font-mono text-[14.5px] text-ink">{current.email}</span>{" "}
-            <span className="num">
-              ({Math.min(done + 1, progress.total).toLocaleString("en")} of {progress.total.toLocaleString("en")})
-            </span>
-          </>
-        ) : (
-          "Getting the attachments ready…"
-        )}
-      </p>
+      {progress.paused ? (
+        <ReauthNotice
+          email={from}
+          message={`Paused: your sign-in ${gone ? "has expired" : "is about to expire"}. Sign in again to continue.`}
+        />
+      ) : (
+        <p className="text-[15.5px] text-ink-2 [overflow-wrap:anywhere]">
+          {current ? (
+            <>
+              Sending to <span className="font-mono text-[14.5px] text-ink">{current.email}</span>{" "}
+              <span className="num">
+                ({Math.min(done + 1, progress.total).toLocaleString("en")} of {progress.total.toLocaleString("en")})
+              </span>
+            </>
+          ) : (
+            "Getting the attachments ready…"
+          )}
+        </p>
+      )}
       <p aria-live="polite" className="num text-[15px] text-ink-2">
         {progress.sent.toLocaleString("en")} sent · {progress.failed.toLocaleString("en")} failed · {left.toLocaleString("en")} left
       </p>
@@ -60,6 +106,8 @@ interface ResultsViewProps {
 
 export function ResultsView({ results, from, onRetry, onDownload, onNewBatch }: ResultsViewProps) {
   const o = outcomeOf(results);
+  // While the session is expired the wizard's banner carries the sign-in button.
+  const { expired } = useAuth();
   const [filter, setFilter] = useState<Filter>(o.failed ? "failed" : o.notSent ? "notSent" : "all");
   const [reauthed, setReauthed] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -76,7 +124,7 @@ export function ResultsView({ results, from, onRetry, onDownload, onNewBatch }: 
   const notSentIdx = results.filter((r) => r.status === "notSent").map((r) => r.index);
   const rows = results.filter((r) => filter === "all" || r.status === filter);
   const shown = rows.slice(0, RESULTS_ROWS_SHOWN);
-  const needAuth = o.expired && !reauthed;
+  const needAuth = expired || (o.expired && !reauthed);
 
   const stats: { label: string; value: number; tone: string }[] = [
     { label: "sent", value: o.sent, tone: "text-ink" },
@@ -96,7 +144,7 @@ export function ResultsView({ results, from, onRetry, onDownload, onNewBatch }: 
       </dl>
 
       <div className="flex flex-wrap items-center gap-3">
-        {needAuth && (
+        {needAuth && !expired && (
           <Button onClick={signIn} disabled={busy} aria-busy={busy || undefined}>
             {busy ? "Opening Google…" : "Sign in again"}
           </Button>

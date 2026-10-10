@@ -13,10 +13,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import { SEND_DELAY_MS, THIN } from "./constants";
 import { batchEstimateMs, tokenTooShort } from "./timing";
-import { fieldsUsed, formatBytes, formatDuration, plural } from "./preview";
+import { fieldsUsed, formatBytes, formatDuration, plural, totalBytes } from "./preview";
 import { PreviewCard } from "./PreviewCard";
 import type { CsvState, WizardState } from "./state";
 import { card, cardTitle } from "./ui";
@@ -47,8 +48,11 @@ interface ReviewProps {
 export function Review({ state, csv, from, files, validRows, expiresAt, now }: ReviewProps) {
   const skipped = csv.rows.length - validRows;
   const used = fieldsUsed(state.subject, state.body);
-  const estimate = batchEstimateMs(validRows);
-  const short = tokenTooShort(expiresAt, now, validRows);
+  const attachmentBytes = totalBytes(files);
+  const estimate = batchEstimateMs(validRows, attachmentBytes);
+  const short = tokenTooShort(expiresAt, now, validRows, attachmentBytes);
+  // An expired session gets the wizard's banner instead of this notice.
+  const { expired } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
   const { signIn, busy } = useGoogleSignIn({
     reauthEmail: from || undefined,
@@ -116,7 +120,7 @@ export function Review({ state, csv, from, files, validRows, expiresAt, now }: R
           )}
         </dl>
 
-        {short && (
+        {short && !expired && (
           <div className="grid gap-3 rounded-md bg-surface-2 p-4 text-[15px] text-ink-2">
             <p className="flex items-start gap-2.5">
               <Clock aria-hidden="true" className="mt-0.5 size-[18px] flex-none text-ink-3" strokeWidth={1.8} />

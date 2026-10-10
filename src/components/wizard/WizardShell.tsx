@@ -17,11 +17,11 @@ import { useAIPolish } from "@/hooks/useAIPolish";
 import { BottomBar } from "./BottomBar";
 import { LEGACY_SLUGS, SEND_DELAY_MS, STEPS, THIN, type Step } from "./constants";
 import { Message } from "./Message";
-import { messageProblem, plural, validRowCount } from "./preview";
+import { messageProblem, plural, totalBytes, validRowCount } from "./preview";
 import { Recipients } from "./Recipients";
 import { Review, SendConfirm } from "./Review";
 import { outcomeOf, outcomeTitle, useSender } from "./sender";
-import { ResultsView, SendingView } from "./SendRun";
+import { ReauthNotice, ResultsView, SendingView } from "./SendRun";
 import { makeSessionId, useWizardState, withMessage, type CsvState, type RowResult } from "./state";
 import { Stepper } from "./Stepper";
 import { tokenTooShort, useNow } from "./timing";
@@ -57,7 +57,7 @@ export function WizardShell() {
   const params = useParams();
   const [sessionId, slug] = (params["*"] ?? "").split("/").filter(Boolean);
   const navigate = useNavigate();
-  const { user, accessToken, expiresAt } = useAuth();
+  const { user, accessToken, expiresAt, expired } = useAuth();
   const from = user?.email ?? "";
   const { state, update, reset } = useWizardState(sessionId);
   const [files, setFiles] = useState<File[]>([]);
@@ -76,7 +76,7 @@ export function WizardShell() {
     [update],
   );
   const ai = useAIPolish({ subject, body, versions: state?.polish ?? null, onApply: onPolishApply });
-  const sender = useSender({ csv, subject, body, files, token: accessToken, from, update });
+  const sender = useSender({ csv, subject, body, files, token: accessToken, expiresAt, from, update });
   const running = sender.running;
   const blocker = useBlocker(running);
 
@@ -154,11 +154,16 @@ export function WizardShell() {
 
   const fileName = csv?.fileName ?? "";
   const skipped = csv ? csv.rows.length - valid : 0;
-  const short = tokenTooShort(expiresAt, now, valid);
+  const short = tokenTooShort(expiresAt, now, valid, totalBytes(files));
+  // Shown in place of each step's own reason while the Google sign-in has expired (M1).
+  const expiredReason = expired ? "Sign in again to continue." : null;
 
   let title: string;
   let sentence: ReactNode;
-  if (running) {
+  if (running && sender.progress?.paused) {
+    title = "Paused";
+    sentence = "Sending carries on from the same email once you sign in again. Keep this tab open.";
+  } else if (running) {
     title = "Sending…";
     sentence = `One email every ${SEND_DELAY_MS}${THIN}ms. Keep this tab open.`;
   } else if (results) {
@@ -200,7 +205,9 @@ export function WizardShell() {
       bar = (
         <BottomBar
           stepLabel="Step 1 of 3"
-          reason={!csv ? "Upload a CSV to continue." : valid === 0 ? "None of the rows has a valid email address." : null}
+          reason={
+            expiredReason ?? (!csv ? "Upload a CSV to continue." : valid === 0 ? "None of the rows has a valid email address." : null)
+          }
           primaryLabel="Next: Message"
           onPrimary={() => go("message")}
         />
@@ -211,7 +218,7 @@ export function WizardShell() {
           stepLabel="Step 2 of 3"
           onBack={() => go("recipients")}
           backDisabled={ai.busy}
-          reason={ai.busy ? "Polishing…" : problem}
+          reason={expiredReason ?? (ai.busy ? "Polishing…" : problem)}
           primaryLabel="Next: Review & send"
           onPrimary={() => go("review")}
         />
@@ -221,7 +228,7 @@ export function WizardShell() {
         <BottomBar
           stepLabel="Step 3 of 3"
           onBack={() => go("message")}
-          reason={short ? "Sign in again before sending." : null}
+          reason={expiredReason ?? (short ? "Sign in again before sending." : null)}
           primaryLabel={`Send ${plural(valid, "email", "emails")}`}
           onPrimary={() => setConfirmOpen(true)}
         />
@@ -245,8 +252,16 @@ export function WizardShell() {
           </p>
         </div>
 
+        {expired && !running && user && (
+          <ReauthNotice
+            email={user.email}
+            message="Your Google sign-in expired. Sign in again to keep going."
+            className="mb-6 max-w-[720px]"
+          />
+        )}
+
         {running && sender.progress ? (
-          <SendingView progress={sender.progress} />
+          <SendingView progress={sender.progress} from={from} />
         ) : results ? (
           <ResultsView
             results={results}

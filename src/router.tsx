@@ -26,13 +26,15 @@ function AuthGate({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/** Sends to /login only when there is no session at all; an expired one renders the page (M1). */
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { accessToken, isLoading } = useAuth();
+  const { accessToken, user, isLoading } = useAuth();
   if (isLoading) return <AuthGate>{null}</AuthGate>;
-  if (!accessToken) return <Navigate to="/login" replace />;
+  if (!user && !accessToken) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
+/** Keeps signed-in users away from /login; an expired session may use it to sign in again. */
 function PublicOnly({ children }: { children: ReactNode }) {
   const { accessToken, isLoading } = useAuth();
   if (isLoading) return <AuthGate>{null}</AuthGate>;

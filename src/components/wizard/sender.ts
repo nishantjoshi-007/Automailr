@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isValidEmail } from "@/utils/csvParser";
-import { prepareAttachments, sendEmail, type Attachment } from "@/utils/gmailSender";
+import { prepareAttachments, sendEmail, type Attachment, type SendResult } from "@/utils/gmailSender";
 import { replacePlaceholders, replacePlaceholdersPlain } from "@/utils/placeholders";
-import { SEND_DELAY_MS } from "./constants";
+import { PAUSE_BEFORE_EXPIRY_MS, SEND_DELAY_MS } from "./constants";
 import { emailKey, plural } from "./preview";
 import type { CsvState, RowResult, WizardState, WizardUpdate } from "./state";
 
@@ -10,13 +10,19 @@ import type { CsvState, RowResult, WizardState, WizardUpdate } from "./state";
 const AUTH_ERROR = /HTTP 401|invalid.?(authentication.?)?credentials|authError|UNAUTHENTICATED/i;
 
 export const STOPPED = "Stopped";
+/** Kept for results saved before M1, when a 401 ended the run. */
 export const SIGN_IN_EXPIRED = "Sign-in expired";
+
+/** Why the loop is waiting: the token is about to run out, or it is gone or refused. */
+export type PauseReason = "expiring" | "unauthorized";
 
 export interface RunProgress {
   total: number;
   sent: number;
   failed: number;
   current: { index: number; email: string } | null;
+  /** Set while the loop waits for a fresh sign-in (M1); null while sending. */
+  paused: PauseReason | null;
 }
 
 interface SenderOptions {
@@ -25,8 +31,20 @@ interface SenderOptions {
   body: string;
   files: File[];
   token: string | null;
+  /** The token's deadline from AuthContext (ms since epoch). */
+  expiresAt: number | null;
   from: string;
   update: (u: WizardUpdate) => void;
+}
+
+interface AuthSnapshot {
+  token: string | null;
+  expiresAt: number | null;
+}
+
+/** True when the next row must wait for a fresh sign-in. */
+function needsSignIn(a: AuthSnapshot): boolean {
+  return !a.token || a.expiresAt === null || a.expiresAt - Date.now() < PAUSE_BEFORE_EXPIRY_MS;
 }
 
 function sleep(ms: number, signal: AbortSignal): Promise<void> {
@@ -51,23 +69,49 @@ function setRows(update: SenderOptions["update"], patch: Map<number, Partial<Row
 
 /**
  * The send loop (D42): one email at a time, 250 ms apart, results written to
- * wizard state as they come in. Stop and a 401 leave the rest "not sent".
+ * wizard state as they come in. Stop leaves the rest "not sent". A token
+ * that is gone, refused (401) or within 90 s of its deadline pauses the loop
+ * on the current row until a fresh sign-in arrives, then it carries on (M1).
  */
-export function useSender({ csv, subject, body, files, token, from, update }: SenderOptions) {
+export function useSender({ csv, subject, body, files, token, expiresAt, from, update }: SenderOptions) {
   const [progress, setProgress] = useState<RunProgress | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // The loop reads the token through this ref, so a sign-in mid-run reaches it.
+  const authRef = useRef<AuthSnapshot>({ token, expiresAt });
+  const wakeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    authRef.current = { token, expiresAt };
+    wakeRef.current?.();
+  }, [token, expiresAt]);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const start = useCallback(
     async (indices: number[]) => {
-      if (!csv || !token || abortRef.current) return;
+      if (!csv || abortRef.current) return;
       const controller = new AbortController();
+      const { signal } = controller;
       abortRef.current = controller;
       const key = emailKey(csv.headers);
       const chosen = new Set(indices);
       const toOf = (i: number) => (csv.rows[i]?.[key] ?? "").trim();
       const total = indices.filter((i) => isValidEmail(toOf(i))).length;
+
+      /** Resolves once the auth differs from `stale` and is good to send with, or on Stop. */
+      const waitForSignIn = (stale: AuthSnapshot) =>
+        new Promise<void>((resolve) => {
+          const check = () => {
+            const a = authRef.current;
+            const changed = a.token !== stale.token || a.expiresAt !== stale.expiresAt;
+            if (signal.aborted || (changed && !needsSignIn(a))) {
+              if (wakeRef.current === check) wakeRef.current = null;
+              resolve();
+            }
+          };
+          wakeRef.current = check;
+          signal.addEventListener("abort", check, { once: true });
+        });
 
       // Every chosen row starts as "not sent (stopped)", so a reload mid-run is honest.
       update((s) => {
@@ -87,9 +131,9 @@ export function useSender({ csv, subject, body, files, token, from, update }: Se
 
       let sent = 0;
       let failed = 0;
-      setProgress({ total, sent, failed, current: null });
-      const done = new Set<number>();
-      let expired = false;
+      let current: RunProgress["current"] = null;
+      const report = (paused: PauseReason | null = null) => setProgress({ total, sent, failed, current, paused });
+      report();
       let attachments: Attachment[];
       try {
         attachments = await prepareAttachments(files);
@@ -100,52 +144,67 @@ export function useSender({ csv, subject, body, files, token, from, update }: Se
         return;
       }
 
+      /** Sends one row, pausing for a fresh sign-in first or after a 401; null when stopped while paused. */
+      const dispatch = async (row: Record<string, string>, to: string): Promise<SendResult | null> => {
+        for (;;) {
+          let auth = authRef.current;
+          if (needsSignIn(auth)) {
+            report(auth.token ? "expiring" : "unauthorized");
+            await waitForSignIn(auth);
+            if (signal.aborted) return null;
+            auth = authRef.current;
+            report();
+          }
+          const res = await sendEmail(
+            auth.token ?? "",
+            from,
+            to,
+            replacePlaceholdersPlain(subject, row),
+            replacePlaceholders(body, row),
+            attachments,
+          );
+          if (res.success || !AUTH_ERROR.test(res.error ?? "")) return res;
+          // Refused token: leave the row as it was and send it again after the sign-in.
+          report("unauthorized");
+          await waitForSignIn(auth);
+          if (signal.aborted) return null;
+          report();
+        }
+      };
+
       let first = true;
       for (const i of indices) {
-        if (controller.signal.aborted) break;
+        if (signal.aborted) break;
         const row = csv.rows[i];
         const to = toOf(i);
         if (!row || !isValidEmail(to)) {
-          done.add(i);
           setRows(update, new Map([[i, { status: "skipped", error: "Invalid email address" }]]));
           continue;
         }
         if (!first) {
-          await sleep(SEND_DELAY_MS, controller.signal);
-          if (controller.signal.aborted) break;
+          await sleep(SEND_DELAY_MS, signal);
+          if (signal.aborted) break;
         }
         first = false;
-        setProgress({ total, sent, failed, current: { index: i, email: to } });
-        const res = await sendEmail(
-          token,
-          from,
-          to,
-          replacePlaceholdersPlain(subject, row),
-          replacePlaceholders(body, row),
-          attachments,
-        );
-        done.add(i);
+        current = { index: i, email: to };
+        report();
+        const res = await dispatch(row, to);
+        if (!res) break;
         if (res.success) {
           sent++;
           setRows(update, new Map([[i, { status: "sent", error: undefined }]]));
-        } else if (AUTH_ERROR.test(res.error ?? "")) {
-          expired = true;
-          setRows(update, new Map([[i, { status: "notSent", error: SIGN_IN_EXPIRED }]]));
-          break;
         } else {
           failed++;
           setRows(update, new Map([[i, { status: "failed", error: res.error ?? "Gmail refused this message" }]]));
         }
-        setProgress({ total, sent, failed, current: { index: i, email: to } });
+        report();
       }
 
-      if (expired) {
-        setRows(update, new Map(indices.filter((i) => !done.has(i)).map((i) => [i, { error: SIGN_IN_EXPIRED }])));
-      }
+      wakeRef.current = null;
       abortRef.current = null;
       setProgress(null);
     },
-    [csv, token, from, subject, body, files, update],
+    [csv, from, subject, body, files, update],
   );
 
   const stop = useCallback(() => abortRef.current?.abort(), []);

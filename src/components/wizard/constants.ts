@@ -10,6 +10,12 @@ export const INVALID_ROWS_SHOWN = 50;
 export const RESULTS_ROWS_SHOWN = 200;
 /** Batch estimate per valid row: 250 ms pause plus typical request time. */
 export const SEND_ESTIMATE_MS_PER_ROW = 600;
+/** Upload rate assumed by the estimate: 2 MB per second. */
+export const UPLOAD_BYTES_PER_SEC = 2 * 1024 * 1024;
+/** Bytes sent per attachment byte: base64 plus the MIME wrapper and the JSON envelope. */
+export const UPLOAD_OVERHEAD = 1.78;
+/** The send loop pauses for a fresh sign-in when the token has less than this left (M1). */
+export const PAUSE_BEFORE_EXPIRY_MS = 90 * 1000;
 /** Margin the Google token must have beyond the estimate (D42). */
 export const TOKEN_MARGIN_MS = 60 * 1000;
 /** secureStorage key for the wizard state (D38). */
