@@ -65,7 +65,17 @@ const router = createBrowserRouter([
             <Outlet />
           </ProtectedRoute>
         ),
-        children: [{ path: "app/*", lazy: page(() => import("./pages/Wizard")) }],
+        children: [
+          {
+            path: "app/*",
+            // The error boundary comes with the wizard's chunk, so a batch that breaks
+            // a render shows "Start over" instead of the router's default page (L6).
+            lazy: async () => {
+              const [wizard, boundary] = await Promise.all([import("./pages/Wizard"), import("./pages/WizardError")]);
+              return { Component: wizard.default, ErrorBoundary: boundary.default };
+            },
+          },
+        ],
       },
       // Public since 5b: AppNav renders the marketing header when signed out.
       { path: "help", lazy: page(() => import("./pages/Help")) },

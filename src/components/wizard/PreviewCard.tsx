@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronLeft, ChevronRight, CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { replacePlaceholdersMarked } from "@/utils/placeholders";
-import { fieldsUsed, joinAnd, nameLine, rowEmail, emailKey, sanitizePreview } from "./preview";
+import { cell, fieldsUsed, joinAnd, nameLine, rowEmail, rowView, emailKey, sanitizePreview } from "./preview";
 import type { CsvState } from "./state";
 import { card, cardTitle } from "./ui";
 
@@ -34,7 +34,7 @@ function subjectNodes(subject: string, row: Record<string, string>, headers: str
       out.push(m[0]);
       continue;
     }
-    const value = own(row, key) ? (row[key] ?? "") : "";
+    const value = cell(row, key);
     const cls = cn("fill", linked === key && "is-linked");
     out.push(
       value.trim() === "" ? (
@@ -58,11 +58,13 @@ export function PreviewCard({ csv, from, subject, body, linkedField = null, onLi
   // Only rows that will actually be sent to, so "Recipient 1 of N" matches every other count.
   const rows = useMemo(() => {
     const key = emailKey(csv.headers);
-    return csv.rows.filter((r) => isValidEmail(r[key] ?? ""));
+    return csv.rows.filter((r) => isValidEmail(cell(r, key)));
   }, [csv]);
   const count = rows.length;
   const index = Math.min(rawIndex, Math.max(0, count - 1));
-  const row = rows[index] ?? NO_ROW;
+  const raw = rows[index] ?? NO_ROW;
+  // The CSV's columns only, every value a string, so the fillers never see anything else (L6).
+  const row = useMemo(() => rowView(csv.headers, raw), [csv.headers, raw]);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   const html = useMemo(
@@ -78,7 +80,7 @@ export function PreviewCard({ csv, from, subject, body, linkedField = null, onLi
   }, [linkedField, html]);
 
   const used = fieldsUsed(subject, body).filter((f) => own(row, f) || csv.headers.includes(f));
-  const empty = used.filter((f) => !(row[f] ?? "").trim());
+  const empty = used.filter((f) => !cell(row, f).trim());
   const who = nameLine(csv.headers, row);
 
   const hover = (e: React.MouseEvent) => {

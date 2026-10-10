@@ -3,7 +3,7 @@ import { isValidEmail } from "@/utils/csvParser";
 import { prepareAttachments, sendEmail, type Attachment, type SendResult } from "@/utils/gmailSender";
 import { replacePlaceholders, replacePlaceholdersPlain } from "@/utils/placeholders";
 import { PAUSE_BEFORE_EXPIRY_MS, RATE_LIMIT_BACKOFF_MS, SEND_DELAY_MS } from "./constants";
-import { emailKey, plural } from "./preview";
+import { cell, emailKey, plural, rowView } from "./preview";
 import type { CsvState, RowResult, WizardState, WizardUpdate } from "./state";
 
 /** Fallback only, for a refusal without an HTTP status: Gmail's wording for a bad token. */
@@ -120,7 +120,7 @@ export function useSender({ csv, subject, body, files, token, expiresAt, from, u
       abortRef.current = controller;
       const key = emailKey(csv.headers);
       const chosen = new Set(indices);
-      const toOf = (i: number) => (csv.rows[i]?.[key] ?? "").trim();
+      const toOf = (i: number) => cell(csv.rows[i], key).trim();
       const total = indices.filter((i) => isValidEmail(toOf(i))).length;
 
       /** Resolves once the auth differs from `stale` and is good to send with, or on Stop. */
@@ -216,7 +216,7 @@ export function useSender({ csv, subject, body, files, token, expiresAt, from, u
       for (let k = 0; k < indices.length; k++) {
         const i = indices[k];
         if (signal.aborted) break;
-        const row = csv.rows[i];
+        const row = csv.rows[i] ? rowView(csv.headers, csv.rows[i]) : null;
         const to = toOf(i);
         if (!row || !isValidEmail(to)) {
           setRows(update, new Map([[i, { status: "skipped", error: "Invalid email address" }]]));

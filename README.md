@@ -68,6 +68,8 @@ Then start the dev server, which listens on http://localhost:8080.
 npm run dev
 ```
 
+To open it from a phone on the same network, run `npm run dev -- --host` for that session only.
+
 ## Google Cloud setup
 
 1. In Google Cloud Console, create or pick a project and enable the Gmail API.

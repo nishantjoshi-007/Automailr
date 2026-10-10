@@ -38,14 +38,32 @@ export function emailKey(headers: readonly string[]): string {
   return headers.find((h) => h.toLowerCase() === "email") ?? "email";
 }
 
+/**
+ * One cell, always a string. Own properties only, so a column named after an
+ * Object.prototype member never reads the prototype, and anything that isn't
+ * a string (a row from an older saved batch, say) reads as blank (L6).
+ */
+export function cell(row: unknown, key: string): string {
+  if (!row || typeof row !== "object" || !Object.prototype.hasOwnProperty.call(row, key)) return "";
+  const v = (row as Record<string, unknown>)[key];
+  return typeof v === "string" ? v : "";
+}
+
+/** The row as the placeholder fillers see it: the CSV's columns only, read through `cell`. */
+export function rowView(headers: readonly string[], row: unknown): Record<string, string> {
+  const out = Object.create(null) as Record<string, string>;
+  for (const h of headers) out[h] = cell(row, h);
+  return out;
+}
+
 export function rowEmail(csv: CsvState, row: Record<string, string>): string {
-  return (row[emailKey(csv.headers)] ?? "").trim();
+  return cell(row, emailKey(csv.headers)).trim();
 }
 
 export function validRowCount(csv: CsvState | null): number {
   if (!csv) return 0;
   const key = emailKey(csv.headers);
-  return csv.rows.filter((r) => isValidEmail(r[key] ?? "")).length;
+  return csv.rows.filter((r) => isValidEmail(cell(r, key))).length;
 }
 
 /** Column names usable as {{fields}}: letters, numbers and underscores. */
@@ -67,9 +85,9 @@ export function nameLine(headers: readonly string[], row: Record<string, string>
   const last = find("last_name");
   const company = find("company");
   let person = "";
-  if (name) person = (row[name] ?? "").trim();
-  else if (first && last) person = `${(row[first] ?? "").trim()} ${(row[last] ?? "").trim()}`.trim();
-  const org = company ? (row[company] ?? "").trim() : "";
+  if (name) person = cell(row, name).trim();
+  else if (first && last) person = `${cell(row, first).trim()} ${cell(row, last).trim()}`.trim();
+  const org = company ? cell(row, company).trim() : "";
   const parts = [person, org].filter(Boolean);
   if (!name && !(first && last) && !company) return null;
   return parts.length ? parts.join(" · ") : null;

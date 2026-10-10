@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SAMPLE_CSV, isValidEmail, parseCSV } from "./csvParser";
+import { MAX_FILE_BYTES, SAMPLE_CSV, isValidEmail, parseCSV } from "./csvParser";
 
 function csvFile(content: string, name = "contacts.csv"): File {
   return new File([content], name, { type: "text/csv" });
@@ -58,6 +58,32 @@ describe("isValidEmail", () => {
   it("rejects CR/LF embedded in the local part or domain", () => {
     expect(isValidEmail("a\r\nb@c.com")).toBe(false);
     expect(isValidEmail("a@b\r\n.com")).toBe(false);
+  });
+
+  it("accepts a 254-character address and rejects a longer one (L9)", () => {
+    const at254 = `${"a".repeat(64)}@${"b".repeat(185)}.com`;
+    expect(at254).toHaveLength(254);
+    expect(isValidEmail(at254)).toBe(true);
+    expect(isValidEmail(`a${at254}`)).toBe(false);
+  });
+
+  it("rejects consecutive dots in the domain", () => {
+    expect(isValidEmail("a@b..com")).toBe(false);
+  });
+
+  it("rejects a@ + 10,000 dots + @ quickly, without backtracking (L9)", () => {
+    const evil = `a@${".".repeat(10_000)}@`;
+    const t0 = performance.now();
+    expect(isValidEmail(evil)).toBe(false);
+    expect(performance.now() - t0).toBeLessThan(50);
+  });
+
+  it("rejects the same shape under the length cap quickly", () => {
+    // Under 254 characters the cap doesn't apply, so this times the pattern itself.
+    const evil = `a@b${".".repeat(240)}@`;
+    const t0 = performance.now();
+    expect(isValidEmail(evil)).toBe(false);
+    expect(performance.now() - t0).toBeLessThan(50);
   });
 });
 
@@ -254,6 +280,93 @@ describe("parseCSV", () => {
       expect(result.success).toBe(true);
       expect(result.data?.headers).toEqual(["email", "first_name", "company"]);
       expect(result.data?.rows[0]).toEqual({ email: "alice@example.com", first_name: "Alice", company: "Acme" });
+    });
+  });
+
+  describe("column names (L6)", () => {
+    const RULE = "Column names can't be empty, repeated, or reserved words like __proto__.";
+
+    it.each(["__proto__", "constructor", "prototype", "toString", "hasOwnProperty", "__parsed_extra"])(
+      "rejects a column named %s and names it",
+      async (name) => {
+        const result = await parseCSV(csvFile(`email,${name}\na@b.com,x`));
+        expect(result.success).toBe(false);
+        expect(result.data).toBeUndefined();
+        expect(result.error).toContain(RULE);
+        expect(result.error).toContain(`"${name}"`);
+      },
+    );
+
+    it("rejects a repeated column name, also when it only repeats after trimming", async () => {
+      for (const header of ["email,name,name", "email, name ,name"]) {
+        const result = await parseCSV(csvFile(`${header}\na@b.com,x,y`));
+        expect(result.success).toBe(false);
+        expect(result.error).toContain(RULE);
+        expect(result.error).toContain('"name" appears more than once');
+      }
+    });
+
+    it("rejects an empty column name and says which column", async () => {
+      for (const header of ["email,,company", "email,  ,company"]) {
+        const result = await parseCSV(csvFile(`${header}\na@b.com,x,y`));
+        expect(result.success).toBe(false);
+        expect(result.error).toContain(RULE);
+        expect(result.error).toContain("Column 2 has no name");
+      }
+    });
+
+    it("still accepts names that only look like reserved words", async () => {
+      const result = await parseCSV(csvFile("email,proto,Constructor,name_1\na@b.com,x,y,z"));
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("row objects (L6)", () => {
+    it("builds rows with no prototype", async () => {
+      const result = await parseCSV(csvFile("email,name\na@b.com,Alice"));
+      const row = result.data!.rows[0];
+      expect(Object.getPrototypeOf(row)).toBeNull();
+      expect("toString" in row).toBe(false);
+    });
+
+    it("fills a missing cell with an empty string", async () => {
+      const result = await parseCSV(csvFile("email,name,company\na@b.com"));
+      const row = result.data!.rows[0];
+      expect(row).toEqual({ email: "a@b.com", name: "", company: "" });
+      for (const v of Object.values(row)) expect(typeof v).toBe("string");
+    });
+
+    it("drops cells past the last column instead of keeping __parsed_extra", async () => {
+      const result = await parseCSV(csvFile("email,name\na@b.com,Alice,extra,more"));
+      const row = result.data!.rows[0];
+      expect(Object.keys(row)).toEqual(["email", "name"]);
+      expect(row).toEqual({ email: "a@b.com", name: "Alice" });
+    });
+  });
+
+  describe("file size (L9)", () => {
+    it("rejects a file over 10 MB before parsing", async () => {
+      const file = csvFile("email\na@b.com");
+      Object.defineProperty(file, "size", { value: MAX_FILE_BYTES + 1 });
+      const result = await parseCSV(file);
+      expect(result).toEqual({ success: false, error: "That file is over 10 MB. Split the list into smaller batches." });
+    });
+
+    it("accepts a file of exactly 10 MB", async () => {
+      expect(MAX_FILE_BYTES).toBe(10 * 1024 * 1024);
+      const file = csvFile("email\na@b.com");
+      Object.defineProperty(file, "size", { value: MAX_FILE_BYTES });
+      const result = await parseCSV(file);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("row cap with preview (L9)", () => {
+    it("stops parsing past the cap on a much longer file and still rejects it", async () => {
+      const result = await parseCSV(csvFile(buildCsv(8000)));
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/at least 5\D?001 rows/);
+      expect(result.error).toMatch(/maximum is 5\D?000/);
     });
   });
 

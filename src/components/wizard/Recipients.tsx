@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { downloadSampleCSV, isValidEmail, parseCSV } from "@/utils/csvParser";
 import { INVALID_ROWS_SHOWN, PREVIEW_ROWS } from "./constants";
-import { emailKey, isUsableField, plural, UNUSABLE_FIELD_TITLE } from "./preview";
+import { cell, emailKey, isUsableField, plural, UNUSABLE_FIELD_TITLE } from "./preview";
 import type { CsvState } from "./state";
 import { card, cardTitle, chip, dropOver, dropZone, linkish } from "./ui";
 
@@ -130,7 +130,7 @@ function RecipientsTable({ csv, onReplace, fileInput, errorLine }: TableProps) {
   const [onlyInvalid, setOnlyInvalid] = useState(false);
   const key = emailKey(csv.headers);
   const columns = [key, ...csv.headers.filter((h) => h !== key)];
-  const invalid = csv.rows.filter((r) => !isValidEmail(r[key] ?? ""));
+  const invalid = csv.rows.filter((r) => !isValidEmail(cell(r, key)));
   const showInvalid = onlyInvalid && invalid.length > 0;
   const rows = showInvalid ? invalid.slice(0, INVALID_ROWS_SHOWN) : csv.rows.slice(0, PREVIEW_ROWS);
   const total = showInvalid ? invalid.length : csv.rows.length;
@@ -167,7 +167,7 @@ function RecipientsTable({ csv, onReplace, fileInput, errorLine }: TableProps) {
               {rows.map((r, i) => (
                 <TableRow key={i}>
                   {columns.map((c) => {
-                    const v = r[c] ?? "";
+                    const v = cell(r, c);
                     const bad = c === key && !isValidEmail(v);
                     return (
                       <TableCell key={c} className="max-w-[260px] truncate px-4 py-2.5 whitespace-nowrap text-ink-2">
