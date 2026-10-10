@@ -1,14 +1,14 @@
 ﻿import { useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Sun, Moon } from "lucide-react";
 import { isGoogleConfigured } from "@/App";
 import { Footer } from "@/components/Footer";
 import { GoogleIcon } from "@/components/GoogleIcon";
 import { AuroraBackground } from "@/components/ui/aurora-background";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { toast } from "sonner";
 import { PageTransition } from "@/components/PageTransition";
 

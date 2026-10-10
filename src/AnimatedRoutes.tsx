@@ -1,6 +1,6 @@
 // src/AnimatedRoutes.tsx
-import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
+import { Routes, Route, useLocation, Navigate } from "react-router";
+import { AnimatePresence } from "motion/react";
 import Home from "./pages/Home";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";

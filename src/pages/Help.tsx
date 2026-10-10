@@ -25,9 +25,9 @@ import {
   Check,
 } from "lucide-react";
 import { downloadSampleCSV } from "@/utils/csvParser";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { AuroraBackground } from "@/components/ui/aurora-background";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { PageTransition } from "@/components/PageTransition";
 
 /* ------------------------------------------------------------------ */

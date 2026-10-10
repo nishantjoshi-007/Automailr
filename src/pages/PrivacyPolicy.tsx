@@ -3,7 +3,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router";
 
 export default function PrivacyPolicy() {
   const navigate = useNavigate();

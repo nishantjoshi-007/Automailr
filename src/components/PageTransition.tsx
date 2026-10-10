@@ -1,5 +1,5 @@
 // src/components/PageTransition.tsx
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { ReactNode } from "react";
 
 export const PageTransition = ({ children, className }: { children: ReactNode; className?: string }) => {

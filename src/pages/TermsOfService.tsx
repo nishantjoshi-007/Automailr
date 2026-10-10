@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PageTransition } from "@/components/PageTransition";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { ChevronLeft } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router";
 
 export default function TermsOfService() {
   const navigate = useNavigate();

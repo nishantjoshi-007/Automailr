@@ -1,11 +1,11 @@
-﻿import { useNavigate, Link } from "react-router-dom";
+﻿import { useNavigate, Link } from "react-router";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { PageTransition } from "@/components/PageTransition";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import {
   Mail,
   Upload,

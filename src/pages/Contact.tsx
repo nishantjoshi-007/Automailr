@@ -1,13 +1,13 @@
 import { useState, FormEvent } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Footer } from "@/components/Footer";
 import { AuroraBackground } from "@/components/ui/aurora-background";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { ChevronLeft, Sun, Moon, CheckCircle2, Mail, Send } from "lucide-react";
 import { PageTransition } from "@/components/PageTransition";
 

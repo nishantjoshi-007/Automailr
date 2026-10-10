@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { HelpCircle, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router";
 
 export function AppNav() {
   const { user, logout } = useAuth();
