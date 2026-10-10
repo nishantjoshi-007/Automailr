@@ -129,7 +129,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar: data.picture || "",
       };
       setUser(profile);
-      await secureStorage.setItem("automailr_user", JSON.stringify(profile));
+      // Persisting is best-effort: a storage failure must not replace the
+      // profile we just fetched with the "Unknown" fallback below.
+      try {
+        await secureStorage.setItem("automailr_user", JSON.stringify(profile));
+      } catch (err) {
+        console.warn("[Automailr] Failed to persist profile:", err);
+      }
     } catch (err) {
       console.warn("[Automailr] Failed to fetch user profile:", err);
       setUser({ name: "Unknown", email: "", avatar: "" });

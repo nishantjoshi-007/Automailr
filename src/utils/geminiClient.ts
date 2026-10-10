@@ -1,5 +1,3 @@
-import { GoogleGenerativeAI, type GenerationConfig } from "@google/generative-ai";
-
 export interface PolishResult {
   subject: string;
   body: string;
@@ -10,6 +8,14 @@ export const MIN_BODY_CHARS = 30;
 
 /** Timeout in ms for the Gemini API call */
 const API_TIMEOUT_MS = 30_000;
+
+/**
+ * Gemini model id. `-latest` aliases are hot-swapped by Google to the newest
+ * release of the variant, with advance notice before breaking changes.
+ */
+const MODEL = "gemini-flash-lite-latest";
+
+const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 const SYSTEM_INSTRUCTION = `You are a professional email copywriter. Your job is to take a user's rough email draft and polish it into a clear, professional, and well-structured email.
 
@@ -22,11 +28,36 @@ Rules:
 6. Return ONLY valid JSON with exactly two fields: "subject" (string) and "body" (string containing HTML).
 7. Do NOT wrap the JSON in markdown code fences or add any text outside the JSON object.`;
 
-const GENERATION_CONFIG: GenerationConfig = {
+const GENERATION_CONFIG = {
   temperature: 0.7,
   maxOutputTokens: 2048,
   responseMimeType: "application/json",
-};
+} as const;
+
+/** Finish reasons that mean the output was withheld by a content filter. */
+const BLOCKED_FINISH_REASONS = new Set(["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII"]);
+
+const MESSAGES = {
+  cancelled: "Request was cancelled.",
+  timeout: "The AI request timed out. Please try again.",
+  invalidKey: "Invalid Gemini API key. Please check your VITE_GEMINI_API_KEY.",
+  accessDenied: "Access denied. Your Gemini API key may lack the required permissions.",
+  rateLimit: "Rate limit exceeded. Please wait a moment and try again.",
+  modelUnavailable: "The AI model is unavailable. Please try again later.",
+  network: "Network error — check your internet connection and try again.",
+  safety: "The content was flagged by safety filters. Please revise your draft.",
+  parse: "Failed to parse AI response. Please try again.",
+  format: "AI returned an unexpected format. Please try again.",
+} as const;
+
+/** Subset of the `generateContent` response that this module reads. */
+interface GenerateContentResponse {
+  candidates?: Array<{
+    content?: { parts?: Array<{ text?: string; thought?: boolean }> };
+    finishReason?: string;
+  }>;
+  promptFeedback?: { blockReason?: string };
+}
 
 /**
  * Strips HTML tags from a string, returning plain text.
@@ -46,6 +77,75 @@ export function stripHtmlTags(html: string): string {
     .replace(/&#39;/gi, "'")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+/**
+ * Combines the caller's optional abort signal with a timeout. Uses
+ * `AbortSignal.timeout` + `AbortSignal.any` where available, otherwise a
+ * manual controller. `dispose` must be called once the request settles.
+ */
+function createRequestSignal(
+  signal: AbortSignal | undefined,
+  ms: number,
+): { signal: AbortSignal; timedOut: () => boolean; dispose: () => void } {
+  if (typeof AbortSignal.timeout === "function" && typeof AbortSignal.any === "function") {
+    const timeout = AbortSignal.timeout(ms);
+    return {
+      signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+      timedOut: () => timeout.aborted,
+      dispose: () => {},
+    };
+  }
+
+  const controller = new AbortController();
+  let didTimeOut = false;
+  const timer = setTimeout(() => {
+    didTimeOut = true;
+    controller.abort(new DOMException("The operation timed out.", "TimeoutError"));
+  }, ms);
+  const onAbort = () => controller.abort(signal?.reason);
+  signal?.addEventListener("abort", onAbort, { once: true });
+
+  return {
+    signal: controller.signal,
+    timedOut: () => didTimeOut,
+    dispose: () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    },
+  };
+}
+
+function errorName(err: unknown): string | undefined {
+  return typeof err === "object" && err !== null && "name" in err ? String((err as { name: unknown }).name) : undefined;
+}
+
+/** Maps a rejected `fetch` / body read to a user-facing message. */
+function transportErrorMessage(err: unknown, signal: AbortSignal | undefined, timedOut: boolean): string {
+  if (signal?.aborted) return MESSAGES.cancelled;
+  if (timedOut || errorName(err) === "TimeoutError") return MESSAGES.timeout;
+  if (errorName(err) === "AbortError") return MESSAGES.cancelled;
+  // fetch rejects with a TypeError on network failure (also CORS / CSP blocks)
+  if (err instanceof TypeError) return MESSAGES.network;
+  return `AI service error: ${err instanceof Error ? err.message : "Unknown error"}`;
+}
+
+/** Maps a non-2xx Gemini API response to a user-facing message. */
+function httpErrorMessage(status: number, bodyText: string): string {
+  if (status === 401 || (status === 400 && /API_KEY_INVALID|API key not valid/i.test(bodyText))) {
+    return MESSAGES.invalidKey;
+  }
+  if (status === 403) return MESSAGES.accessDenied;
+  if (status === 429) return MESSAGES.rateLimit;
+  if (status === 404) return MESSAGES.modelUnavailable;
+
+  let message = "";
+  try {
+    message = (JSON.parse(bodyText) as { error?: { message?: string } }).error?.message ?? "";
+  } catch {
+    // Non-JSON error body
+  }
+  return `AI service error: ${message || `HTTP ${status}`}`;
 }
 
 /**
@@ -75,79 +175,72 @@ export async function polishEmail(subject: string, bodyHtml: string, signal?: Ab
 
   // Check for abort before making the API call
   if (signal?.aborted) {
-    throw new Error("Request was cancelled.");
+    throw new Error(MESSAGES.cancelled);
   }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: "gemini-flash-lite-latest",
-    systemInstruction: SYSTEM_INSTRUCTION,
-    generationConfig: GENERATION_CONFIG,
-  });
 
   const prompt = `Polish this email draft:\n\nSubject: ${subject || "(no subject provided)"}\n\nBody:\n${bodyText || "(no body provided)"}`;
 
-  // Race the API call against a timeout and optional abort signal
-  let responseText: string;
+  const request = createRequestSignal(signal, API_TIMEOUT_MS);
+  let ok: boolean;
+  let status: number;
+  let responseBody: string;
   try {
-    const apiPromise = model.generateContent(prompt);
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      const id = setTimeout(() => reject(new Error("__TIMEOUT__")), API_TIMEOUT_MS);
-      // If the caller aborts, clear timeout and reject immediately
-      signal?.addEventListener(
-        "abort",
-        () => {
-          clearTimeout(id);
-          reject(new Error("__ABORT__"));
-        },
-        { once: true },
-      );
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Header, not query string, so the key never lands in URLs or logs
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: GENERATION_CONFIG,
+      }),
+      signal: request.signal,
     });
-
-    const result = await Promise.race([apiPromise, timeoutPromise]);
-    responseText = result.response.text();
+    ok = res.ok;
+    status = res.status;
+    responseBody = await res.text();
   } catch (err: unknown) {
-    if (signal?.aborted) {
-      throw new Error("Request was cancelled.");
-    }
-    const message = err instanceof Error ? err.message : "Unknown error";
-    if (message === "__TIMEOUT__") {
-      throw new Error("The AI request timed out. Please try again.");
-    }
-    if (message === "__ABORT__") {
-      throw new Error("Request was cancelled.");
-    }
-    if (message.includes("API_KEY_INVALID") || message.includes("API key not valid")) {
-      throw new Error("Invalid Gemini API key. Please check your VITE_GEMINI_API_KEY.");
-    }
-    if (
-      message.includes("RATE_LIMIT") ||
-      message.includes("429") ||
-      message.includes("Resource has been exhausted")
-    ) {
-      throw new Error("Rate limit exceeded. Please wait a moment and try again.");
-    }
-    if (message.includes("SAFETY") || message.includes("HARM_CATEGORY")) {
-      throw new Error("The content was flagged by safety filters. Please revise your draft.");
-    }
-    if (message.includes("PERMISSION_DENIED") || message.includes("403")) {
-      throw new Error("Access denied. Your Gemini API key may lack the required permissions.");
-    }
-    if (message.includes("NOT_FOUND") || message.includes("404")) {
-      throw new Error("The AI model is unavailable. Please try again later.");
-    }
-    if (message.includes("Failed to fetch") || message.includes("NetworkError") || message.includes("net::")) {
-      throw new Error("Network error — check your internet connection and try again.");
-    }
-    throw new Error(`AI service error: ${message}`);
+    throw new Error(transportErrorMessage(err, signal, request.timedOut()), { cause: err });
+  } finally {
+    request.dispose();
   }
 
-  // Parse and validate the JSON response
+  if (!ok) {
+    throw new Error(httpErrorMessage(status, responseBody));
+  }
+
+  let data: GenerateContentResponse;
+  try {
+    data = JSON.parse(responseBody) as GenerateContentResponse;
+  } catch (err: unknown) {
+    throw new Error(MESSAGES.parse, { cause: err });
+  }
+
+  const candidate = data.candidates?.[0];
+  if (data.promptFeedback?.blockReason || BLOCKED_FINISH_REASONS.has(candidate?.finishReason ?? "")) {
+    throw new Error(MESSAGES.safety);
+  }
+
+  // Join the text parts (skipping any thought summaries), as the old SDK's text() did
+  const responseText = (candidate?.content?.parts ?? [])
+    .filter((part) => typeof part.text === "string" && !part.thought)
+    .map((part) => part.text)
+    .join("");
+  if (!responseText) {
+    throw new Error(
+      `AI service error: the model returned no content${candidate?.finishReason ? ` (${candidate.finishReason})` : ""}.`,
+    );
+  }
+
+  // Parse and validate the JSON payload the model produced
   let parsed: unknown;
   try {
     parsed = JSON.parse(responseText);
-  } catch {
-    throw new Error("Failed to parse AI response. Please try again.");
+  } catch (err: unknown) {
+    throw new Error(MESSAGES.parse, { cause: err });
   }
 
   if (
@@ -156,7 +249,7 @@ export async function polishEmail(subject: string, bodyHtml: string, signal?: Ab
     typeof (parsed as PolishResult).subject !== "string" ||
     typeof (parsed as PolishResult).body !== "string"
   ) {
-    throw new Error("AI returned an unexpected format. Please try again.");
+    throw new Error(MESSAGES.format);
   }
 
   const result = parsed as PolishResult;

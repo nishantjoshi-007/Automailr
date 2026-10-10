@@ -1,3 +1,5 @@
+import { isValidEmail } from "./csvParser";
+
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = "";
@@ -41,7 +43,17 @@ export async function prepareAttachments(files: File[]): Promise<Attachment[]> {
   );
 }
 
-function buildMimeMessage(
+/** Strip CR/LF so a value can never terminate a header and inject another one. */
+function sanitizeHeaderValue(value: string): string {
+  return value.replace(/[\r\n]/g, "").trim();
+}
+
+/** Only allow a well-formed media type; anything else becomes an opaque binary. */
+function sanitizeMimeType(type: string): string {
+  return /^[\w.+-]+\/[\w.+-]+$/.test(type) ? type : "application/octet-stream";
+}
+
+export function buildMimeMessage(
   from: string,
   to: string,
   subject: string,
@@ -51,9 +63,9 @@ function buildMimeMessage(
   const boundary = "automailr_boundary_" + Date.now();
 
   let mime = "";
-  mime += `From: ${from}\r\n`;
-  mime += `To: ${to}\r\n`;
-  mime += `Subject: =?UTF-8?B?${utf8ToBase64(subject)}?=\r\n`;
+  mime += `From: ${sanitizeHeaderValue(from)}\r\n`;
+  mime += `To: ${sanitizeHeaderValue(to)}\r\n`;
+  mime += `Subject: ${subject ? `=?UTF-8?B?${utf8ToBase64(subject)}?=` : ""}\r\n`;
   mime += "MIME-Version: 1.0\r\n";
 
   if (attachments.length === 0) {
@@ -68,11 +80,14 @@ function buildMimeMessage(
     mime += utf8ToBase64(htmlBody) + "\r\n";
 
     for (const att of attachments) {
-      // Sanitize filename: strip CRLF and escape double-quotes to prevent MIME header injection
-      const safeName = att.name.replace(/[\r\n]/g, "").replace(/"/g, "'");
+      // Sanitize filename: strip CRLF and escape double-quotes to prevent MIME header injection.
+      // filename* carries the RFC 2231 UTF-8 form so non-ASCII names survive.
+      const safeName = sanitizeHeaderValue(att.name).replace(/"/g, "'");
+      const encodedName = encodeURIComponent(safeName);
+      const safeType = sanitizeMimeType(att.type);
       mime += `--${boundary}\r\n`;
-      mime += `Content-Type: ${att.type}; name="${safeName}"\r\n`;
-      mime += `Content-Disposition: attachment; filename="${safeName}"\r\n`;
+      mime += `Content-Type: ${safeType}; name="${safeName}"\r\n`;
+      mime += `Content-Disposition: attachment; filename="${safeName}"; filename*=UTF-8''${encodedName}\r\n`;
       mime += "Content-Transfer-Encoding: base64\r\n\r\n";
       mime += att.data + "\r\n";
     }
@@ -97,8 +112,15 @@ export async function sendEmail(
   htmlBody: string,
   attachments: Attachment[],
 ): Promise<SendResult> {
+  // Validate here, not only in the UI: every caller (first send, retry) goes
+  // through this function, so a malformed address can never reach the To: header.
+  const recipient = to.trim();
+  if (!isValidEmail(recipient)) {
+    return { email: to, success: false, error: "Invalid email address" };
+  }
+
   try {
-    const raw = buildMimeMessage(from, to, subject, htmlBody, attachments);
+    const raw = buildMimeMessage(from, recipient, subject, htmlBody, attachments);
     const b64url = toBase64url(utf8ToBase64(raw));
 
     const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
@@ -111,16 +133,19 @@ export async function sendEmail(
     });
 
     if (!response.ok) {
-      const err = await response.json();
-      return {
-        email: to,
-        success: false,
-        error: err.error?.message || `HTTP ${response.status}`,
-      };
+      // Error bodies are normally JSON, but proxies/outages can return HTML.
+      let message = `HTTP ${response.status}`;
+      try {
+        const err = await response.json();
+        if (err?.error?.message) message = err.error.message;
+      } catch {
+        /* keep the HTTP status message */
+      }
+      return { email: recipient, success: false, error: message };
     }
 
-    return { email: to, success: true };
-  } catch (err: any) {
-    return { email: to, success: false, error: err.message };
+    return { email: recipient, success: true };
+  } catch (err) {
+    return { email: recipient, success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }

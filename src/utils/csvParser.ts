@@ -23,7 +23,9 @@ export function parseCSV(file: File): Promise<CSVParseResult> {
   return new Promise((resolve) => {
     Papa.parse(file, {
       header: true,
-      skipEmptyLines: true,
+      // "greedy" also drops whitespace-only lines and lines of bare commas,
+      // which `true` would turn into blank rows that then fail email validation.
+      skipEmptyLines: "greedy",
       complete: (results) => {
         const headers = results.meta.fields || [];
         const rows = results.data as Record<string, string>[];

@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    groups:
+      # All minor + patch bumps in one PR
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      # Majors in their own PR so they can be reviewed separately
+      major:
+        update-types:
+          - "major"
+
+  # Harmless while there are no workflows; picks up actions once CI exists
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

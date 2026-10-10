@@ -16,6 +16,13 @@
  *    *use* the key through SubtleCrypto, never export the raw bytes.
  *  - Each value is encrypted with a unique random IV, so identical plaintexts
  *    produce different ciphertexts.
+ *
+ * Fails closed: nothing is ever written or returned in plaintext.
+ *  - If encryption fails, `setItem` stores nothing (and drops any older value
+ *    under that key) and rethrows, so callers can decide what to do.
+ *  - If decryption fails (tampered value, plaintext left from an older build,
+ *    or ciphertext from a key that has since been destroyed), `getItem`
+ *    removes the stale item and returns `null`.
  */
 
 // ─── IndexedDB key store ────────────────────────────────────────────────────
@@ -25,7 +32,13 @@ const DB_VERSION = 1;
 const STORE_NAME = "keys";
 const KEY_ID = "master";
 
-let cachedKey: CryptoKey | null = null;
+/**
+ * The key, or the in-flight load/creation of it. Caching the promise (not the
+ * key) means concurrent first calls share one key instead of each generating
+ * their own and leaving values encrypted under a key that IndexedDB no longer
+ * holds.
+ */
+let keyPromise: Promise<CryptoKey> | null = null;
 
 /** Wrap a promise with a timeout so IndexedDB operations don't hang forever. */
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -56,9 +69,17 @@ function openDB(): Promise<IDBDatabase> {
   );
 }
 
-async function getOrCreateKey(): Promise<CryptoKey> {
-  if (cachedKey) return cachedKey;
+function getOrCreateKey(): Promise<CryptoKey> {
+  if (!keyPromise) {
+    keyPromise = loadOrCreateKey().catch((err: unknown) => {
+      keyPromise = null; // let the next call retry
+      throw err;
+    });
+  }
+  return keyPromise;
+}
 
+async function loadOrCreateKey(): Promise<CryptoKey> {
   const db = await openDB();
 
   // Try loading an existing key
@@ -70,10 +91,7 @@ async function getOrCreateKey(): Promise<CryptoKey> {
     req.onerror = () => reject(req.error);
   });
 
-  if (existing) {
-    cachedKey = existing;
-    return existing;
-  }
+  if (existing) return existing;
 
   // Generate a new AES-256-GCM key (non-extractable)
   const key = await crypto.subtle.generateKey(
@@ -91,13 +109,25 @@ async function getOrCreateKey(): Promise<CryptoKey> {
     req.onerror = () => reject(req.error);
   });
 
-  cachedKey = key;
   return key;
 }
 
 // ─── Encryption helpers ─────────────────────────────────────────────────────
 
 const IV_LENGTH = 12; // 96-bit IV recommended for AES-GCM
+
+/**
+ * Base-64 encode in chunks: spreading a large array into
+ * `String.fromCharCode(...)` overflows the call stack (~100 KB+ values).
+ */
+function bytesToBase64(bytes: Uint8Array): string {
+  const CHUNK = 0x8000;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
 
 async function encrypt(plaintext: string): Promise<string> {
   const key = await getOrCreateKey();
@@ -111,7 +141,7 @@ async function encrypt(plaintext: string): Promise<string> {
   combined.set(iv);
   combined.set(new Uint8Array(cipherBuf), IV_LENGTH);
 
-  return btoa(String.fromCharCode(...combined));
+  return bytesToBase64(combined);
 }
 
 async function decrypt(encoded: string): Promise<string> {
@@ -132,20 +162,24 @@ export const secureStorage = {
   /**
    * Encrypt `value` and store it under `key`.
    * Defaults to sessionStorage; pass `localStorage` for persistent data.
+   * Throws if encryption fails; nothing is stored in that case and any
+   * previous value under `key` is removed so a stale value can't be read back.
    */
   async setItem(key: string, value: string, storage: Storage = sessionStorage): Promise<void> {
+    let encrypted: string;
     try {
-      const encrypted = await encrypt(value);
-      storage.setItem(key, encrypted);
+      encrypted = await encrypt(value);
     } catch (err) {
-      console.warn("[secureStorage] Encryption failed, storing as-is:", err);
-      storage.setItem(key, value);
+      storage.removeItem(key);
+      throw err;
     }
+    storage.setItem(key, encrypted);
   },
 
   /**
    * Read and decrypt the value stored under `key`.
-   * Returns `null` when the key does not exist.
+   * Returns `null` when the key does not exist or the value can't be
+   * decrypted (the undecryptable item is removed).
    */
   async getItem(key: string, storage: Storage = sessionStorage): Promise<string | null> {
     const raw = storage.getItem(key);
@@ -154,10 +188,10 @@ export const secureStorage = {
     try {
       return await decrypt(raw);
     } catch {
-      // Value may have been stored before encryption was enabled, or was
-      // written by a different key (e.g. after clearing IndexedDB). Return
-      // the raw value so callers can still function during the transition.
-      return raw;
+      // Tampered, plaintext from an older build, or encrypted with a key that
+      // no longer exists. Never hand back the raw value.
+      storage.removeItem(key);
+      return null;
     }
   },
 
@@ -168,7 +202,7 @@ export const secureStorage = {
 
   /** Destroy the encryption key. Call on logout to ensure forward secrecy. */
   async destroyKey(): Promise<void> {
-    cachedKey = null;
+    keyPromise = null;
     try {
       const db = await openDB();
       await new Promise<void>((resolve, reject) => {

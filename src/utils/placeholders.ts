@@ -10,7 +10,12 @@ function escapeHtml(str: string): string {
 
 export function replacePlaceholders(template: string, data: Record<string, string>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-    return data[key] !== undefined ? escapeHtml(data[key]) : match;
+    // Own-property check: a plain `data[key] !== undefined` also matches inherited
+    // Object.prototype members ({{constructor}}, {{toString}}, …) and then
+    // crashes in escapeHtml because the value is a function, not a string.
+    if (!Object.prototype.hasOwnProperty.call(data, key)) return match;
+    const value = data[key];
+    return value === undefined || value === null ? match : escapeHtml(String(value));
   });
 }
 
