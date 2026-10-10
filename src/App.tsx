@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AnimatedRoutes } from "./AnimatedRoutes";
+import { MotionConfig } from "motion/react";
 import { Analytics } from "@vercel/analytics/react";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
@@ -19,9 +20,11 @@ const App = () => (
       <ThemeProvider>
         <AuthProvider>
           <Sonner />
-          <BrowserRouter>
-            <AnimatedRoutes />
-          </BrowserRouter>
+          <MotionConfig reducedMotion="user">
+            <BrowserRouter>
+              <AnimatedRoutes />
+            </BrowserRouter>
+          </MotionConfig>
           <Analytics />
         </AuthProvider>
       </ThemeProvider>

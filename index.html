@@ -47,10 +47,12 @@
     />
   </head>
   <body>
+    <!-- If this script changes, update its sha256 in the CSP in vercel.json. -->
     <script>
       try {
-        var t = localStorage.getItem("automailr_theme");
-        document.documentElement.classList.add(t === "light" ? "light" : "dark");
+        var t = localStorage.getItem("automailr.theme");
+        var d = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.classList.add(d ? "dark" : "light");
       } catch (e) {
         document.documentElement.classList.add("dark");
       }

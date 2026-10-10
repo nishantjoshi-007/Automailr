@@ -390,3 +390,17 @@
   opacity: 0;
   animation: fade-in-up-delay 0.4s 0.35s ease-out forwards;
 }
+
+/* Respect prefers-reduced-motion: stop decorative infinite animations */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-aurora,
+  .animate-gradient,
+  .animate-pulse-ring,
+  .animate-pulse {
+    animation: none;
+  }
+}
