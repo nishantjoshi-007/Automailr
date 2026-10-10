@@ -26,6 +26,8 @@ export function parseCSV(file: File): Promise<CSVParseResult> {
       // "greedy" also drops whitespace-only lines and lines of bare commas,
       // which `true` would turn into blank rows that then fail email validation.
       skipEmptyLines: "greedy",
+      // "first_name " in a hand-edited header would otherwise never match {{first_name}}.
+      transformHeader: (h) => h.trim(),
       complete: (results) => {
         const headers = results.meta.fields || [];
         const rows = results.data as Record<string, string>[];

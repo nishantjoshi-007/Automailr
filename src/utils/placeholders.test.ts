@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { hasUnresolvedPlaceholders, replacePlaceholders } from "./placeholders";
+import {
+  findPlaceholders,
+  hasUnresolvedPlaceholders,
+  replacePlaceholders,
+  replacePlaceholdersMarked,
+  replacePlaceholdersPlain,
+} from "./placeholders";
 
 describe("replacePlaceholders", () => {
   it("substitutes a single placeholder", () => {
@@ -167,5 +173,75 @@ describe("hasUnresolvedPlaceholders", () => {
 
   it("is false when a resolved value is empty", () => {
     expect(hasUnresolvedPlaceholders(replacePlaceholders("Hi {{a}}", { a: "" }))).toBe(false);
+  });
+});
+
+describe("replacePlaceholdersPlain", () => {
+  it("substitutes without HTML-escaping the value", () => {
+    expect(replacePlaceholdersPlain("Hi {{company}}", { company: "Smith & Sons <Ltd>" })).toBe(
+      "Hi Smith & Sons <Ltd>",
+    );
+  });
+
+  it("leaves unknown placeholders untouched", () => {
+    expect(replacePlaceholdersPlain("{{a}} {{b}}", { a: "x" })).toBe("x {{b}}");
+  });
+
+  it("ignores inherited Object.prototype keys", () => {
+    expect(replacePlaceholdersPlain("{{constructor}} {{toString}}", {})).toBe("{{constructor}} {{toString}}");
+  });
+
+  it("substitutes an empty value as an empty string", () => {
+    expect(replacePlaceholdersPlain("[{{company}}]", { company: "" })).toBe("[]");
+  });
+
+  it("replaces every occurrence", () => {
+    expect(replacePlaceholdersPlain("{{n}}-{{n}}", { n: "1" })).toBe("1-1");
+  });
+});
+
+describe("replacePlaceholdersMarked", () => {
+  it("wraps a filled value in a .fill span with its field name", () => {
+    expect(replacePlaceholdersMarked("Hi {{first_name}},", { first_name: "Alice" })).toBe(
+      'Hi <span class="fill" data-field="first_name">Alice</span>,',
+    );
+  });
+
+  it("escapes the value inside the span", () => {
+    expect(replacePlaceholdersMarked("{{c}}", { c: '<img src=x onerror="1">' })).toBe(
+      '<span class="fill" data-field="c">&lt;img src=x onerror=&quot;1&quot;&gt;</span>',
+    );
+  });
+
+  it("marks an empty value as an empty .fill.is-empty span with a title", () => {
+    expect(replacePlaceholdersMarked("at {{company}}", { company: "  " })).toBe(
+      'at <span class="fill is-empty" data-field="company" title="company is empty for this recipient"></span>',
+    );
+  });
+
+  it("treats a header missing from the row as empty", () => {
+    expect(replacePlaceholdersMarked("{{company}}", {}, ["company"])).toContain('class="fill is-empty"');
+  });
+
+  it("leaves unknown names as literal text", () => {
+    expect(replacePlaceholdersMarked("Hi {{typo}}", { first_name: "A" }, ["first_name"])).toBe("Hi {{typo}}");
+  });
+
+  it("ignores inherited Object.prototype keys", () => {
+    expect(replacePlaceholdersMarked("{{constructor}}", {})).toBe("{{constructor}}");
+  });
+});
+
+describe("findPlaceholders", () => {
+  it("returns unique names in order of first appearance", () => {
+    expect(findPlaceholders("{{b}} {{a}} {{b}} {{c}}")).toEqual(["b", "a", "c"]);
+  });
+
+  it("returns an empty list when there are none", () => {
+    expect(findPlaceholders("No fields {here} or {{ spaced }}")).toEqual([]);
+  });
+
+  it("finds names inside HTML", () => {
+    expect(findPlaceholders("<p>Hi <b>{{first_name}}</b></p><p>{{company}}</p>")).toEqual(["first_name", "company"]);
   });
 });

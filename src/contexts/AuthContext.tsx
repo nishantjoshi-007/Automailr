@@ -12,6 +12,8 @@ interface AuthContextType {
   user: UserProfile | null;
   /** true while encrypted session data is being decrypted on first load */
   isLoading: boolean;
+  /** When the current Google token stops working (ms since epoch), or null when signed out. */
+  expiresAt: number | null;
   login: (token: string) => Promise<void>;
   logout: () => void;
 }
@@ -25,15 +27,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [tokenTs, setTokenTs] = useState<number | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const logout = useCallback(async () => {
     setAccessToken(null);
     setUser(null);
+    setTokenTs(null);
     secureStorage.removeItem("automailr_token");
     secureStorage.removeItem("automailr_token_ts");
     secureStorage.removeItem("automailr_user");
+    // The wizard's CSV rows and message must not outlive the session (D38).
+    secureStorage.removeItem("automailr_wizard");
     // Destroy the encryption key so old ciphertext is unrecoverable
     await secureStorage.destroyKey();
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -57,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const elapsed = Date.now() - Number(ts);
           if (elapsed < TOKEN_LIFETIME_MS) {
             setAccessToken(token);
+            setTokenTs(Number(ts));
             if (storedUser) {
               try {
                 setUser(JSON.parse(storedUser));
@@ -105,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (token: string) => {
     setAccessToken(token);
+    setTokenTs(Date.now());
 
     try {
       await Promise.all([
@@ -143,7 +151,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ accessToken, user, isLoading, login, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{
+        accessToken,
+        user,
+        isLoading,
+        expiresAt: tokenTs === null ? null : tokenTs + TOKEN_LIFETIME_MS,
+        login,
+        logout,
+      }}>{children}</AuthContext.Provider>
   );
 }
 

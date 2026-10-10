@@ -363,3 +363,42 @@
     animation: none !important;
   }
 }
+
+/* Wizard editor and preview (5c). `.tok` chips in the editor are ProseMirror
+   decorations; `.fill` spans come from replacePlaceholdersMarked. */
+.tok-unknown {
+  background: var(--color-neg-soft);
+  color: var(--color-neg);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-neg) 30%, transparent);
+}
+
+.fill {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+  border-radius: 4px;
+  padding: 0 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition: box-shadow 150ms, background-color 150ms;
+}
+
+.fill.is-empty {
+  display: inline-block;
+  min-width: 5ch;
+  height: 1.15em;
+  vertical-align: -0.2em;
+  padding: 0;
+  background: transparent;
+  border-bottom: 2px dashed var(--color-neg);
+  border-radius: 0;
+}
+
+.fill.is-linked {
+  background: color-mix(in oklch, var(--color-accent-soft), var(--color-accent-ink) 14%);
+  box-shadow: inset 0 -2px 0 var(--color-accent-ink);
+}
+
+.fill.is-empty.is-linked {
+  background: transparent;
+  box-shadow: none;
+}

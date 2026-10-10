@@ -248,6 +248,15 @@ describe("parseCSV", () => {
     });
   });
 
+  describe("header trimming", () => {
+    it("trims spaces around column names so they match {{fields}}", async () => {
+      const result = await parseCSV(csvFile(" email , first_name ,company\nalice@example.com,Alice,Acme"));
+      expect(result.success).toBe(true);
+      expect(result.data?.headers).toEqual(["email", "first_name", "company"]);
+      expect(result.data?.rows[0]).toEqual({ email: "alice@example.com", first_name: "Alice", company: "Acme" });
+    });
+  });
+
   describe("SAMPLE_CSV", () => {
     it("parses with the expected headers and 5 rows", async () => {
       const result = await parseCSV(csvFile(SAMPLE_CSV, "sample-contacts.csv"));
