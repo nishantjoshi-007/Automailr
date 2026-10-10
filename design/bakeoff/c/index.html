@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automailr · Mail merge for Gmail, run in your browser</title>
+<meta name="description" content="Free, open-source mail merge for Gmail. Upload a CSV, write one message with fields, check every copy and send from your own Gmail. Runs in your browser.">
+<meta name="theme-color" content="#f2f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1013" media="(prefers-color-scheme: dark)">
+<script>
+  /* Theme bootstrap, runs before first paint: ?theme= (from compare.html) > saved choice > system setting. */
+  (function () {
+    var k = 'automailr-theme';
+    try {
+      var q = new URLSearchParams(location.search).get('theme');
+      if (q === 'light' || q === 'dark') localStorage.setItem(k, q);
+      else if (q === 'system') localStorage.removeItem(k);
+      var s = localStorage.getItem(k);
+      if (s === 'light' || s === 'dark') document.documentElement.setAttribute('data-theme', s);
+    } catch (e) {}
+  })();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Direction C · Utility console. Tokens first (OKLCH). Cool graphite, one ink-blue accent, 1px rules. */
+:root {
+  --bg: oklch(0.968 0.004 250);
+  --surface: oklch(0.995 0.001 250);
+  --surface-2: oklch(0.945 0.005 250);
+  --line: oklch(0.88 0.007 250);
+  --line-strong: oklch(0.6 0.012 255);
+  --ink: oklch(0.22 0.014 258);
+  --ink-2: oklch(0.39 0.014 258);
+  --muted: oklch(0.5 0.014 258);
+  --accent: oklch(0.47 0.15 255);
+  --accent-hover: oklch(0.42 0.14 255);
+  --on-accent: oklch(0.99 0.002 250);
+  --accent-ink: oklch(0.47 0.15 255);
+  --accent-soft: oklch(0.935 0.025 250);
+  --pos: oklch(0.5 0.12 152);
+  --neg: oklch(0.52 0.18 25);
+  --f-ui: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --r: 2px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: oklch(0.17 0.008 258);
+    --surface: oklch(0.2 0.009 258);
+    --surface-2: oklch(0.23 0.01 258);
+    --line: oklch(0.3 0.011 258);
+    --line-strong: oklch(0.52 0.014 258);
+    --ink: oklch(0.94 0.004 250);
+    --ink-2: oklch(0.8 0.008 252);
+    --muted: oklch(0.69 0.01 255);
+    --accent: oklch(0.72 0.12 250);
+    --accent-hover: oklch(0.77 0.11 250);
+    --on-accent: oklch(0.17 0.012 258);
+    --accent-ink: oklch(0.76 0.11 250);
+    --accent-soft: oklch(0.29 0.05 255);
+    --pos: oklch(0.74 0.14 152);
+    --neg: oklch(0.7 0.16 25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: oklch(0.17 0.008 258);
+  --surface: oklch(0.2 0.009 258);
+  --surface-2: oklch(0.23 0.01 258);
+  --line: oklch(0.3 0.011 258);
+  --line-strong: oklch(0.52 0.014 258);
+  --ink: oklch(0.94 0.004 250);
+  --ink-2: oklch(0.8 0.008 252);
+  --muted: oklch(0.69 0.01 255);
+  --accent: oklch(0.72 0.12 250);
+  --accent-hover: oklch(0.77 0.11 250);
+  --on-accent: oklch(0.17 0.012 258);
+  --accent-ink: oklch(0.76 0.11 250);
+  --accent-soft: oklch(0.29 0.05 255);
+  --pos: oklch(0.74 0.14 152);
+  --neg: oklch(0.7 0.16 25);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--f-ui); font-size: 15px; line-height: 1.5; letter-spacing: 0.005em;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: inherit; }
+button, input, select { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; }
+svg { display: block; }
+.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: square; stroke-linejoin: miter; flex: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+::selection { background: var(--accent-soft); color: var(--ink); }
+.num, .mono, code { font-family: var(--f-mono); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+code { font-size: 0.92em; }
+
+.wrap { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: clamp(16px, 3vw, 40px); }
+
+/* Brand: the existing mark in ink blue, plain wordmark. */
+.brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; min-width: 0; color: var(--ink); }
+.brand .mark { width: 26px; height: auto; color: var(--accent); }
+.word { font-weight: 600; font-size: 17px; letter-spacing: -0.01em; }
+
+/* Buttons: square, flat */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 0 16px; border-radius: var(--r);
+  font-weight: 500; font-size: 14.5px; line-height: 1; text-decoration: none; white-space: nowrap;
+  border: 1px solid transparent; transition: background-color .12s, border-color .12s;
+}
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-quiet { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+.btn-quiet:hover { background: var(--surface-2); }
+.btn-lg { min-height: 48px; padding: 0 22px; font-size: 15.5px; }
+.btn .i { width: 16px; height: 16px; }
+.btn[aria-disabled="true"], .btn:disabled { background: var(--surface-2); color: var(--muted); border-color: var(--line); cursor: not-allowed; }
+
+.icon-btn {
+  width: 36px; height: 36px; display: inline-grid; place-items: center; flex: none;
+  border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+}
+.icon-btn:hover { border-color: var(--line-strong); color: var(--ink); }
+.icon-btn:disabled { color: var(--line-strong); background: var(--bg); cursor: not-allowed; border-color: var(--line); }
+
+.theme-btn .i-sun { display: none; }
+:root[data-theme="dark"] .theme-btn .i-sun { display: block; }
+:root[data-theme="dark"] .theme-btn .i-moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-btn .i-sun { display: block; }
+  :root:not([data-theme="light"]) .theme-btn .i-moon { display: none; }
+}
+
+/* Field token: mono, square, outlined in blue. */
+.tok {
+  display: inline-flex; align-items: baseline; padding: 0 0.35em; margin: 0 0.04em;
+  border-radius: var(--r); background: var(--accent-soft); color: var(--accent-ink);
+  border: 1px solid color-mix(in oklch, var(--accent-ink) 35%, transparent);
+  font-family: var(--f-mono); font-size: 0.86em; font-weight: 500; line-height: 1.4; white-space: nowrap; letter-spacing: 0;
+}
+.tok .tok-b { opacity: 0.55; }
+.tok.is-linked { border-color: var(--accent-ink); box-shadow: inset 0 0 0 1px var(--accent-ink); }
+
+/* Guidelines pass: skip link, touch, select colours */
+.skip { position: absolute; left: 12px; top: -80px; z-index: 50; padding: 10px 14px; background: var(--ink); color: var(--bg); text-decoration: none; font-weight: 600; border-radius: 6px; }
+.skip:focus { top: 12px; }
+a, button, summary, select, [contenteditable] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+select option { background-color: var(--surface); color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+
+/* ---------- Landing ---------- */
+.nav { border-bottom: 1px solid var(--line); background: var(--surface); }
+.nav-in { display: flex; align-items: center; gap: 8px; min-height: 56px; }
+.nav-links { display: flex; align-items: stretch; margin-left: auto; align-self: stretch; }
+.nav-links a { display: flex; align-items: center; padding: 0 14px; text-decoration: none; color: var(--ink-2); font-size: 14.5px; border-bottom: 2px solid transparent; }
+.nav-links a:hover { color: var(--ink); border-bottom-color: var(--line-strong); }
+.nav .theme-btn { margin-left: 6px; }
+.nav .btn { margin-left: 6px; }
+.menu { display: none; position: relative; }
+.menu > summary { list-style: none; }
+.menu > summary::-webkit-details-marker { display: none; }
+.menu-panel { position: absolute; right: 0; top: calc(100% + 6px); z-index: 10; width: min(240px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line-strong); display: grid; }
+.menu-panel a { padding: 12px 14px; text-decoration: none; border-bottom: 1px solid var(--line); }
+.menu-panel a:hover { background: var(--surface-2); }
+.menu-panel .btn { margin: 10px; }
+
+.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(32px, 5vw, 64px); align-items: center; padding-block: clamp(48px, 6vw, 88px); }
+.hero h1 { font-weight: 600; font-size: clamp(2.3rem, 1.3rem + 3vw, 3.9rem); line-height: 1.04; letter-spacing: -0.035em; text-wrap: balance; }
+.lede { margin-top: 22px; font-size: clamp(1.02rem, 0.98rem + 0.25vw, 1.15rem); color: var(--ink-2); max-width: 34rem; line-height: 1.6; }
+.cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 32px; }
+.text-link { color: var(--accent-ink); font-weight: 500; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.text-link:hover { text-decoration-thickness: 2px; }
+.hero-note { margin-top: 16px; color: var(--muted); font-size: 13.5px; }
+
+/* Console panel */
+.console { border: 1px solid var(--line-strong); background: var(--surface); min-width: 0; }
+.c-tabs { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); background: var(--surface-2); font-size: 13px; }
+.c-tab { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-right: 1px solid var(--line); color: var(--muted); font-family: var(--f-mono); }
+.c-tab.on { background: var(--surface); color: var(--ink); box-shadow: inset 0 2px 0 var(--accent); margin-bottom: -1px; }
+.c-tab .i { width: 14px; height: 14px; }
+.c-tabs .meta { margin-left: auto; display: flex; align-items: center; padding: 0 14px; color: var(--muted); font-family: var(--f-mono); }
+.grid-t { width: 100%; border-collapse: collapse; table-layout: fixed; font-family: var(--f-mono); font-size: 11.5px; }
+.grid-t th, .grid-t td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grid-t th { font-weight: 500; color: var(--muted); background: var(--surface); }
+.grid-t td { color: var(--ink-2); }
+.grid-t th + th, .grid-t td + td { border-left: 1px solid var(--line); }
+.grid-t .rn { width: 34px; color: var(--muted); text-align: right; }
+.grid-t .ce { width: 39%; } .grid-t .cf { width: 16%; } .grid-t .cl { width: 14%; }
+.grid-t tr.on td { background: var(--accent-soft); color: var(--ink); }
+.grid-t tr.on td.rn { box-shadow: inset 2px 0 0 var(--accent); color: var(--accent-ink); }
+.render { display: grid; grid-template-columns: 76px minmax(0, 1fr); font-size: 13.5px; }
+.render dt { padding: 8px 10px 8px 14px; color: var(--muted); border-bottom: 1px solid var(--line); font-family: var(--f-mono); font-size: 12px; display: flex; align-items: center; }
+.render dd { padding: 8px 14px 8px 0; border-bottom: 1px solid var(--line); color: var(--ink); overflow-wrap: anywhere; }
+.render-body { padding: 14px 14px 16px; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); display: grid; gap: 8px; }
+.f { background: var(--accent-soft); color: var(--ink); box-shadow: inset 0 -1px 0 var(--accent-ink); padding: 0 2px; }
+.c-status { display: flex; flex-wrap: wrap; gap: 4px 18px; padding: 7px 14px; border-top: 1px solid var(--line); background: var(--surface-2); font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
+.c-status .r { margin-left: auto; }
+.c-status .dot { display: inline-block; width: 7px; height: 7px; background: var(--pos); margin-right: 6px; vertical-align: 0.05em; }
+
+/* Section frame */
+.section { padding-block: clamp(56px, 7vw, 96px); border-top: 1px solid var(--line); }
+.sec-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px 32px; margin-bottom: 28px; }
+.sec-head h2, .priv h2 { font-weight: 600; font-size: clamp(1.75rem, 1.3rem + 1.4vw, 2.5rem); letter-spacing: -0.03em; line-height: 1.1; }
+.sec-head p { color: var(--ink-2); max-width: 34rem; }
+
+/* Steps: three ruled cells */
+.cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--surface); }
+.cell { padding: 24px 24px 0; display: flex; flex-direction: column; border-left: 1px solid var(--line); min-width: 0; }
+.cell:first-child { border-left: 0; }
+.cell .n { font-family: var(--f-mono); font-size: 13px; color: var(--accent-ink); font-weight: 500; }
+.cell h3 { font-weight: 600; font-size: 1.3rem; letter-spacing: -0.015em; margin-top: 14px; }
+.cell p { margin-top: 8px; color: var(--ink-2); font-size: 14.5px; }
+.cell .spec { margin: 22px -24px 0; margin-top: auto; padding: 11px 24px; border-top: 1px solid var(--line); background: var(--surface-2); font-family: var(--f-mono); font-size: 12.5px; color: var(--ink-2); }
+.cell .spacer { height: 22px; }
+
+/* Privacy: spec sheet */
+.priv { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 28px clamp(32px, 5vw, 64px); align-items: start; }
+.priv .side p { margin-top: 16px; color: var(--ink-2); max-width: 26rem; }
+.sheet { border: 1px solid var(--line); background: var(--surface); }
+.sheet > div { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) minmax(0, 12rem); border-top: 1px solid var(--line); }
+.sheet > div:first-child { border-top: 0; }
+.sheet dt { padding: 16px 18px; font-weight: 600; font-size: 14.5px; }
+.sheet dd { padding: 16px 18px; color: var(--ink-2); font-size: 14.5px; border-left: 1px solid var(--line); }
+.sheet dd.k { font-family: var(--f-mono); font-size: 12.5px; color: var(--ink); background: var(--surface-2); }
+.ai-note { margin-top: 16px; padding: 12px 16px; border: 1px solid var(--line); border-left: 2px solid var(--line-strong); font-size: 14px; color: var(--ink-2); background: var(--surface); }
+
+/* Limits: spec grid with mono numerals */
+.specs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--surface); }
+.spec-c { padding: 20px 22px 22px; border-left: 1px solid var(--line); min-width: 0; }
+.spec-c:first-child { border-left: 0; }
+.spec-c .k { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.spec-c .v { display: block; margin-top: 10px; font-family: var(--f-mono); font-weight: 500; font-size: clamp(2.1rem, 1.5rem + 1.7vw, 3.1rem); line-height: 1; letter-spacing: -0.04em; color: var(--ink); white-space: nowrap; }
+.spec-c .v small { font-size: 0.45em; letter-spacing: 0; margin-left: 0.15em; color: var(--ink-2); }
+.spec-c .v .approx { color: var(--muted); font-weight: 400; }
+.spec-c p { margin-top: 10px; font-size: 14px; color: var(--ink-2); }
+.limits-note { margin-top: 14px; color: var(--muted); font-size: 14px; max-width: 46rem; }
+
+/* Footer */
+.footer { border-top: 1px solid var(--line); background: var(--surface); margin-top: clamp(40px, 6vw, 72px); }
+.foot-top { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; padding-block: 28px; }
+.foot-top p { color: var(--ink-2); font-size: 14.5px; margin-right: auto; }
+.foot-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; padding-block: 16px 28px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--muted); }
+.foot-links { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.foot-links a { color: var(--ink-2); text-decoration: none; }
+.foot-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1060px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .priv { grid-template-columns: minmax(0, 1fr); }
+  .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spec-c:nth-child(3) { border-left: 0; }
+  .spec-c:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+@media (max-width: 760px) {
+  .nav-links, .nav .btn-nav { display: none; }
+  .nav .theme-btn { margin-left: auto; }
+  .menu { display: block; }
+  .cells { grid-template-columns: minmax(0, 1fr); }
+  .cell { border-left: 0; border-top: 1px solid var(--line); }
+  .cell:first-child { border-top: 0; }
+  .sheet > div { grid-template-columns: minmax(0, 1fr); }
+  .sheet dd { border-left: 0; padding-top: 0; }
+  .sheet dd.k { padding-top: 10px; padding-bottom: 10px; border-top: 1px solid var(--line); }
+  .cta-row .btn { width: 100%; }
+  .grid-t .hide-md { display: none; }
+  .grid-t .ce { width: 48%; } .grid-t .cf { width: 19%; }
+  .foot-top .btn { width: 100%; }
+}
+@media (max-width: 460px) {
+  .specs { grid-template-columns: minmax(0, 1fr); }
+  .spec-c, .spec-c:nth-child(3) { border-left: 0; }
+  .spec-c + .spec-c { border-top: 1px solid var(--line); }
+  .c-tabs .meta { display: none; }
+  .grid-t .hide-sm { display: none; }
+  .grid-t .ce { width: 64%; } .grid-t .cf { width: auto; }
+  .render { grid-template-columns: 78px minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-arrow-l" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  <symbol id="i-list-ol" viewBox="0 0 24 24"><path d="M10 6h11M10 12h11M10 18h11M4 4h1v5M4 9h2M6 19H4c0-1.2 2-1.8 2-3 0-.8-.7-1.2-1.4-1.1-.4.1-.6.3-.6.6"/></symbol>
+  <symbol id="i-quote" viewBox="0 0 24 24"><path d="M5 7h5v5c0 3-1.6 5-4.5 5.8M14 7h5v5c0 3-1.6 5-4.5 5.8"/></symbol>
+  <symbol id="i-bold" viewBox="0 0 24 24"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z"/></symbol>
+  <symbol id="i-italic" viewBox="0 0 24 24"><path d="M19 4h-9M14 20H5M15 4 9 20"/></symbol>
+  <symbol id="i-strike" viewBox="0 0 24 24"><path d="M16 5H9.5a3.5 3.5 0 0 0-1.9 6.4M15 13.5a3.5 3.5 0 0 1-2.5 5.5H6M4 12h16"/></symbol>
+  <symbol id="i-heading" viewBox="0 0 24 24"><path d="M6 4v16M17 4v16M6 12h11"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5M12 16.5h.01"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.8-9.8M16 7l3 3M18.5 4.5l2 2"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v10H4V6a1 1 0 0 1 1-1ZM2 19.5h20"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m21.5 2.5-7 19-3.5-8-8-3.5Z"/><path d="M21.5 2.5 11 13"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="index.html" aria-label="Automailr home"><svg class="mark" viewBox="0 12 100 76" aria-hidden="true" focusable="false"><path fill="currentColor" d="M38.3 12.7 51.9 12.6 53 13 64.5 38.3 50.3 42.7 45.6 31.9 44.6 30.7 31.7 58.8 41 52.2 51.4 46.8 63.6 42.9 74.5 41.5 74.7 29.4 75.1 28.6 99.3 48.1 100 49.3 75.5 69.3 74.9 69.2 74.7 68.5 74.4 56.8 70.2 56.9 61.3 58.4 52 61.2 46.4 63.6 36.8 68.9 27.6 76 21.7 81.9 17.1 87.3 0.3 87.3 0 86.6 36.1 14.4 36.9 13.1ZM70 61.2 70.5 62 70.6 78.3 79.4 71.9 86.2 86.3 86 87.1 69.3 87.4 68.2 87 58.1 63.8 62.7 62.3Z"/></svg><span class="word" translate="no">Automailr</span></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#">Help</a>
+      <a href="#">Contact</a>
+    </nav>
+    <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+    <a class="btn btn-primary btn-nav" href="#">Start a mail merge</a>
+    <details class="menu">
+      <summary class="icon-btn" aria-label="Open menu"><svg aria-hidden="true" class="i"><use href="#i-menu"/></svg></summary>
+      <div class="menu-panel">
+        <a href="#">Help</a>
+        <a href="#">Contact</a>
+        <a class="btn btn-primary" href="#">Start a mail merge</a>
+      </div>
+    </details>
+  </div>
+</header>
+
+<main id="main">
+  <section class="wrap hero">
+    <div>
+      <h1>Mail merge for Gmail, run entirely in your browser.</h1>
+      <p class="lede">Upload a CSV, write one message with fields like <span class="tok" translate="no"><span class="tok-b">{{</span>first_name<span class="tok-b">}}</span></span>, check each person’s copy, then send from your own Gmail account. Free and open source.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary btn-lg" href="#">Start a mail merge</a>
+        <a class="text-link" href="#">Read the source on GitHub</a>
+      </div>
+      <p class="hero-note">You’ll sign in with Google. No account to create, nothing to install.</p>
+    </div>
+
+    <figure class="console" aria-label="Example: a CSV row and the email it produces">
+      <div class="c-tabs">
+        <span class="c-tab on"><svg aria-hidden="true" class="i"><use href="#i-file"/></svg>contacts.csv</span>
+        <span class="meta">42 rows × 4 columns</span>
+      </div>
+      <table class="grid-t">
+        <thead><tr><th class="rn">#</th><th class="ce">email</th><th class="cf">first_name</th><th class="cl hide-md">last_name</th><th class="hide-sm">company</th></tr></thead>
+        <tbody>
+          <tr class="on"><td class="rn">1</td><td>alice.johnson@acmecorp.com</td><td>Alice</td><td class="hide-md">Johnson</td><td class="hide-sm">Acme Corp</td></tr>
+          <tr><td class="rn">2</td><td>ben.okafor@northwindtraders.com</td><td>Ben</td><td class="hide-md">Okafor</td><td class="hide-sm">Northwind Traders</td></tr>
+          <tr><td class="rn">3</td><td>chloe.martin@gmail.com</td><td>Chloé</td><td class="hide-md">Martin</td><td class="hide-sm"></td></tr>
+        </tbody>
+      </table>
+      <div class="c-tabs" style="border-top:1px solid var(--line)">
+        <span class="c-tab on"><svg aria-hidden="true" class="i"><use href="#i-mail"/></svg>row 1, rendered</span>
+      </div>
+      <dl class="render">
+        <dt>to</dt><dd>alice.johnson@acmecorp.com</dd>
+        <dt>subject</dt><dd>Speaking at the October meetup, <span class="f">Alice</span>?</dd>
+      </dl>
+      <div class="render-body">
+        <p>Hi <span class="f">Alice</span>,</p>
+        <p>I run the Riverside Product Meetup, a monthly evening for about 80 designers and engineers. A few people mentioned the work <span class="f">Acme Corp</span> has been doing on onboarding…</p>
+      </div>
+      <div class="c-status"><span><i class="dot" aria-hidden="true"></i>gmail.send only</span><span>250&nbsp;ms between sends</span><span class="r">0 of 42 sent</span></div>
+    </figure>
+  </section>
+
+  <section class="section" aria-labelledby="steps-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="steps-h">Three steps.</h2>
+        <p>Recipients, message, review. You can go back to any step before anything is sent.</p>
+      </div>
+      <ol class="cells">
+        <li class="cell">
+          <span class="n">01</span>
+          <h3>Recipients</h3>
+          <p>Upload a CSV with an email column, plus any columns you want in the message, like first_name or company. Invalid addresses are flagged and won’t be sent.</p>
+          <span class="spacer"></span>
+          <span class="spec">up to 5,000 rows</span>
+        </li>
+        <li class="cell">
+          <span class="n">02</span>
+          <h3>Message</h3>
+          <p>Write once, and click a column name to drop in a field like <span class="tok" translate="no"><span class="tok-b">{{</span>company<span class="tok-b">}}</span></span>. Attach files if you need to. The preview beside the editor shows each person’s copy as you type.</p>
+          <span class="spacer"></span>
+          <span class="spec">attachments up to 25&nbsp;MB</span>
+        </li>
+        <li class="cell">
+          <span class="n">03</span>
+          <h3>Review &amp; send</h3>
+          <p>Step through every recipient’s email, then send from your Gmail. Messages go out one at a time, and any that fail can be retried.</p>
+          <span class="spacer"></span>
+          <span class="spec">250&nbsp;ms between sends</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="privacy-h">
+    <div class="wrap priv">
+      <div class="side">
+        <h2 id="privacy-h">Your list stays between your browser and Google.</h2>
+        <p>Automailr is a set of static files. There’s no Automailr server or database, so there’s nowhere for a copy of your data to end up.</p>
+      </div>
+      <div>
+        <dl class="sheet">
+          <div><dt>Read on your device</dt><dd>Your CSV is parsed in the browser tab. Messages go from your browser straight to the Gmail API.</dd><dd class="k">no backend</dd></div>
+          <div><dt>Send-only permission</dt><dd>Google sign-in asks for one scope. Automailr can send email as you. It can’t read, search or delete anything in your inbox.</dd><dd class="k">gmail.send</dd></div>
+          <div><dt>Encrypted sign-in token</dt><dd>Your Google access token is encrypted in the browser and expires after 55&nbsp;minutes. Signing out deletes the key.</dd><dd class="k">AES-256-GCM · 55&nbsp;min</dd></div>
+        </dl>
+        <p class="ai-note">AI polish is optional. If you use it, your subject and message, with the <span class="tok" translate="no"><span class="tok-b">{{</span>fields<span class="tok-b">}}</span></span> still in place, go to Google’s Gemini API. Your recipient list doesn’t.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="limits-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="limits-h">Limits.</h2>
+        <p>Worth knowing before you upload a big list.</p>
+      </div>
+      <ul class="specs">
+        <li class="spec-c"><span class="k">rows per CSV</span><span class="v">5,000</span><p>Split bigger lists into batches.</p></li>
+        <li class="spec-c"><span class="k">attachments per message</span><span class="v">25<small>MB</small></span><p>In total. That’s Gmail’s cap.</p></li>
+        <li class="spec-c"><span class="k">per day, personal Gmail</span><span class="v"><span class="approx">~</span>500</span><p>Emails a day, set by Google.</p></li>
+        <li class="spec-c"><span class="k">per day, Google Workspace</span><span class="v"><span class="approx">~</span>2,000</span><p>Emails a day, set by Google.</p></li>
+      </ul>
+      <p class="limits-note">The daily caps are Google’s, not Automailr’s. They count everything you send from that account in a day, and Google can change them.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="brand" href="index.html" aria-label="Automailr home"><svg class="mark" viewBox="0 12 100 76" aria-hidden="true" focusable="false"><path fill="currentColor" d="M38.3 12.7 51.9 12.6 53 13 64.5 38.3 50.3 42.7 45.6 31.9 44.6 30.7 31.7 58.8 41 52.2 51.4 46.8 63.6 42.9 74.5 41.5 74.7 29.4 75.1 28.6 99.3 48.1 100 49.3 75.5 69.3 74.9 69.2 74.7 68.5 74.4 56.8 70.2 56.9 61.3 58.4 52 61.2 46.4 63.6 36.8 68.9 27.6 76 21.7 81.9 17.1 87.3 0.3 87.3 0 86.6 36.1 14.4 36.9 13.1ZM70 61.2 70.5 62 70.6 78.3 79.4 71.9 86.2 86.3 86 87.1 69.3 87.4 68.2 87 58.1 63.8 62.7 62.3Z"/></svg><span class="word" translate="no">Automailr</span></a>
+      <p>Free, open-source mail merge for Gmail. Licensed for personal, non-commercial use.</p>
+      <a class="btn btn-primary" href="#">Start a mail merge</a>
+    </div>
+    <div class="foot-bottom">
+      <nav class="foot-links" aria-label="Footer"><a href="#">Help</a><a href="#">Contact</a><a href="#">Privacy</a><a href="#">Terms</a><a href="#">GitHub</a></nav>
+      <span>Made by Nishant Joshi</span>
+    </div>
+  </div>
+</footer>
+<script>
+/* Light/dark toggle: remembers the choice, follows the system until one is made. */
+(function () {
+  var k = 'automailr-theme', root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : mq.matches; }
+  function sync() {
+    var d = isDark();
+    document.querySelectorAll('[data-theme-toggle]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(d));
+      b.setAttribute('aria-label', d ? 'Switch to light theme' : 'Switch to dark theme');
+      b.title = d ? 'Switch to light theme' : 'Switch to dark theme';
+    });
+  }
+  function apply(v) {
+    if (v === 'system') { root.removeAttribute('data-theme'); try { localStorage.removeItem(k); } catch (e) {} }
+    else { root.setAttribute('data-theme', v); try { localStorage.setItem(k, v); } catch (e) {} }
+    sync();
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-theme-toggle]');
+    if (!b) return;
+    var next = isDark() ? 'light' : 'dark';
+    apply(next);
+    try { if (window.parent !== window) window.parent.postMessage({ type: 'automailr-theme', value: next }, '*'); } catch (err) {}
+  });
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (d && d.type === 'automailr-set-theme' && /^(system|light|dark)$/.test(d.value)) apply(d.value);
+  });
+  if (mq.addEventListener) mq.addEventListener('change', sync);
+  sync();
+})();
+</script>
+</body>
+</html>

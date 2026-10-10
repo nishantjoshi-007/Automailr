@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automailr redesign · bake-off</title>
+<script>
+  /* Same theme key as the entries: system unless a choice was saved. */
+  (function () { try { var s = localStorage.getItem('automailr-theme'); if (s === 'light' || s === 'dark') document.documentElement.setAttribute('data-theme', s); } catch (e) {} })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Blind bake-off comparison page, from brand-ui-playbook/assets/compare-template.html.
+   Added: a Page switch (landing / Message step) and a Theme switch that drives every entry. */
+:root {
+  --bg: #EFEEEA; --fg: #1B1A18; --muted: #6A6862; --line: #D8D6CF; --panel: #FFFFFF; --on: #1B1A18; --on-fg: #FFFFFF; --stage: #E3E1DB;
+  --f-ui: 'Geist', ui-sans-serif, system-ui, sans-serif; --f-code: 'Geist Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #151514; --fg: #ECEAE5; --muted: #A09E98; --line: #33322F; --panel: #1E1D1B; --on: #ECEAE5; --on-fg: #151514; --stage: #0F0F0E; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #151514; --fg: #ECEAE5; --muted: #A09E98; --line: #33322F; --panel: #1E1D1B; --on: #ECEAE5; --on-fg: #151514; --stage: #0F0F0E; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-ui); font-size: 14.5px; line-height: 1.5; padding-inline: 16px; padding-block: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+header { display: grid; gap: 4px; max-width: 78ch; }
+h1 { margin: 0; font-size: 1.35rem; font-weight: 600; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.group { display: flex; gap: 4px; flex-wrap: wrap; }
+.group button, .reveal, .open { font: inherit; font-size: 13.5px; font-weight: 500; color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 7px; padding: 6px 12px; cursor: pointer; text-decoration: none; }
+.group button[aria-pressed="true"] { background: var(--on); color: var(--on-fg); border-color: var(--on); }
+.group button:focus-visible, .reveal:focus-visible, .open:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.label { font-family: var(--f-code); font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.spacer { flex: 1; }
+.who { font-family: var(--f-code); font-size: 12.5px; color: var(--muted); }
+.who strong { color: var(--fg); font-weight: 500; }
+.stage { flex: 1; min-height: 70vh; background: var(--stage); border: 1px solid var(--line); border-radius: 10px; overflow: auto; display: flex; justify-content: center; }
+.stage iframe { display: block; border: 0; width: 100%; height: 100%; min-height: 70vh; background: #fff; }
+.stage.phone { padding: 16px 0; }
+.stage.phone iframe { width: 390px; max-width: 100%; border-radius: 18px; box-shadow: 0 0 0 1px var(--line); }
+@media (max-width: 640px) { .widthgroup { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Automailr redesign: three directions</h1>
+  <p>Each direction has two pages: the landing page and the Message step of the wizard (step 2 of 3). All three use the same copy and sample data, so only the design differs. Pick a favourite, then reveal. The Theme switch here drives every entry, and each entry’s own light/dark button stays in sync with it.</p>
+</header>
+
+<div class="bar" role="toolbar" aria-label="Compare entries">
+  <span class="label">Entry</span>
+  <div class="group" id="entries"></div>
+  <span class="label">Page</span>
+  <div class="group" id="pages">
+    <button type="button" data-p="index" aria-pressed="true">Landing</button>
+    <button type="button" data-p="message" aria-pressed="false">Message step</button>
+  </div>
+  <span class="label">Theme</span>
+  <div class="group" id="themes" role="group" aria-label="Theme for every entry">
+    <button type="button" data-t="system" aria-pressed="true">System</button>
+    <button type="button" data-t="light" aria-pressed="false">Light</button>
+    <button type="button" data-t="dark" aria-pressed="false">Dark</button>
+  </div>
+  <span class="label widthgroup">Width</span>
+  <div class="group widthgroup" id="widths">
+    <button type="button" data-w="desktop" aria-pressed="true">Desktop</button>
+    <button type="button" data-w="phone" aria-pressed="false">Phone</button>
+  </div>
+  <a class="open" id="open" href="#" target="_blank" rel="noopener">Open full page</a>
+  <span class="spacer"></span>
+  <span class="who" id="who" aria-live="polite"></span>
+  <button type="button" class="reveal" id="reveal">Reveal</button>
+</div>
+
+<div class="stage" id="stage"><iframe id="frame" title="Entry"></iframe></div>
+
+<script>
+  // key = folder, label = button text, made = hidden reveal text.
+  const ENTRIES = [
+    { key: 'a', label: 'A', made: 'Clean product · Wise + Supabase + Cal · Archivo + Geist · teal accent, dark text on it' },
+    { key: 'b', label: 'B', made: 'Warm editorial · Zapier + Claude + Cursor · Newsreader + Hanken Grotesk · rust accent' },
+    { key: 'c', label: 'C', made: 'Utility console · IBM Carbon + Vercel + Coinbase · IBM Plex Sans + Plex Mono · ink-blue accent' },
+  ];
+  const KEY = 'automailr-theme';
+  let current = ENTRIES[0].key, page = 'index', theme = 'system', revealed = false;
+  const byKey = Object.fromEntries(ENTRIES.map(e => [e.key, e]));
+  const frame = document.getElementById('frame'), open = document.getElementById('open'), who = document.getElementById('who');
+  const wrap = document.getElementById('entries');
+  ENTRIES.forEach(e => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.k = e.key; b.textContent = e.label; b.setAttribute('aria-pressed', 'false');
+    wrap.appendChild(b);
+  });
+  function press(groupId, attr, value) {
+    document.querySelectorAll('#' + groupId + ' button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === value)));
+  }
+  function label() { who.innerHTML = revealed ? 'Entry ' + byKey[current].label + ': <strong>' + byKey[current].made + '</strong>' : ''; }
+  function applyThemeHere() {
+    if (theme === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', theme);
+    press('themes', 't', theme);
+  }
+  function src() { return current + '/' + page + '.html?theme=' + theme; }
+  function load() {
+    frame.src = src(); frame.title = 'Entry ' + byKey[current].label + ', ' + (page === 'index' ? 'landing page' : 'Message step');
+    open.href = src();
+    press('entries', 'k', current); press('pages', 'p', page);
+    label();
+    try { localStorage.setItem('bakeoff-entry', current); localStorage.setItem('bakeoff-page', page); } catch (err) {}
+  }
+  function setTheme(t, fromEntry) {
+    theme = t;
+    try { if (t === 'system') localStorage.removeItem(KEY); else localStorage.setItem(KEY, t); } catch (err) {}
+    applyThemeHere();
+    open.href = src();
+    if (!fromEntry) { try { frame.contentWindow.postMessage({ type: 'automailr-set-theme', value: t }, '*'); } catch (err) { load(); } }
+  }
+  wrap.addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) { current = b.dataset.k; load(); } });
+  document.getElementById('pages').addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) { page = b.dataset.p; load(); } });
+  document.getElementById('themes').addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) setTheme(b.dataset.t, false); });
+  window.addEventListener('message', ev => { const d = ev.data; if (d && d.type === 'automailr-theme' && (d.value === 'light' || d.value === 'dark')) setTheme(d.value, true); });
+  document.getElementById('widths').addEventListener('click', ev => {
+    const b = ev.target.closest('button'); if (!b) return;
+    document.getElementById('stage').classList.toggle('phone', b.dataset.w === 'phone');
+    press('widths', 'w', b.dataset.w);
+  });
+  document.getElementById('reveal').addEventListener('click', ev => {
+    revealed = !revealed; ev.currentTarget.textContent = revealed ? 'Hide' : 'Reveal'; label();
+  });
+  try {
+    const k = localStorage.getItem('bakeoff-entry'); if (k && byKey[k]) current = k;
+    const p = localStorage.getItem('bakeoff-page'); if (p === 'index' || p === 'message') page = p;
+    const t = localStorage.getItem(KEY); if (t === 'light' || t === 'dark') theme = t;
+  } catch (err) {}
+  applyThemeHere();
+  load();
+</script>
+</body>
+</html>
