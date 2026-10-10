@@ -42,7 +42,7 @@ export default function Contact() {
   return (
     <PageTransition className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <nav className="fixed w-full z-50 top-0 left-0 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <nav className="fixed w-full z-50 top-0 left-0 border-b border-border/40 bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 sm:px-6">
           <Link to="/" className="flex items-center gap-2 group">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-extrabold text-lg shadow-lg group-hover:scale-105 transition-transform duration-200">

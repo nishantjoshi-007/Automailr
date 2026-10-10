@@ -29,7 +29,7 @@ const features = [
     description:
       "Your data never leaves your browser. No servers, no databases — everything runs locally in your device.",
     header: (
-      <div className="flex flex-1 w-full h-full min-h-[6rem] items-center justify-center rounded-xl bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800">
+      <div className="flex flex-1 w-full h-full min-h-24 items-center justify-center rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800">
         <div className="flex flex-col items-center gap-2">
           <div className="rounded-full bg-green-500/10 p-4">
             <ShieldCheck className="h-8 w-8 text-green-500" />
@@ -46,7 +46,7 @@ const features = [
     description:
       "Upload a CSV with recipient data and use dynamic placeholders to personalize every email completely.",
     header: (
-      <div className="flex flex-1 w-full h-full min-h-[6rem] items-center justify-center rounded-xl bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800 overflow-hidden relative p-4">
+      <div className="flex flex-1 w-full h-full min-h-24 items-center justify-center rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800 overflow-hidden relative p-4">
         <div className="grid grid-cols-3 gap-2 w-full opacity-50">
           {[...Array(9)].map((_, i) => (
             <div
@@ -57,7 +57,7 @@ const features = [
           ))}
         </div>
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-background/80 backdrop-blur-sm p-3 rounded-xl border border-border shadow-sm">
+          <div className="bg-background/80 backdrop-blur-xs p-3 rounded-xl border border-border shadow-xs">
             <FileSpreadsheet className="h-6 w-6 text-primary" />
           </div>
         </div>
@@ -71,7 +71,7 @@ const features = [
     description:
       "Authenticate with Google and send directly through the Gmail API — emails come from your real address.",
     header: (
-      <div className="flex flex-1 w-full h-full min-h-[6rem] items-center justify-center rounded-xl bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800">
+      <div className="flex flex-1 w-full h-full min-h-24 items-center justify-center rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800">
         <div className="relative">
           <div className="absolute -inset-1 rounded-full bg-red-500/20 blur-lg animate-pulse"></div>
           <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl border border-border relative z-10 shadow-lg">
@@ -91,7 +91,7 @@ const features = [
     description:
       "Smart throttling ensures your emails are spaced out to respect Gmail's sending limits automatically.",
     header: (
-      <div className="flex flex-1 w-full h-full min-h-[6rem] items-center justify-center rounded-xl bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800 p-6">
+      <div className="flex flex-1 w-full h-full min-h-24 items-center justify-center rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800 p-6">
         <div className="w-full flex items-end justify-between gap-2 h-16">
           <div className="w-full bg-primary/20 rounded-t-md h-[40%]" />
           <div className="w-full bg-primary/40 rounded-t-md h-[70%]" />
@@ -108,7 +108,7 @@ const features = [
     title: "Live Preview",
     description: "Preview every personalized email before sending. See exactly what each recipient will receive.",
     header: (
-      <div className="flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800 p-4 flex flex-col gap-2 relative overflow-hidden group">
+      <div className="flex-1 w-full h-full min-h-24 rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800 p-4 flex flex-col gap-2 relative overflow-hidden group">
         <div className="h-2 w-1/3 bg-foreground/10 rounded-full" />
         <div className="h-2 w-2/3 bg-foreground/10 rounded-full" />
         <div className="h-16 w-full bg-foreground/5 rounded-lg mt-2 p-2">
@@ -116,7 +116,7 @@ const features = [
             Hello {"{{name}}"}
           </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-linear-to-t/srgb from-background/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     ),
     className: "md:col-span-1",
@@ -151,7 +151,7 @@ export default function Home() {
   return (
     <PageTransition className="flex min-h-screen flex-col bg-background selection:bg-primary/10">
       {/* Header */}
-      <nav className="fixed w-full z-50 top-0 left-0 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <nav className="fixed w-full z-50 top-0 left-0 border-b border-border/40 bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 sm:px-6">
           <Link to="/" className="flex items-center gap-2 group">
             <img
@@ -198,14 +198,14 @@ export default function Home() {
           }}
           className="relative flex flex-col gap-4 items-center justify-center px-4 max-w-5xl mx-auto text-center z-10"
         >
-          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary backdrop-blur-sm mb-6">
+          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary backdrop-blur-xs mb-6">
             <Sparkles className="mr-2 h-3.5 w-3.5" />
             <span>Now with Smart Throttling</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1]">
             Send Personalized Emails <br className="hidden sm:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-pink-500 animate-gradient bg-[length:200%_auto]">
+            <span className="text-transparent bg-clip-text bg-linear-to-r/srgb from-primary via-purple-500 to-pink-500 animate-gradient bg-size-[200%_auto]">
               At Scale, For Free.
             </span>
           </h1>
@@ -228,7 +228,7 @@ export default function Home() {
               variant="outline"
               size="lg"
               onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-              className="h-12 px-8 text-base rounded-full bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-background/80"
+              className="h-12 px-8 text-base rounded-full bg-background/50 backdrop-blur-xs border-primary/20 hover:bg-background/80"
             >
               Learn More
             </Button>
@@ -294,7 +294,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
             {/* Connecting Line (Desktop) */}
-            <div className="hidden md:block absolute top-[25%] left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-transparent via-border to-transparent -z-10" />
+            <div className="hidden md:block absolute top-[25%] left-[16%] right-[16%] h-0.5 bg-linear-to-r/srgb from-transparent via-border to-transparent -z-10" />
 
             {steps.map((step, i) => (
               <motion.div
@@ -303,7 +303,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.2, duration: 0.5 }}
                 viewport={{ once: true }}
-                className="relative bg-background p-8 rounded-3xl border shadow-sm flex flex-col items-center text-center group hover:-translate-y-1 transition-transform duration-300"
+                className="relative bg-background p-8 rounded-3xl border shadow-xs flex flex-col items-center text-center group hover:-translate-y-1 transition-transform duration-300"
               >
                 <div className="absolute top-0 right-0 p-4 opacity-5 text-4xl font-black">{step.num}</div>
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform duration-300">
@@ -319,9 +319,9 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="py-24 px-4">
-        <div className="max-w-5xl mx-auto rounded-[2.5rem] bg-gradient-to-br from-indigo-500 via-primary to-purple-600 p-1 sm:p-12 overflow-hidden shadow-2xl relative">
-          <div className="absolute inset-0 bg-grid-white/[0.2] [mask-image:linear-gradient(to_bottom,transparent,black,transparent)]" />
-          <div className="relative bg-background/10 backdrop-blur-xl rounded-[2rem] p-8 sm:p-12 text-center border border-white/20">
+        <div className="max-w-5xl mx-auto rounded-[2.5rem] bg-linear-to-br/srgb from-indigo-500 via-primary to-purple-600 p-1 sm:p-12 overflow-hidden shadow-2xl relative">
+          <div className="absolute inset-0 bg-grid-white/[0.2] mask-[linear-gradient(to_bottom,transparent,black,transparent)]" />
+          <div className="relative bg-background/10 backdrop-blur-xl rounded-4xl p-8 sm:p-12 text-center border border-white/20">
             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">Ready to send smarter emails?</h2>
             <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto mb-10">
               Join thousands of users who trust Automailr for their personal communication needs. It's free, open

@@ -38,7 +38,7 @@ export function AppNav() {
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-secondary/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-secondary/60 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>

@@ -22,20 +22,20 @@ export const AuroraBackground = ({
       <div className="absolute inset-0 overflow-hidden">
         <div
           className={cn(
-            "filter blur-[10px] pointer-events-none absolute -inset-[10px] opacity-30 will-change-transform",
+            "filter blur-[10px] pointer-events-none absolute inset-[-10px] opacity-30 will-change-transform",
             "dark:[background-image:var(--dark-gradient),var(--aurora)]",
             "[background-image:var(--white-gradient),var(--aurora)]",
-            "[background-size:300%_100%]",
-            "[mask-image:radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]",
+            "bg-size-[300%_100%]",
+            "mask-[radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]",
             "after:content-[''] after:absolute after:inset-0 after:[background-image:var(--white-gradient),var(--aurora)]",
-            "after:dark:[background-image:var(--dark-gradient),var(--aurora)]",
-            "after:[background-size:200%_100%]",
-            "after:animate-aurora after:[background-attachment:fixed] after:mix-blend-difference",
+            "dark:after:[background-image:var(--dark-gradient),var(--aurora)]",
+            "after:bg-size-[200%_100%]",
+            "after:animate-aurora after:bg-fixed after:mix-blend-difference",
           )}
         ></div>
       </div>
       {showRadialGradient && (
-        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
+        <div className="absolute inset-0 mask-[radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
       )}
       {children}
     </div>

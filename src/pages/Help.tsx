@@ -75,7 +75,7 @@ function PlaceholderDemo() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/50"
             />
           </div>
           <div>
@@ -83,7 +83,7 @@ function PlaceholderDemo() {
             <input
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/50"
             />
           </div>
         </div>
@@ -99,7 +99,7 @@ function PlaceholderDemo() {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Live preview</p>
           <Zap className="h-3 w-3 text-yellow-500" />
         </div>
-        <div className="min-h-[140px] p-4 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 text-sm whitespace-pre-wrap leading-relaxed">
+        <div className="min-h-[140px] p-4 rounded-lg bg-linear-to-br/srgb from-primary/5 to-primary/10 border border-primary/20 text-sm whitespace-pre-wrap leading-relaxed">
           {preview}
         </div>
       </div>

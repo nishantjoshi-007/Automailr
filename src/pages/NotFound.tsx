@@ -47,7 +47,7 @@ const NotFound = () => {
         </div>
       </div>
 
-      <Footer className="relative z-10 border-t border-border/40 bg-background/50 backdrop-blur-sm" />
+      <Footer className="relative z-10 border-t border-border/40 bg-background/50 backdrop-blur-xs" />
     </PageTransition>
   );
 };
