@@ -21,7 +21,15 @@ export default defineConfig([
     },
     rules: {
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
       // React Compiler rules (react-hooks v7). Only the current wizard
       // (Dashboard.tsx, PreviewSend.tsx) trips them and it is rewritten in
       // Phase 5c; promote both back to "error" once that lands.

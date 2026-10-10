@@ -25,7 +25,6 @@ import {
   XCircle,
   RefreshCw,
   MailPlus,
-  X,
   AlertTriangle,
   Square,
 } from "lucide-react";
