@@ -33,3 +33,7 @@ keys/
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Private working notes (owner only, never pushed)
+/PLAN.md
+/DECISIONS.md

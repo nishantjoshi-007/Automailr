@@ -19,5 +19,5 @@ I read every report and will reply when I have confirmed or ruled it out. Fixes 
 ## Out of scope
 
 - Google's own services (Gmail, OAuth, Gemini), Vercel and Formspark. Report those to them.
-- The Gemini API key being visible in the client bundle. That is a documented decision (`DECISIONS.md`, D4); the key is restricted by referrer, API and quota. Abuse of it is capped, not prevented.
+- The Gemini API key being visible in the client bundle. That is a deliberate decision; the key is restricted by referrer, API and quota. Abuse of it is capped, not prevented.
 - Rate limits and daily sending caps, which are Google's.

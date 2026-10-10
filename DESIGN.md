@@ -1,7 +1,7 @@
 # Automailr design
 
 The system behind every page of Automailr. Chosen by a blind bake-off on
-2026-10-10 (`design/bakeoff/`, DECISIONS.md D32–D33): direction A's layout,
+2026-10-10 (`design/bakeoff/`): direction A's layout,
 type and white/charcoal neutrals, with C's ink blue as the one accent.
 Tokens live in `src/index.css`; this file explains them.
 

@@ -33,7 +33,7 @@ Add or update tests in `src/utils/*.test.ts` when you touch the CSV parser, plac
 
 ## How the code is organised
 
-`README.md` has the layout. `DESIGN.md` is the design system and the voice for interface copy: sentence case, plain words, numbers with units, no exclamation marks, no emoji. `DECISIONS.md` records why things are the way they are; if your change reverses one of those decisions, say so in the pull request and add a new entry rather than editing the old one.
+`README.md` has the layout. `DESIGN.md` is the design system and the voice for interface copy: sentence case, plain words, numbers with units, no exclamation marks, no emoji. If your change reverses a deliberate choice described there or in the README, say so in the pull request.
 
 ## Pull requests
 
