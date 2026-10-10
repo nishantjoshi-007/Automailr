@@ -15,7 +15,7 @@ Automailr is a mail merge for Gmail that runs entirely in the browser. Upload a 
 | Recipients per batch | 5,000 rows |
 | Attachments | 25 MB in total, measured on the raw files |
 | Pause between sends | 250 ms |
-| Sign-in lifetime | 55 minutes, then sign in again |
+| Sign-in lifetime | About an hour (Google's own expiry), then sign in again |
 
 If the sign-in runs out partway through a batch, sending pauses, the rest are marked "not sent", and you can sign in again and send them.
 
@@ -25,8 +25,8 @@ Automailr asks Google for `gmail.send`, plus your basic profile (name, email add
 
 Stays in the browser:
 
-- The Google access token is encrypted with AES-256-GCM and kept in `sessionStorage`. The key is a non-extractable `CryptoKey` in IndexedDB. The token is treated as expired after 55 minutes.
-- Wizard state (CSV rows, subject, body, send results) is encrypted the same way in `sessionStorage` and cleared on sign-out. Attachments stay in memory only.
+- The Google access token is encrypted with AES-256-GCM and kept in `sessionStorage`. The key is a non-extractable `CryptoKey` in IndexedDB. Automailr stops using the token a minute before Google's own expiry (`expires_in`, an hour in practice; 55 minutes if Google gives none).
+- Wizard state (CSV rows, subject, body, send results) is encrypted the same way in `sessionStorage`, tagged with the signed-in account so another account never sees it, and cleared on sign-out or when you start a new batch. Attachments stay in memory only.
 - The message preview is sanitised with DOMPurify before it is rendered.
 
 Leaves the browser, and when:
@@ -34,9 +34,11 @@ Leaves the browser, and when:
 | Recipient | What | When |
 | --- | --- | --- |
 | Google (OAuth and Gmail API) | Sign-in, and each email you send | Signing in and sending |
-| Google (Gemini API) | Your subject and message, with `{{fields}}` left in place. Never the recipient list. | Only when you press Polish with AI |
+| Google (Gemini API) | Your subject and message, with `{{fields}}` left in place. Never the recipient list, the CSV or attachments. | Only when you press Polish with AI |
 | Vercel | The site's files, and cookie-free page-view counts through Vercel Web Analytics | Loading the site |
-| Formspark | Name, email address and message | Only when you send the contact form |
+| Formspark | Name, email address and message, plus a hidden honeypot field that bots fill in and people leave empty | Only when you send the contact form |
+
+AI polish uses Gemini's free tier. Under Google's terms for unpaid Gemini API use, Google may use the text you send, and the response, to improve its products and models, including with human review, and that text does not get the data protections of the paid tier. Don't polish anything confidential.
 
 ## Run it locally
 

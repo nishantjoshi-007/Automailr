@@ -127,10 +127,10 @@ export function Message({ state, csv, from, files, onFiles, onMessage, onTemplat
   };
 
   const polishHint = polish
-    ? "Rewritten by Gemini. Your fields are unchanged, and your original is kept."
+    ? "Rewritten by Gemini. Your fields are unchanged, and your original is kept. Read it through before you send."
     : !ai.meetsMin
       ? `Write at least ${ai.minChars} characters to use AI polish (${ai.charCount} of ${ai.minChars}).`
-      : "Rewrites the subject and message with Google Gemini. Fields stay as they are, and you can switch back.";
+      : "Rewrites the subject and message with Google Gemini. Fields stay as they are, and you can switch back. Google may review and use what you send to improve its models, so don’t polish anything confidential.";
 
   return (
     <div className="grid grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] items-start gap-6 pb-8 max-[1080px]:grid-cols-1">

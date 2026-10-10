@@ -129,7 +129,7 @@ function ContactForm({ formId }: { formId: string }) {
           </Button>
         </div>
       </form>
-      <p className="mt-5 text-[13.5px] text-ink-3">Sent through Formspark, which emails it to the maintainer.</p>
+      <p className="mt-5 text-[13.5px] text-ink-3">Sent through Formspark, which emails it to me.</p>
     </>
   );
 }

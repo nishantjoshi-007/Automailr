@@ -286,11 +286,10 @@ const QUESTIONS: { q: string; a: ReactNode }[] = [
     ),
   },
   {
-    q: "Why does it sign me out after 55 minutes?",
+    q: "Why does it ask me to sign in again after about an hour?",
     a: (
       <>
-        Signing in with Google gives Automailr an access token, not your password, and that token lasts{" "}
-        <span className="num whitespace-nowrap">55&#8239;minutes</span>. Keeping it short-lived limits what anyone
+        Signing in with Google gives Automailr an access token, not your password, and that token lasts about an hour (Google sets the exact time). Keeping it short-lived limits what anyone
         could do with it. When it runs out, sign in again; a batch in progress pauses and carries on after you do.
       </>
     ),
@@ -389,8 +388,7 @@ export default function Help() {
               <li>The results can be downloaded as a CSV.</li>
             </ul>
             <p>
-              Your Google sign-in lasts <span className="num whitespace-nowrap">55&#8239;minutes</span>, and a long
-              batch can outlast it. If the time left looks too short for the batch, Automailr asks you to sign in again
+              Your Google sign-in lasts about an hour, and a long batch can outlast it. If the time left looks too short for the batch, Automailr asks you to sign in again
               before it starts. If the sign-in runs out mid-batch, sending pauses, and you can sign in again and
               continue.
             </p>
@@ -405,7 +403,17 @@ export default function Help() {
             <p>
               AI polish is optional. If you press Polish with AI, your subject and message, with the <Tok>fields</Tok>{" "}
               still in place, go to Google&rsquo;s Gemini API, and the rewritten version comes back for you to check.
-              Your original is kept. Your recipient list is never sent.
+              Your original is kept, and you can switch back. Nothing else is sent: never your recipient list, your CSV
+              or your attachments.
+            </p>
+            <p>
+              Automailr uses Gemini&rsquo;s free tier. Under Google&rsquo;s{" "}
+              <a href="https://ai.google.dev/gemini-api/terms" {...external}>
+                Gemini API Additional Terms
+              </a>
+              , Google may use what you send, and what it sends back, to improve its products and models, and human
+              reviewers may read it. So don&rsquo;t polish anything confidential or sensitive, and read the rewritten
+              version before you send it.
             </p>
           </ProseSection>
 
