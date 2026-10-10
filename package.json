@@ -63,5 +63,16 @@
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.4",
     "vitest": "^5.0.3"
+  },
+  "description": "Mail merge for Gmail that runs entirely in the browser: upload a CSV, write one message with {{fields}}, check every copy, send from your own account.",
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Nishant Joshi",
+  "homepage": "https://automailr.nishantjoshi.me",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nishantjoshi-007/Automailr.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nishantjoshi-007/Automailr/issues"
   }
 }

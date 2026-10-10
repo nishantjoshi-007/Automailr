@@ -82,7 +82,7 @@ The production app is verified by Google, so signing in there shows no "unverifi
 
 Optional. AI polish is the only feature that uses it.
 
-The key ships in the client bundle by design. There is no server to hold it, and the owner accepted that risk instead of adding a proxy or asking each user for their own key (DECISIONS.md, D3 and D4). Anyone can read it from the deployed JavaScript, so restrict it in Google Cloud:
+The key ships in the client bundle by design. There is no server to hold it, and I accept that risk instead of adding a proxy or asking each user for their own key (DECISIONS.md, D3 and D4). Anyone can read it from the deployed JavaScript, so restrict it in Google Cloud:
 
 - Application restriction: HTTP referrers, set to the deployed origin (`https://automailr.nishantjoshi.me/*` in production, plus `http://localhost:8080/*` for development).
 - API restriction: Generative Language API only.

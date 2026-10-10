@@ -30,3 +30,6 @@ keys/
 *.njsproj
 *.sln
 *.sw?
+
+# TypeScript incremental build info
+*.tsbuildinfo

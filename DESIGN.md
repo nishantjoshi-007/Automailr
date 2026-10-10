@@ -182,8 +182,10 @@ outcome. Errors say what happened and what to do next.
 
 ## Before showing anything
 
-1. `python3 ~/.claude/skills/brand-ui-playbook/scripts/taste_check.py` on the
-   built CSS / page: no purple, one accent family, no eyebrow pills, dark
-   theme and toggle present, no external resources.
+1. Run my taste-check script (a small Python script, not in this repo,
+   that flags these) on the built CSS / page: no purple, one accent
+   family, no eyebrow pills, dark theme and toggle present, no external
+   resources.
 2. Screenshots at 1440 and 390 in light and dark; no horizontal scroll.
-3. `web-design-guidelines` pass; keyboard-only run through the wizard.
+3. A pass against Vercel's web interface guidelines; keyboard-only run
+   through the wizard.

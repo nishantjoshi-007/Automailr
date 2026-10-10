@@ -26,12 +26,12 @@ Pages are self-contained HTML + CSS + a little JS. The only external requests ar
 
 | Path | What |
 |---|---|
-| `compare.html` | Comparison page, from the playbook's `compare-template.html` plus Page and Theme switches |
+| `compare.html` | Comparison page, from my comparison template plus Page and Theme switches |
 | `a/index.html`, `a/message.html` | Direction A: landing page, Message step |
 | `b/index.html`, `b/message.html` | Direction B |
 | `c/index.html`, `c/message.html` | Direction C |
 
-## The shared brief (identical in all three)
+## The shared spec (identical in all three)
 
 Only the design differs. The copy, sample data, features and behaviour are the same in all three, so the comparison is about the look.
 
@@ -117,7 +117,7 @@ Realtime Colors:
 
 **Why teal**
 - It reads as "go / sent" without being the success green. The hue (182) sits well away from `--pos` (150), so "filled in" and "email column found" states stay unambiguous.
-- It's light enough to take dark text, the pattern that won blind test E and the Tally landing.
+- It's light enough to take dark text, the pattern that won an earlier blind test.
 - Nothing about it says purple or AI.
 
 **For the product**
@@ -131,7 +131,7 @@ Realtime Colors:
 - A literary serif (Newsreader) for headlines at regular weight, with a clean grotesk for reading.
 - One rust accent.
 - Generous margins; hairlines instead of cards and shadows.
-- The product moment is a letter: Alice's email set as a sheet of paper with the rest of the batch stacked behind it (hairline offsets, no blur), with the CSV values underlined in rust. It's a restrained use of the tactile-object idea from the Tally / Chalo feedback.
+- The product moment is a letter: Alice's email set as a sheet of paper with the rest of the batch stacked behind it (hairline offsets, no blur), with the CSV values underlined in rust. It's a restrained use of the tactile-object idea from earlier feedback on other work.
 - Steps read like a table of contents, the privacy promise like a definition list, and the limits like a price list with dot leaders.
 
 **References**
@@ -171,7 +171,7 @@ Realtime Colors:
 **Why rust**
 - It's the colour of printer's ink and postage, so it fits a letter-based product.
 - It's dark enough for white text in light mode (5.35:1). In dark mode it lifts to apricot with dark text (7.0:1).
-- It's deliberately deeper and browner than the saffron rejected for Chalo.
+- It's deliberately deeper and browner than a saffron I had rejected before.
 
 **For the product**
 - Wizard: open layout with hairline rules rather than boxed cards; an underline-style subject field set in the serif; the preview as a letter on paper; Back as a text link, Next in rust.
@@ -223,7 +223,7 @@ Realtime Colors:
 
 **Why ink blue**
 - Blue reads as "tool" and "trustworthy", and as the colour of links, which suits a utility.
-- It's kept at OKLCH hue 250–255, which is screen hue 210°. That is well clear of the indigo/purple band (232–300°) that read as AI in the Chalo tests.
+- It's kept at OKLCH hue 250–255, which is screen hue 210°. That is well clear of the indigo/purple band (232–300°) that read as AI in my earlier tests.
 - It's dark enough for white text (6.7:1).
 
 **For the product**
@@ -234,14 +234,14 @@ Realtime Colors:
 
 ## Checks run
 
-- **`taste_check.py`: every page passes 6/6**, compare page included.
+- **Taste check: every page passes 6/6**, compare page included.
   - No purple or indigo; at most one accent hue family per direction (A 150–180°, B 0–30°, C 210–240°).
   - No eyebrows or pills; dark theme present; toggle present; no external resources besides Google Fonts.
 - **Screenshots in headless Chrome** at 1440 and 390, in light and dark, for all six pages, with the real fonts loaded.
 - **Horizontal scroll at 390.** A script measured `scrollWidth` against the viewport for every page in both themes, at 390 and 1440. There was no overflow anywhere. The test viewport was effectively 375 px because of the iframe scrollbar, which is stricter than required.
 - **Behaviour.** 45 scripted checks across the three Message steps all pass: live preview, the missing-field warning on row 3, stopping at 42, Next-disabled reasons, polish disabled under 30 characters, field insertion, polish and restore, and the theme toggle with its label and `aria-pressed`.
 - **Contrast.** Every text pair is at least 4.5:1 in both themes. The lowest is about 5.1:1 (muted text on `--surface-2`). Text on the accent: A 10.2:1, B 5.35:1 (light) and 7.0:1 (dark), C 6.7:1 and 7.8:1.
-- **`web-design-guidelines` pass**, against the current Vercel rules. Fixed:
+- **Web interface guidelines pass**, against Vercel's current rules. Fixed:
   - `aria-hidden` on decorative icons
   - skip links
   - `aria-live` on the Next reason, the polish hint and the attachment total
@@ -256,7 +256,7 @@ Realtime Colors:
   - explicit `<select>` option colours
   - safe-area padding on the bottom bar
 
-  Deliberately not followed: the guideline's Title Case for headings and buttons, because the playbook and these directions use sentence case.
+  Deliberately not followed: the guideline's Title Case for headings and buttons, because my design notes and these directions use sentence case.
 
 ## Taste rules applied
 
@@ -271,16 +271,16 @@ Realtime Colors:
   - the toggle has an `aria-label` that says what pressing does, and `aria-pressed` reflects dark
 - Web-first at 1440, then checked at 390 with no horizontal scroll.
 - Copy: plain and specific, one CTA label everywhere, no "we", no fabricated social proof, no hype words, no emoji. Buttons say what happens ("Next: Review & send", "Polish with AI").
-- A real product moment in each hero (brand.md §8).
-- Small linked details, which he valued in Chalo:
+- A real product moment in each hero.
+- Small linked details, which I value:
   - hovering or focusing a field chip or token highlights its value in the preview
   - the preview follows the editor live
   - the preview warns per recipient when a field is empty
 
 ## What I bent, and why
 
-- **bakeoff.md step 2 (one fresh agent per entry, blind).** One agent built all three. The variable under test is the direction itself, so identical copy, data and behaviour isolate it better than three agents writing three different pages. The letters aren't randomised because the brief fixed the folder names a/b/c to the suggested directions. The compare page's Reveal still hides the names.
-- **IBM's DESIGN.md** says 0 px corners and weight-300 display. C uses 2 px corners and 600 headings, because light Plex at hero size reads faint and corporate, and his history favours confident type.
+- **One separate build per entry, blind.** I built all three myself. The variable under test is the direction itself, so identical copy, data and behaviour isolate it better than three separately written pages. The letters aren't randomised because the spec fixed the folder names a/b/c to the suggested directions. The compare page's Reveal still hides the names.
+- **IBM's DESIGN.md** says 0 px corners and weight-300 display. C uses 2 px corners and 600 headings, because light Plex at hero size reads faint and corporate, and my history favours confident type.
 - **Supabase and Cal** cap display weight at 500–600; **Wise and Vercel** prescribe pill CTAs and mono eyebrows. A uses 800 headlines (heavy type on what matters has won twice). All pill-eyebrow advice was dropped.
 - **Two shades of one hue in A.** The bright teal can't be used as text on white, so links and tokens use a dark teal (`--accent-ink`). It's one hue family, needed for contrast.
 - **Mockup shortcuts:**
