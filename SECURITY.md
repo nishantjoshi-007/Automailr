@@ -19,5 +19,5 @@ I read every report and will reply when I have confirmed or ruled it out. Fixes 
 ## Out of scope
 
 - Google's own services (Gmail, OAuth, Gemini), Vercel and Formspark. Report those to them.
-- The Gemini API key being visible in the client bundle. That is a deliberate decision; the key is restricted by referrer, API and quota. Abuse of it is capped, not prevented.
+- The Gemini API key being visible in the client bundle. That is a deliberate decision, confirmed again by a full scan in October 2026: there is no server to hold it, and I chose not to add one. The key is restricted in Google Cloud to this site's referrers and to the Generative Language API, it has a hard daily quota cap with a billing alert, and I rotate it. Abuse of it is bounded by that cap, not prevented, and the only thing an attacker can spend is my quota; the key reaches no user data and nothing about your Gmail. If you can show the restrictions being bypassed in a way the cap does not bound, that is in scope.
 - Rate limits and daily sending caps, which are Google's.
