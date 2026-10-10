@@ -1,307 +1,421 @@
-﻿import { useNavigate } from "react-router";
-import { SiteHeader } from "@/components/SiteHeader";
-import { Button } from "@/components/ui/button";
-import { Footer } from "@/components/Footer";
-import { AuroraBackground } from "@/components/ui/aurora-background";
-import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
-import { PageTransition } from "@/components/PageTransition";
-import { motion } from "motion/react";
+import type { ReactNode } from "react";
+import { Link } from "react-router";
 import {
-  Mail,
-  Upload,
-  Zap,
-  ArrowRight,
-  Lock,
-  Sparkles,
+  ArrowDown,
+  Check,
+  ChevronLeft,
+  ChevronRight,
   FileSpreadsheet,
+  Laptop,
+  Lock,
   Send,
-  Eye,
-  CheckCircle,
-  ShieldCheck,
+  type LucideIcon,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { SiteHeader } from "@/components/SiteHeader";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-const features = [
-  {
-    icon: <Lock className="h-6 w-6 text-neutral-500" />,
-    title: "100% Client-Side",
-    description:
-      "Your data never leaves your browser. No servers, no databases — everything runs locally in your device.",
-    header: (
-      <div className="flex flex-1 w-full h-full min-h-24 items-center justify-center rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800">
-        <div className="flex flex-col items-center gap-2">
-          <div className="rounded-full bg-green-500/10 p-4">
-            <ShieldCheck className="h-8 w-8 text-green-500" />
-          </div>
-          <div className="text-xs font-medium text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">Secure</div>
+/** A `{{field}}` token as it appears in the editor. */
+function Tok({ name, className }: { name: string; className?: string }) {
+  return (
+    <span className={cn("tok", className)} translate="no">
+      <span className="opacity-55">{"{{"}</span>
+      {name}
+      <span className="opacity-55">{"}}"}</span>
+    </span>
+  );
+}
+
+const h2Class = "heading text-[clamp(2rem,1.3rem+2vw,3.1rem)] leading-[1.02]";
+
+/** Section heading: h2 left, one sentence right (stacked under 900 px). */
+function SectionHead({ id, title, children }: { id?: string; title: string; children: ReactNode }) {
+  return (
+    <div className="mb-[clamp(32px,4vw,52px)] grid grid-cols-1 items-end gap-x-12 gap-y-4 min-[900px]:grid-cols-2">
+      <h2 id={id} className={h2Class}>
+        {title}
+      </h2>
+      <p className="max-w-[34rem] text-[1.08rem] text-ink-2">{children}</p>
+    </div>
+  );
+}
+
+/* ---------- Hero ---------- */
+
+const SAMPLE_ROWS = [
+  { email: "alice.johnson@acmecorp.com", name: "Alice", company: "Acme Corp" },
+  { email: "ben.okafor@northwindtraders.com", name: "Ben", company: "Northwind Traders" },
+  { email: "diego.alvarez@contoso.com", name: "Diego", company: "Contoso" },
+];
+
+const cell = "overflow-hidden px-3 py-[9px] text-left text-ellipsis whitespace-nowrap";
+const firstCell = "pl-4 max-[480px]:pl-3.5";
+const companyCell = "max-[640px]:hidden";
+const fill = "rounded-[4px] bg-accent-soft px-[3px] text-ink box-decoration-clone";
+
+/** Static product moment: one CSV row becoming Alice's email. */
+function MergeFigure() {
+  return (
+    <figure
+      aria-label="Example: one row of a CSV becomes one personal email"
+      className="overflow-hidden rounded-2xl border border-line bg-surface shadow-elev"
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5 text-[13px] text-ink-3 max-[480px]:px-3.5">
+        <span className="inline-flex items-center gap-2 font-mono text-[13px] text-ink">
+          <FileSpreadsheet aria-hidden="true" className="size-4 text-ink-3" strokeWidth={1.8} />
+          contacts.csv
+        </span>
+        <span className="num">42 rows · 4 columns</span>
+      </div>
+
+      <table className="w-full table-fixed border-collapse font-mono text-[11.5px]">
+        <thead>
+          <tr>
+            <th className={cn(cell, firstCell, "w-1/2 bg-surface-2 font-medium text-ink-3 max-[640px]:w-[66%]")}>
+              email
+            </th>
+            <th className={cn(cell, "w-[19%] bg-surface-2 font-medium text-ink-3 max-[640px]:w-[34%]")}>first_name</th>
+            <th className={cn(cell, companyCell, "w-[31%] bg-surface-2 font-medium text-ink-3")}>company</th>
+          </tr>
+        </thead>
+        <tbody>
+          {SAMPLE_ROWS.map((row, i) => {
+            const on = i === 0;
+            const td = cn(cell, "border-t border-line", on ? "bg-accent-soft text-ink" : "text-ink-2");
+            return (
+              <tr key={row.email}>
+                <td className={cn(td, firstCell, on && "shadow-[inset_3px_0_0_var(--color-accent-ink)]")}>
+                  {row.email}
+                </td>
+                <td className={td}>{row.name}</td>
+                <td className={cn(td, companyCell)}>{row.company}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      <div className="flex items-center gap-2.5 border-y border-line bg-surface-2 px-5 py-3 text-[13px] text-ink-3 max-[480px]:px-3.5">
+        <ArrowDown aria-hidden="true" className="size-4 flex-none text-accent-ink" strokeWidth={1.8} />
+        <span>
+          <b className="num font-semibold text-ink">Recipient 1 of 42</b> · what Alice receives
+        </span>
+      </div>
+
+      <div className="px-5 pt-[18px] pb-[22px] max-[480px]:px-3.5">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3.5 gap-y-1.5 border-b border-line pb-3.5 text-[13.5px]">
+          <dt className="text-ink-3">To</dt>
+          <dd className="text-ink [overflow-wrap:anywhere]">alice.johnson@acmecorp.com</dd>
+          <dt className="text-ink-3">Subject</dt>
+          <dd className="text-ink [overflow-wrap:anywhere]">
+            Speaking at the October meetup, <mark className={fill}>Alice</mark>?
+          </dd>
+        </dl>
+        <div className="grid gap-2.5 pt-3.5 text-[14.5px] leading-[1.6] text-ink-2">
+          <p>
+            Hi <mark className={fill}>Alice</mark>,
+          </p>
+          <p>
+            I run the Riverside Product Meetup, a monthly evening for about 80 designers and engineers. A few people
+            mentioned the work <mark className={fill}>Acme Corp</mark> has been doing on onboarding…
+          </p>
         </div>
       </div>
+    </figure>
+  );
+}
+
+function Hero({ ctaTo }: { ctaTo: string }) {
+  return (
+    <section className="pt-[clamp(48px,7vw,104px)] pb-[clamp(56px,7vw,112px)]">
+      <div className="container grid grid-cols-1 items-center gap-[clamp(32px,5vw,72px)] min-[900px]:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
+        <div>
+          <h1 className="heading max-w-[15ch] text-[clamp(2.6rem,1.6rem+3vw,4.4rem)] leading-[0.98] tracking-[-0.035em] font-stretch-[106%] min-[900px]:max-w-[13ch]">
+            Mail merge for Gmail, run entirely in your browser.
+          </h1>
+          <p className="mt-6 max-w-[36rem] text-[clamp(1.07rem,1rem+0.3vw,1.25rem)] leading-[1.55] text-ink-2">
+            Upload a CSV, write one message with fields like <Tok name="first_name" />, check each person’s copy, then
+            send from your own Gmail account. Free and open source.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <Button asChild size="lg" className="max-[720px]:w-full">
+              <Link to={ctaTo} viewTransition>
+                Start sending
+              </Link>
+            </Button>
+            <a
+              href="https://github.com/nishantjoshi-007/Automailr"
+              target="_blank"
+              rel="noopener"
+              className="font-semibold text-ink underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:decoration-ink"
+            >
+              Read the source on GitHub
+            </a>
+          </div>
+          <p className="mt-[18px] text-sm text-ink-3">
+            You’ll sign in with Google. No account to create, nothing to install.
+          </p>
+        </div>
+
+        <MergeFigure />
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Three steps ---------- */
+
+const fragClass =
+  "mt-auto grid gap-1.5 rounded-md border border-line bg-surface px-3.5 py-3 text-[13.5px] max-[900px]:col-start-2";
+
+function PagerChip({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <span className="grid size-[26px] place-items-center rounded-[7px] border border-line text-ink-3">
+      <Icon className="size-3.5" strokeWidth={1.8} />
+    </span>
+  );
+}
+
+const STEPS: { title: string; body: ReactNode; frag: ReactNode }[] = [
+  {
+    title: "Recipients",
+    body: "Upload a CSV with an email column, plus any columns you want in the message, like first_name or company. Up to 5,000 rows. Invalid addresses are flagged and won’t be sent.",
+    frag: (
+      <>
+        <div className="flex items-center justify-between gap-2.5">
+          <span className="font-mono text-[0.9em]">contacts.csv</span>
+          <span className="num text-ink-3">42 rows</span>
+        </div>
+        <span className="inline-flex items-center gap-1.5 font-medium text-pos">
+          <Check className="size-[15px]" strokeWidth={2.2} />
+          email column found
+        </span>
+      </>
     ),
-    className: "md:col-span-1",
   },
   {
-    icon: <FileSpreadsheet className="h-6 w-6 text-neutral-500" />,
-    title: "CSV-Powered",
-    description:
-      "Upload a CSV with recipient data and use dynamic placeholders to personalize every email completely.",
-    header: (
-      <div className="flex flex-1 w-full h-full min-h-24 items-center justify-center rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800 overflow-hidden relative p-4">
-        <div className="grid grid-cols-3 gap-2 w-full opacity-50">
-          {[...Array(9)].map((_, i) => (
-            <div
-              key={i}
-              className="h-4 bg-foreground/10 rounded animate-pulse"
-              style={{ animationDelay: `${i * 0.1}s` }}
-            />
+    title: "Message",
+    body: (
+      <>
+        Write once, and click a column name to drop in a field like <Tok name="company" />. Attach files if you need to.
+        The preview beside the editor shows each person’s copy as you type.
+      </>
+    ),
+    frag: (
+      <>
+        <span>
+          Hi <Tok name="first_name" />,
+        </span>
+        <span className="text-ink-3">Fields: email, first_name, last_name, company</span>
+      </>
+    ),
+  },
+  {
+    title: "Review & send",
+    body: "Step through every recipient’s email, then send from your Gmail. Messages go out one at a time, 250 ms apart, and any that fail can be retried.",
+    frag: (
+      <>
+        <div className="flex items-center justify-between gap-2.5">
+          <span className="num">Recipient 1 of 42</span>
+          <span className="inline-flex gap-1">
+            <PagerChip icon={ChevronLeft} />
+            <PagerChip icon={ChevronRight} />
+          </span>
+        </div>
+        <span className="num text-ink-3">250{" "}ms between sends</span>
+      </>
+    ),
+  },
+];
+
+function Steps() {
+  return (
+    <section id="how" className="pb-[clamp(64px,8vw,112px)]">
+      <div className="container">
+        <SectionHead title="Three steps">
+          Recipients, message, review. You can go back to any step before anything is sent.
+        </SectionHead>
+        <ol className="grid grid-cols-1 gap-5 min-[900px]:grid-cols-3">
+          {STEPS.map((step, i) => (
+            <li
+              key={step.title}
+              className="flex flex-col gap-3.5 rounded-xl bg-surface-2 px-7 pt-7 pb-6 max-[900px]:grid max-[900px]:grid-cols-[auto_minmax(0,1fr)] max-[900px]:gap-x-6 max-[720px]:flex"
+            >
+              <span
+                aria-hidden="true"
+                className="numeral text-[76px] leading-[0.8] text-ink font-stretch-[118%] max-[900px]:row-span-3 max-[720px]:text-[60px]"
+              >
+                {i + 1}
+              </span>
+              <h3 className="mt-2.5 font-display text-[1.45rem] font-[750] tracking-[-0.015em] font-stretch-[104%] max-[900px]:mt-0">
+                {step.title}
+              </h3>
+              <p className="text-[15.5px] text-ink-2">{step.body}</p>
+              <div aria-hidden="true" className={fragClass}>
+                {step.frag}
+              </div>
+            </li>
           ))}
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-background/80 backdrop-blur-xs p-3 rounded-xl border border-border shadow-xs">
-            <FileSpreadsheet className="h-6 w-6 text-primary" />
-          </div>
-        </div>
+        </ol>
       </div>
-    ),
-    className: "md:col-span-1",
+    </section>
+  );
+}
+
+/* ---------- Privacy (the one inverted block) ---------- */
+
+const PROMISES: { icon: LucideIcon; title: string; body: ReactNode }[] = [
+  {
+    icon: Laptop,
+    title: "Read on your device",
+    body: "Your CSV is parsed in the browser tab. Messages go from your browser straight to the Gmail API.",
   },
   {
-    icon: <Mail className="h-6 w-6 text-neutral-500" />,
-    title: "Gmail Integration",
-    description:
-      "Authenticate with Google and send directly through the Gmail API — emails come from your real address.",
-    header: (
-      <div className="flex flex-1 w-full h-full min-h-24 items-center justify-center rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800">
-        <div className="relative">
-          <div className="absolute -inset-1 rounded-full bg-red-500/20 blur-lg animate-pulse"></div>
-          <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl border border-border relative z-10 shadow-lg">
-            <Mail className="h-8 w-8 text-red-500" />
-          </div>
-          <div className="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1 border-2 border-background z-20">
-            <CheckCircle className="h-3 w-3 text-white" />
-          </div>
-        </div>
-      </div>
+    icon: Send,
+    title: "Send-only permission",
+    body: (
+      <>
+        Google sign-in asks for one scope,{" "}
+        <code className="text-invert-ink" translate="no">
+          gmail.send
+        </code>
+        . Automailr can send email as you. It can’t read, search or delete anything in your inbox.
+      </>
     ),
-    className: "md:col-span-1",
   },
   {
-    icon: <Zap className="h-6 w-6 text-neutral-500" />,
-    title: "Built-In Rate Limiting",
-    description:
-      "Smart throttling ensures your emails are spaced out to respect Gmail's sending limits automatically.",
-    header: (
-      <div className="flex flex-1 w-full h-full min-h-24 items-center justify-center rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800 p-6">
-        <div className="w-full flex items-end justify-between gap-2 h-16">
-          <div className="w-full bg-primary/20 rounded-t-md h-[40%]" />
-          <div className="w-full bg-primary/40 rounded-t-md h-[70%]" />
-          <div className="w-full bg-primary/60 rounded-t-md h-[50%]" />
-          <div className="w-full bg-primary/80 rounded-t-md h-[90%]" />
-          <div className="w-full bg-primary rounded-t-md h-[60%]" />
-        </div>
-      </div>
-    ),
-    className: "md:col-span-2",
-  },
-  {
-    icon: <Eye className="h-6 w-6 text-neutral-500" />,
-    title: "Live Preview",
-    description: "Preview every personalized email before sending. See exactly what each recipient will receive.",
-    header: (
-      <div className="flex-1 w-full h-full min-h-24 rounded-xl bg-linear-to-br/srgb from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200 dark:border-neutral-800 p-4 flex flex-col gap-2 relative overflow-hidden group">
-        <div className="h-2 w-1/3 bg-foreground/10 rounded-full" />
-        <div className="h-2 w-2/3 bg-foreground/10 rounded-full" />
-        <div className="h-16 w-full bg-foreground/5 rounded-lg mt-2 p-2">
-          <div className="h-full w-full bg-background/50 rounded flex items-center justify-center text-xs text-muted-foreground">
-            Hello {"{{name}}"}
-          </div>
-        </div>
-        <div className="absolute inset-0 bg-linear-to-t/srgb from-background/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      </div>
-    ),
-    className: "md:col-span-1",
+    icon: Lock,
+    title: "Encrypted sign-in token",
+    body: "Your Google access token is encrypted in the browser with AES-256-GCM and expires after 55 minutes. Signing out deletes the key.",
   },
 ];
 
-const steps = [
+function Privacy() {
+  return (
+    <section aria-labelledby="privacy-h" className="pb-[clamp(64px,8vw,112px)]">
+      <div className="container">
+        <div className="rounded-[28px] bg-invert-bg p-[clamp(32px,5vw,64px)] text-invert-ink max-[720px]:rounded-[22px]">
+          <h2 id="privacy-h" className={cn(h2Class, "max-w-[18ch]")}>
+            Your list stays between your browser and Google.
+          </h2>
+          <p className="mt-[18px] max-w-[40rem] text-[1.08rem] text-invert-muted">
+            Automailr is a set of static files. There’s no Automailr server or database, so there’s nowhere for a copy
+            of your data to end up.
+          </p>
+          <ul className="mt-[clamp(32px,4vw,52px)] grid grid-cols-1 gap-7 border-t border-invert-line pt-8 min-[720px]:grid-cols-3 min-[720px]:gap-8">
+            {PROMISES.map(({ icon: Icon, title, body }) => (
+              <li key={title}>
+                <span
+                  aria-hidden="true"
+                  className="grid size-10 place-items-center rounded-[11px] bg-invert-accent text-invert-on-accent"
+                >
+                  <Icon className="size-5" strokeWidth={1.8} />
+                </span>
+                <h3 className="mt-[18px] text-[1.12rem] font-[650]">{title}</h3>
+                <p className="mt-2 text-[15px] text-invert-muted">{body}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-9 max-w-[52rem] border-t border-invert-line pt-6 text-[14.5px] text-invert-muted">
+            AI polish is optional. If you use it, your subject and message, with the{" "}
+            <Tok name="fields" className="bg-invert-line/60! text-invert-ink! shadow-none!" /> still in place, go to
+            Google’s Gemini API. Your recipient list doesn’t.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Limits ---------- */
+
+function Approx() {
+  return <span className="mr-[0.04em] font-semibold text-ink-3">~</span>;
+}
+
+const LIMITS: { big: ReactNode; label: string }[] = [
+  { big: "5,000", label: "rows per CSV. Split bigger lists into batches." },
   {
-    num: 1,
-    icon: Upload,
-    title: "Upload CSV",
-    description: "Drop in a spreadsheet with an email column and any personalization fields you need.",
+    big: (
+      <>
+        25<small className="ml-[0.08em] text-[0.48em] tracking-[-0.01em] font-stretch-[104%]">MB</small>
+      </>
+    ),
+    label: "of attachments per message, in total. That’s Gmail’s cap.",
   },
   {
-    num: 2,
-    icon: Sparkles,
-    title: "Compose",
-    description: "Write your email with a rich text editor. Insert {{placeholders}} from your CSV columns.",
+    big: (
+      <>
+        <Approx />
+        500
+      </>
+    ),
+    label: "emails a day from a personal Gmail account.",
   },
   {
-    num: 3,
-    icon: Send,
-    title: "Preview & Send",
-    description: "Review every personalized email, attach files, then send — all from your browser.",
+    big: (
+      <>
+        <Approx />
+        2,000
+      </>
+    ),
+    label: "emails a day from a Google Workspace account.",
   },
 ];
+
+function limitCellClass(i: number) {
+  return cn(
+    "pt-7 pr-7 pb-2",
+    i > 0 && "border-l border-line pl-7",
+    i === 2 && "max-[900px]:border-l-0 max-[900px]:pl-0",
+    i >= 2 && "max-[900px]:border-t",
+    "max-[480px]:border-l-0 max-[480px]:px-0 max-[480px]:pt-[22px] max-[480px]:pb-1.5",
+    i > 0 && "max-[480px]:border-t",
+  );
+}
+
+function Limits() {
+  return (
+    <section aria-labelledby="limits-h" className="pb-[clamp(64px,8vw,112px)]">
+      <div className="container">
+        <SectionHead id="limits-h" title="Limits">
+          Worth knowing before you upload a big list.
+        </SectionHead>
+        <ul className="grid grid-cols-1 border-t border-line min-[480px]:grid-cols-2 min-[900px]:grid-cols-4">
+          {LIMITS.map((limit, i) => (
+            <li key={limit.label} className={limitCellClass(i)}>
+              <div className="numeral text-[clamp(2.8rem,1.7rem+2.6vw,4.4rem)] whitespace-nowrap">{limit.big}</div>
+              <p className="mt-3 max-w-[18rem] text-[15px] text-ink-2">{limit.label}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-7 max-w-[46rem] text-[14.5px] text-ink-3">
+          The daily caps are Google’s, not Automailr’s. They count everything you send from that account in a day, and
+          Google can change them.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Page ---------- */
 
 export default function Home() {
-  const navigate = useNavigate();
+  const { accessToken } = useAuth();
+  const ctaTo = accessToken ? "/app" : "/login";
 
   return (
-    <PageTransition className="flex min-h-screen flex-col bg-background selection:bg-primary/10">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
-
-      {/* Hero Section */}
-      <AuroraBackground className="min-h-[90vh] flex flex-col items-center justify-center pt-20 pb-10">
-        <motion.div
-          initial={{ opacity: 0.0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{
-            delay: 0.3,
-            duration: 0.8,
-            ease: "easeInOut",
-          }}
-          className="relative flex flex-col gap-4 items-center justify-center px-4 max-w-5xl mx-auto text-center z-10"
-        >
-          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary backdrop-blur-xs mb-6">
-            <Sparkles className="mr-2 h-3.5 w-3.5" />
-            <span>Now with Smart Throttling</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-            Send Personalized Emails <br className="hidden sm:block" />
-            <span className="text-transparent bg-clip-text bg-linear-to-r/srgb from-primary via-purple-500 to-pink-500 animate-gradient bg-size-[200%_auto]">
-              At Scale, For Free.
-            </span>
-          </h1>
-
-          <p className="font-normal text-muted-foreground text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto mt-4 leading-relaxed">
-            Automate your Gmail workflows directly from your browser. No servers, no hidden fees. Just you and your
-            data.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 mt-8">
-            <Button
-              size="lg"
-              onClick={() => navigate("/login")}
-              className="h-12 px-8 text-base rounded-full shadow-xl shadow-primary/20 hover:scale-105 transition-transform duration-200"
-            >
-              Launch App
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-              className="h-12 px-8 text-base rounded-full bg-background/50 backdrop-blur-xs border-primary/20 hover:bg-background/80"
-            >
-              Learn More
-            </Button>
-          </div>
-
-          <div className="mt-12 flex items-center justify-center gap-8 text-muted-foreground/60">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">No Credit Card</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <a href="https://github.com/nishantjoshi-007/Automailr" target="_blank" rel="noopener noreferrer">
-                <span className="text-sm font-medium">Open Source</span>
-              </a>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Secure</span>
-            </div>
-          </div>
-        </motion.div>
-      </AuroraBackground>
-
-      {/* Features Grid */}
-      <section id="features" className="py-24 bg-background relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-black/[0.02] dark:bg-grid-white/[0.02] -z-10" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-5xl mb-4">
-              Everything you need. Nothing you don't.
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Built focused on privacy, speed, and simplicity. We stripped away the complexity so you can focus on
-              your message.
-            </p>
-          </div>
-
-          <BentoGrid className="max-w-6xl mx-auto">
-            {features.map((item, i) => (
-              <BentoGridItem
-                key={i}
-                title={item.title}
-                description={item.description}
-                header={item.header}
-                icon={item.icon}
-                className={item.className}
-              />
-            ))}
-          </BentoGrid>
-        </div>
-      </section>
-
-      {/* How it Works / Steps */}
-      <section className="py-24 bg-muted/30 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">How it works</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Three simple steps to supercharge your email workflow.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
-            {/* Connecting Line (Desktop) */}
-            <div className="hidden md:block absolute top-[25%] left-[16%] right-[16%] h-0.5 bg-linear-to-r/srgb from-transparent via-border to-transparent -z-10" />
-
-            {steps.map((step, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.2, duration: 0.5 }}
-                viewport={{ once: true }}
-                className="relative bg-background p-8 rounded-3xl border shadow-xs flex flex-col items-center text-center group hover:-translate-y-1 transition-transform duration-300"
-              >
-                <div className="absolute top-0 right-0 p-4 opacity-5 text-4xl font-black">{step.num}</div>
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform duration-300">
-                  <step.icon className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 px-4">
-        <div className="max-w-5xl mx-auto rounded-[2.5rem] bg-linear-to-br/srgb from-indigo-500 via-primary to-purple-600 p-1 sm:p-12 overflow-hidden shadow-2xl relative">
-          <div className="absolute inset-0 bg-grid-white/[0.2] mask-[linear-gradient(to_bottom,transparent,black,transparent)]" />
-          <div className="relative bg-background/10 backdrop-blur-xl rounded-4xl p-8 sm:p-12 text-center border border-white/20">
-            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">Ready to send smarter emails?</h2>
-            <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto mb-10">
-              Join thousands of users who trust Automailr for their personal communication needs. It's free, open
-              source, and licensed for personal use only.
-            </p>
-            <Button
-              size="lg"
-              onClick={() => navigate("/login")}
-              className="bg-white text-primary hover:bg-white/90 font-bold text-lg h-14 px-10 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              Get Started for Free
-            </Button>
-          </div>
-        </div>
-      </section>
-
+      <main id="main" className="flex-1">
+        <Hero ctaTo={ctaTo} />
+        <Steps />
+        <Privacy />
+        <Limits />
+      </main>
       <Footer />
-    </PageTransition>
+    </div>
   );
 }

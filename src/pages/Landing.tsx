@@ -1,108 +1,102 @@
-﻿import { useGoogleLogin } from "@react-oauth/google";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router";
-import { SiteHeader } from "@/components/SiteHeader";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { CircleAlert } from "lucide-react";
 import { isGoogleConfigured } from "@/App";
+import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
+import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
+import { BrandMark } from "@/components/Brand";
 import { GoogleIcon } from "@/components/GoogleIcon";
-import { AuroraBackground } from "@/components/ui/aurora-background";
-import { motion } from "motion/react";
-import { toast } from "sonner";
-import { PageTransition } from "@/components/PageTransition";
+import { Button } from "@/components/ui/button";
 
-function GoogleLoginButton() {
-  const { login } = useAuth();
+/** Rendered only when a Google client id is configured (the hook needs it). */
+function GoogleSignInButton({ onStart, onError }: { onStart: () => void; onError: (message: string) => void }) {
   const navigate = useNavigate();
-
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        await login(tokenResponse.access_token);
-        navigate("/app");
-      } catch {
-        toast.error("Google sign-in failed. Please try again.");
-      }
-    },
-    onError: () => {
-      toast.error("Google sign-in failed. Please try again.");
-    },
-    scope: "https://www.googleapis.com/auth/gmail.send",
-    prompt: "select_account", // force the account selection screen
+  const { signIn, busy } = useGoogleSignIn({
+    onSuccess: () => navigate("/app", { viewTransition: true }),
+    onError,
   });
 
   return (
     <Button
+      type="button"
+      variant="outline"
       size="lg"
-      className="w-full gap-3 text-base h-12 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
-      onClick={() => googleLogin()}
+      className="w-full gap-3 [&_svg]:size-5"
+      aria-busy={busy || undefined}
+      onClick={() => {
+        onStart();
+        signIn();
+      }}
     >
-      <GoogleIcon className="h-5 w-5" />
-      Sign in with Google
+      <GoogleIcon />
+      {busy ? "Opening Google…" : "Continue with Google"}
     </Button>
   );
 }
 
-function ConfigError() {
+function NotConfigured() {
   return (
-    <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-4">
-      <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
-      <div>
-        <p className="font-semibold text-base">Google OAuth not configured</p>
-        <p className="mt-2 text-xs text-destructive/80 leading-relaxed">
-          Set <code className="rounded bg-destructive/20 px-1.5 py-0.5 font-mono">VITE_GOOGLE_CLIENT_ID</code> in a{" "}
-          <code className="rounded bg-destructive/20 px-1.5 py-0.5 font-mono">.env</code> file and restart the dev
-          server.
+    <div className="rounded-md bg-surface-2 p-4 text-[14.5px] text-ink-2">
+      <p>Sign-in isn’t set up on this deployment.</p>
+      {import.meta.env.DEV && (
+        <p className="mt-1.5 font-mono text-[13px] text-ink-3">
+          Set VITE_GOOGLE_CLIENT_ID in .env and restart the dev server.
         </p>
-      </div>
+      )}
     </div>
   );
 }
 
+const smallLink = "text-accent-ink underline underline-offset-[3px] hover:text-ink";
+
 export default function Landing() {
-  const configured = isGoogleConfigured();
+  const [error, setError] = useState<string | null>(null);
 
   return (
-    <PageTransition className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
-
-      {/* Hero */}
-      <div className="relative flex flex-1 items-center justify-center px-4 pt-20 pb-10">
-        <AuroraBackground className="absolute inset-0 z-0 opacity-40 pointer-events-none" />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="glass relative z-10 flex flex-col items-center gap-8 rounded-3xl p-8 sm:p-12 max-w-md w-full text-center border-border/50 shadow-2xl bg-card/50 backdrop-blur-xl"
-        >
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-extrabold text-3xl shadow-xl shadow-primary/20">
-              A
-            </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Welcome Back</h1>
-          </div>
-
-          <p className="text-muted-foreground text-lg leading-relaxed">
-            Continue to your dashboard to manage your email campaigns.
+      <main id="main" className="container flex-1">
+        <div className="mx-auto my-[clamp(40px,8vw,112px)] w-full max-w-[440px] rounded-xl border border-line bg-surface p-7">
+          <span className="grid size-12 place-items-center rounded-[14px] bg-accent text-on-accent">
+            <BrandMark className="h-auto w-[33px]" />
+          </span>
+          <h1 className="heading mt-5 text-[1.7rem]">Sign in to start sending.</h1>
+          <p className="mt-3 text-[15.5px] text-ink-2">
+            Automailr asks Google for one permission, <code translate="no">gmail.send</code>, so it can send email as
+            you. It can’t read your inbox.
           </p>
 
-          <div className="w-full space-y-4">{configured ? <GoogleLoginButton /> : <ConfigError />}</div>
-
-          <div className="px-4 py-3 rounded-lg bg-muted/40 border border-border/50 text-xs text-muted-foreground text-left w-full mt-4">
-            <p className="flex gap-2">
-              <span className="shrink-0 text-lg">🛡️</span>
-              <span>
-                We only request permission to see and send emails.
-                <strong>No data is stored on our servers.</strong> Everything happens locally in your browser.
-              </span>
-            </p>
+          <div className="mt-6">
+            <div role="alert">
+              {error && (
+                <p className="mb-3 flex items-start gap-2 text-[14.5px] text-neg">
+                  <CircleAlert aria-hidden="true" className="mt-[3px] size-4 flex-none" strokeWidth={2} />
+                  {error}
+                </p>
+              )}
+            </div>
+            {isGoogleConfigured() ? (
+              <GoogleSignInButton onStart={() => setError(null)} onError={setError} />
+            ) : (
+              <NotConfigured />
+            )}
           </div>
-        </motion.div>
-      </div>
 
-      <Footer />
-    </PageTransition>
+          <p className="mt-4 text-[13.5px] text-ink-3">
+            By continuing you agree to the{" "}
+            <Link to="/terms" viewTransition className={smallLink}>
+              Terms
+            </Link>{" "}
+            and the{" "}
+            <Link to="/privacy" viewTransition className={smallLink}>
+              Privacy policy
+            </Link>
+            .
+          </p>
+        </div>
+      </main>
+      <Footer compact />
+    </div>
   );
 }

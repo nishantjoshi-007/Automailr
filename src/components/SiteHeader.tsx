@@ -35,6 +35,8 @@ export function SiteHeader() {
   const { accessToken } = useAuth();
   const { pathname } = useLocation();
   const ctaTo = accessToken ? "/app" : "/login";
+  // On the sign-in page the CTA would point at itself.
+  const showCta = pathname !== "/login";
 
   // The menu is open "for" one pathname, so any route change closes it.
   const [openFor, setOpenFor] = useState<string | null>(null);
@@ -78,11 +80,13 @@ export function SiteHeader() {
 
         <ThemeToggle className="max-md:ml-auto" />
 
-        <Button asChild className="ml-1 hidden px-[18px] font-semibold md:inline-flex">
-          <Link to={ctaTo} viewTransition>
-            Start sending
-          </Link>
-        </Button>
+        {showCta && (
+          <Button asChild className="ml-1 hidden px-[18px] font-semibold md:inline-flex">
+            <Link to={ctaTo} viewTransition>
+              Start sending
+            </Link>
+          </Button>
+        )}
 
         <button
           ref={buttonRef}
@@ -119,11 +123,13 @@ export function SiteHeader() {
               {l.label}
             </NavLink>
           ))}
-          <Button asChild className="mt-1.5 w-full font-semibold">
-            <Link to={ctaTo} viewTransition onClick={() => close(false)}>
-              Start sending
-            </Link>
-          </Button>
+          {showCta && (
+            <Button asChild className="mt-1.5 w-full font-semibold">
+              <Link to={ctaTo} viewTransition onClick={() => close(false)}>
+                Start sending
+              </Link>
+            </Button>
+          )}
         </nav>
       </div>
     </header>
