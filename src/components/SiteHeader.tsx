@@ -111,7 +111,7 @@ export function SiteHeader() {
         hidden={!open}
         className="absolute inset-x-0 top-full z-40 border-b border-line bg-surface md:hidden"
       >
-        <nav aria-label="Main" className="container grid gap-0.5 pt-2 pb-4">
+        <nav aria-label="Main menu" className="container grid gap-0.5 pt-2 pb-4">
           {NAV_LINKS.map((l) => (
             <NavLink
               key={l.to}

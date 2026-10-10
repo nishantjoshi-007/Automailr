@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Brand } from "@/components/Brand";
 import { cn } from "@/lib/utils";
 
-const linkClass = "text-ink-2 no-underline hover:text-ink hover:underline underline-offset-[3px]";
+const linkClass = "py-1 text-ink-2 no-underline hover:text-ink hover:underline underline-offset-[3px]";
 
 function FooterLinks() {
   return (
@@ -32,15 +32,19 @@ interface FooterProps {
   className?: string;
   /** One quiet row (links + credit) for app pages: no sentence, no CTA. */
   compact?: boolean;
+  /** Use the app bar's wider container (the wizard's width) instead of `container`. */
+  wide?: boolean;
 }
 
-export function Footer({ className, compact = false }: FooterProps) {
+const wideClass = "mx-auto w-full max-w-[1380px] px-[clamp(16px,3vw,40px)]";
+
+export function Footer({ className, compact = false, wide = false }: FooterProps) {
   const { accessToken } = useAuth();
 
   if (compact) {
     return (
       <footer className={cn("mt-auto border-t border-line", className)}>
-        <div className="container flex flex-wrap justify-between gap-x-6 gap-y-3 py-5 text-sm text-ink-3">
+        <div className={cn(wide ? wideClass : "container", "flex flex-wrap justify-between gap-x-6 gap-y-3 py-5 text-sm text-ink-3")}>
           <FooterLinks />
           <span>Made by Nishant Joshi</span>
         </div>

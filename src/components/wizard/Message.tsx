@@ -212,7 +212,7 @@ export function Message({ state, csv, from, files, onFiles, onMessage, onTemplat
                 {ai.busy ? "Polishing…" : "Polish with AI"}
               </Button>
             )}
-            <p id="polish-hint" className={cn(hint, "flex-[1_1_260px]")} aria-live="polite">
+            <p id="polish-hint" className={cn(hint, "flex-[1_1_260px]")}>
               {polishHint}
             </p>
             {ai.error && (

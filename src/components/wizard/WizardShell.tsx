@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Navigate, useBlocker, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +63,8 @@ export function WizardShell() {
   const [files, setFiles] = useState<File[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const now = useNow();
+  const h1Ref = useRef<HTMLHeadingElement>(null);
+  const firstPhase = useRef(true);
 
   const csv = state?.csv ?? null;
   const subject = state?.subject ?? "";
@@ -93,6 +95,17 @@ export function WizardShell() {
   }, [running]);
 
   const step = (STEPS as readonly string[]).includes(slug ?? "") ? (slug as Step) : null;
+
+  // Each phase (a step, sending, the results) is a new page for assistive tech:
+  // move focus to its heading so the change is announced and Tab starts there.
+  const phase = running ? "sending" : state?.results ? "results" : step;
+  useEffect(() => {
+    if (firstPhase.current) {
+      firstPhase.current = false;
+      return;
+    }
+    h1Ref.current?.focus({ preventScroll: true });
+  }, [phase]);
 
   useEffect(() => {
     if (!step) return;
@@ -222,9 +235,14 @@ export function WizardShell() {
         <div className="pt-7 pb-6">
           <Stepper sessionId={sessionId} current={step} subs={subs} linksDisabled={results !== null || running || ai.busy} />
           <div className="mt-[26px] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1.5">
-            <h1 className="heading text-[clamp(1.7rem,1.3rem+1vw,2.2rem)]">{title}</h1>
+            <h1 ref={h1Ref} tabIndex={-1} className="heading text-[clamp(1.7rem,1.3rem+1vw,2.2rem)]">
+              {title}
+            </h1>
             <p className="text-[15.5px] text-ink-2">{sentence}</p>
           </div>
+          <p className="sr-only" role="status">
+            {results && !running ? title : ""}
+          </p>
         </div>
 
         {running && sender.progress ? (
