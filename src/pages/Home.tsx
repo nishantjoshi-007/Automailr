@@ -1,5 +1,5 @@
-﻿import { useNavigate, Link } from "react-router";
-import { useTheme } from "@/contexts/ThemeContext";
+﻿import { useNavigate } from "react-router";
+import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/Footer";
 import { AuroraBackground } from "@/components/ui/aurora-background";
@@ -11,8 +11,6 @@ import {
   Upload,
   Zap,
   ArrowRight,
-  Sun,
-  Moon,
   Lock,
   Sparkles,
   FileSpreadsheet,
@@ -146,45 +144,10 @@ const steps = [
 
 export default function Home() {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
 
   return (
     <PageTransition className="flex min-h-screen flex-col bg-background selection:bg-primary/10">
-      {/* Header */}
-      <nav className="fixed w-full z-50 top-0 left-0 border-b border-border/40 bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center gap-2 group">
-            <img
-              src="/logo.png"
-              alt="Automailr"
-              className="h-9 w-9 rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-200"
-            />
-            <span className="text-xl font-bold tracking-tight text-foreground hidden sm:inline">Automailr</span>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/contact")}
-              className="text-muted-foreground hover:text-foreground text-sm font-medium hidden sm:inline-flex"
-            >
-              Contact
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-            <Button onClick={() => navigate("/login")} className="shadow-lg shadow-primary/20 rounded-full px-6">
-              Get Started
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <SiteHeader />
 
       {/* Hero Section */}
       <AuroraBackground className="min-h-[90vh] flex flex-col items-center justify-center pt-20 pb-10">

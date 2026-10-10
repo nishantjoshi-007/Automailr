@@ -1,73 +1,68 @@
+import { NavLink, useNavigate } from "react-router";
+import { CircleHelp, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { HelpCircle, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
-import { useNavigate, Link } from "react-router";
+import { Brand } from "@/components/Brand";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { SiteHeader, SkipLink, navLinkClass } from "@/components/SiteHeader";
+import { cn } from "@/lib/utils";
 
+function initials(name: string, email: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (email[0] ?? "?").toUpperCase();
+}
+
+/** App bar for signed-in pages; falls back to the public header when signed out. */
 export function AppNav() {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
+  if (!user) return <SiteHeader />;
+
+  const signOut = async () => {
+    await logout();
+    navigate("/", { viewTransition: true });
+  };
+
   return (
-    <nav className="glass sticky top-0 z-50 flex items-center justify-between px-4 py-3 sm:px-6">
-      <Link to="/" className="flex items-center gap-2">
-        <img src="/logo.png" alt="Automailr" className="h-9 w-9 rounded-lg" />
-        <span className="text-lg font-bold tracking-tight text-foreground hidden sm:inline">Automailr</span>
-      </Link>
+    <header className="relative z-20 border-b border-line bg-surface">
+      <SkipLink />
+      <div className="mx-auto flex min-h-[64px] w-full max-w-[1380px] items-center gap-2.5 px-[clamp(16px,3vw,40px)]">
+        <Brand />
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/help")}
-          className="text-muted-foreground hover:text-foreground"
+        <NavLink
+          to="/help"
+          viewTransition
+          className={cn(navLinkClass, "ml-auto inline-flex items-center gap-2 py-2 max-md:px-2")}
         >
-          <HelpCircle className="h-5 w-5" />
-        </Button>
+          <CircleHelp aria-hidden="true" className="size-[18px]" strokeWidth={1.8} />
+          <span className="max-md:sr-only">Help</span>
+        </NavLink>
 
-        {user && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-secondary/60 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm text-foreground hidden md:inline max-w-[160px] truncate">{user.email}</span>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden md:block" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer">
-                {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-                {theme === "dark" ? "Light mode" : "Dark mode"}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <ThemeToggle />
+
+        <div className="ml-1 flex min-w-0 items-center gap-2.5 border-l border-line pl-3.5 max-md:pl-2.5">
+          <Avatar className="size-[34px]">
+            <AvatarImage src={user.avatar || undefined} alt="" />
+            <AvatarFallback className="bg-accent-soft text-[13px] font-[650] text-accent-ink">
+              {initials(user.name, user.email)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="hidden max-w-[220px] truncate text-[14.5px] text-ink-2 sm:block">{user.email}</span>
+          <Button
+            variant="outline"
+            onClick={signOut}
+            aria-label={user.email ? `Sign out of ${user.email}` : "Sign out"}
+            className="h-10 px-3 text-[14.5px] text-ink-2 hover:text-ink max-md:w-10 max-md:px-0"
+          >
+            <LogOut aria-hidden="true" strokeWidth={1.8} />
+            <span className="max-md:hidden">Sign out</span>
+          </Button>
+        </div>
       </div>
-    </nav>
+    </header>
   );
 }

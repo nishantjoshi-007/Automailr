@@ -350,3 +350,16 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Route change: a short cross-fade (react-router viewTransition) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

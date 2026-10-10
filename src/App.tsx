@@ -1,12 +1,10 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BrowserRouter } from "react-router";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { AnimatedRoutes } from "./AnimatedRoutes";
-import { MotionConfig } from "motion/react";
 import { Analytics } from "@vercel/analytics/react";
+import { AppRouter } from "./router";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
@@ -20,11 +18,7 @@ const App = () => (
       <ThemeProvider>
         <AuthProvider>
           <Sonner />
-          <MotionConfig reducedMotion="user">
-            <BrowserRouter>
-              <AnimatedRoutes />
-            </BrowserRouter>
-          </MotionConfig>
+          <AppRouter />
           <Analytics />
         </AuthProvider>
       </ThemeProvider>

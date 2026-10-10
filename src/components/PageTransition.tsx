@@ -1,17 +1,10 @@
-// src/components/PageTransition.tsx
-import { motion } from "motion/react";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
-export const PageTransition = ({ children, className }: { children: ReactNode; className?: string }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-};
+/**
+ * Motion-free passthrough. Route changes cross-fade through the View
+ * Transitions API instead (see router.tsx and index.css); pages still import
+ * this wrapper until 5c–5e remove the usages.
+ */
+export const PageTransition = ({ children, className }: { children: ReactNode; className?: string }) => (
+  <div className={className}>{children}</div>
+);

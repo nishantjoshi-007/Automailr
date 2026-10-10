@@ -1,21 +1,20 @@
 import { useState, FormEvent } from "react";
-import { useTheme } from "@/contexts/ThemeContext";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Footer } from "@/components/Footer";
+import { SiteHeader } from "@/components/SiteHeader";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { motion } from "motion/react";
-import { ChevronLeft, Sun, Moon, CheckCircle2, Mail, Send } from "lucide-react";
+import { ChevronLeft, CheckCircle2, Mail, Send } from "lucide-react";
 import { PageTransition } from "@/components/PageTransition";
 
 const FORMSPARK_FORM_ID = import.meta.env.VITE_FORMSPARK_FORM_ID || "";
 
 export default function Contact() {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
   const [submitting, setSubmitting] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
   const [error, setError] = useState("");
@@ -41,26 +40,7 @@ export default function Contact() {
 
   return (
     <PageTransition className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
-      <nav className="fixed w-full z-50 top-0 left-0 border-b border-border/40 bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-extrabold text-lg shadow-lg group-hover:scale-105 transition-transform duration-200">
-              A
-            </div>
-            <span className="text-xl font-bold tracking-tight text-foreground hidden sm:inline">Automailr</span>
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
-        </div>
-      </nav>
+      <SiteHeader />
 
       {/* Content */}
       <div className="relative flex flex-1 pt-20">

@@ -1,27 +1,74 @@
 import { Link } from "react-router";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Brand } from "@/components/Brand";
 import { cn } from "@/lib/utils";
 
-export function Footer({ className }: { className?: string }) {
+const linkClass = "text-ink-2 no-underline hover:text-ink hover:underline underline-offset-[3px]";
+
+function FooterLinks() {
   return (
-    <footer className={cn("glass mt-auto border-t border-border/50", className)}>
-      <div className="mx-auto flex flex-col items-center gap-3 px-4 py-4 sm:flex-row sm:justify-between sm:px-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>All processing happens in your browser</span>
-          <span className="hidden sm:inline">·</span>
-          <span className="hidden sm:inline">No data leaves your device</span>
+    <nav aria-label="Footer" className="flex flex-wrap gap-x-[22px] gap-y-2">
+      <Link to="/help" viewTransition className={linkClass}>
+        Help
+      </Link>
+      <Link to="/contact" viewTransition className={linkClass}>
+        Contact
+      </Link>
+      <Link to="/privacy" viewTransition className={linkClass}>
+        Privacy
+      </Link>
+      <Link to="/terms" viewTransition className={linkClass}>
+        Terms
+      </Link>
+      <a href="https://github.com/nishantjoshi-007/Automailr" target="_blank" rel="noopener" className={linkClass}>
+        GitHub
+      </a>
+    </nav>
+  );
+}
+
+interface FooterProps {
+  className?: string;
+  /** One quiet row (links + credit) for app pages: no sentence, no CTA. */
+  compact?: boolean;
+}
+
+export function Footer({ className, compact = false }: FooterProps) {
+  const { accessToken } = useAuth();
+
+  if (compact) {
+    return (
+      <footer className={cn("mt-auto border-t border-line", className)}>
+        <div className="container flex flex-wrap justify-between gap-x-6 gap-y-3 py-5 text-sm text-ink-3">
+          <FooterLinks />
+          <span>Made by Nishant Joshi</span>
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <Link to="/privacy" className="transition-colors hover:text-foreground underline-offset-4 hover:underline">
-            Privacy Policy
-          </Link>
-          <span>·</span>
-          <Link to="/terms" className="transition-colors hover:text-foreground underline-offset-4 hover:underline">
-            Terms of Service
-          </Link>
-          <span>·</span>
-          <Link to="/contact" className="transition-colors hover:text-foreground underline-offset-4 hover:underline">
-            Contact
-          </Link>
+      </footer>
+    );
+  }
+
+  return (
+    // mt-auto keeps the footer at the bottom of short flex-column pages; the
+    // padding above the border is the reference's clamp(24px, 4vw, 48px) gap.
+    <footer className={cn("mt-auto pt-[clamp(24px,4vw,48px)]", className)}>
+      <div className="border-t border-line pt-10 pb-12">
+        <div className="container">
+          <div className="flex flex-wrap items-center justify-between gap-5">
+            <Brand />
+            <p className="max-w-[34rem] text-[15px] text-ink-2">
+              Free, open-source mail merge for Gmail. Licensed for personal, non-commercial use.
+            </p>
+            <Button asChild className="px-[18px] font-semibold max-[460px]:w-full">
+              <Link to={accessToken ? "/app" : "/login"} viewTransition>
+                Start sending
+              </Link>
+            </Button>
+          </div>
+          <div className="mt-8 flex flex-wrap justify-between gap-x-6 gap-y-3 border-t border-line pt-6 text-sm text-ink-3">
+            <FooterLinks />
+            <span>Made by Nishant Joshi</span>
+          </div>
         </div>
       </div>
     </footer>
