@@ -1,217 +1,152 @@
-# Automailr 
+# Automailr
 
-**Send personalized emails at scale, for free.**
+Automailr is a mail merge for Gmail that runs entirely in the browser. Upload a CSV, write one message with `{{fields}}` taken from its columns, check every recipient's copy, and send from your own Gmail account. There is no server and no database: the site is static files on Vercel, and your browser talks to Google directly.
 
-Automailr is a 100 % client-side Gmail mail-merge tool. Upload a CSV, compose a rich-text email with `{{placeholder}}` variables, attach files, preview every message, and send — all from your browser. No servers, no databases, no data leaves your machine except the Gmail API calls you initiate.
+[![Licence: MIT Non-Commercial](https://img.shields.io/badge/licence-MIT%20Non--Commercial-blue)](LICENSE)
 
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white)
-![License](https://img.shields.io/badge/License-Non--Commercial-blue)
+## What it does
 
----
+1. **Recipients.** Upload a CSV with an `email` column. Every other column becomes a `{{field}}` you can use in the message.
+2. **Message.** Write a subject and body in a rich-text editor, insert fields, attach files, and watch the preview for each recipient. Optionally polish the text with AI.
+3. **Review & send.** Step through every recipient's email, then send. Messages go out one at a time. You can stop, retry failures, send the ones not yet sent, and download the results as a CSV.
 
-## Features
+| Limit | Value |
+| --- | --- |
+| Recipients per batch | 5,000 rows |
+| Attachments | 25 MB in total, measured on the raw files |
+| Pause between sends | 250 ms |
+| Sign-in lifetime | 55 minutes, then sign in again |
 
-- **CSV Upload** — Drag-and-drop or file picker; validates for an `email` column; up to 5 000 rows; warns on invalid addresses; downloadable sample CSV.
-- **Rich-Text Composer** — TipTap WYSIWYG editor with clickable `{{placeholder}}` badges sourced from your CSV headers.
-- **Email Templates** — 4 built-in templates (Cold Outreach, Follow-Up, Event Invite, Job Application) with one-click apply.
-- **File Attachments** — Drag-and-drop with image/PDF preview; 25 MB total limit (Gmail cap).
-- **Live Preview** — Navigate through each recipient to see exactly what they'll receive, with warnings for unresolved placeholders.
-- **Bulk Send with Rate Limiting** — 250 ms delay between sends; real-time progress bar; abort support; retry failed only.
-- **Google OAuth** — Minimal scope (`gmail.send` only — no read access).
-- **Encrypted Session Storage** — AES-256-GCM encryption of tokens and PII via the Web Crypto API; forward secrecy on logout.
-- **Auto-Logout** — Tokens expire after 55 min (ahead of Google's 60-min window).
-- **Dark / Light Theme** — Persisted toggle.
-- **Animated Transitions** — Framer Motion page and route transitions with an aurora background effect.
-- **Fully Client-Side** — Zero backend; all processing happens locally.
+If the sign-in runs out partway through a batch, sending pauses, the rest are marked "not sent", and you can sign in again and send them.
 
----
+## Privacy and permissions
 
-## Tech Stack
+Automailr asks Google for one permission, `gmail.send`. It can send email as you. It cannot read, search or delete anything in your mailbox.
 
-| Category         | Technology                                                               |
-| ---------------- | ------------------------------------------------------------------------ |
-| Framework        | React 18 · TypeScript 5                                                  |
-| Build            | Vite 7 (SWC)                                                             |
-| Styling          | Tailwind CSS 3 · tailwindcss-animate · @tailwindcss/typography           |
-| UI Components    | shadcn/ui (Radix primitives · class-variance-authority · tailwind-merge) |
-| Rich-Text Editor | TipTap 3                                                                 |
-| Animations       | Framer Motion 12                                                         |
-| Routing          | React Router 6                                                           |
-| CSV Parsing      | PapaParse 5                                                              |
-| Auth             | @react-oauth/google (implicit token flow)                                |
-| Encryption       | Web Crypto API (AES-256-GCM)                                             |
-| Forms            | react-hook-form · Zod                                                    |
-| Icons            | Lucide React                                                             |
-| Toasts           | Sonner · Radix Toast                                                     |
-| Testing          | Vitest · jsdom · @testing-library/react                                  |
+Stays in the browser:
 
----
+- The Google access token is encrypted with AES-256-GCM and kept in `sessionStorage`. The key is a non-extractable `CryptoKey` in IndexedDB. The token is treated as expired after 55 minutes.
+- Wizard state (CSV rows, subject, body, send results) is encrypted the same way in `sessionStorage` and cleared on sign-out. Attachments stay in memory only.
+- The message preview is sanitised with DOMPurify before it is rendered.
 
-## Getting Started
+Leaves the browser, and when:
 
-### Prerequisites
+| Recipient | What | When |
+| --- | --- | --- |
+| Google (OAuth and Gmail API) | Sign-in, and each email you send | Signing in and sending |
+| Google (Gemini API) | Your subject and message, with `{{fields}}` left in place. Never the recipient list. | Only when you press Polish with AI |
+| Vercel | The site's files, and cookie-free page-view counts through Vercel Web Analytics | Loading the site |
+| Formspark | Name, email address and message | Only when you send the contact form |
 
-- **Node.js ≥ 18** (or Bun)
-- A **Google Cloud project** with the Gmail API enabled and an OAuth 2.0 Client ID configured for a web application.
+## Run it locally
 
-### 1. Clone & install
+Requires Node 20 or later (`package.json` has no `engines` field; the project is developed on Node 24).
 
-```bash
+```sh
 git clone https://github.com/nishantjoshi-007/Automailr.git
 cd Automailr
-npm install        # or: bun install
+npm install
 ```
 
-### 2. Configure environment variables
+Create `.env` in the project root. `.env.example` has the same variables.
 
-Create a `.env` file in the project root:
-
-```env
-# Required — Google OAuth 2.0 Client ID
+```sh
 VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-
-# Optional — Formspark form ID for the /contact page
 VITE_FORMSPARK_FORM_ID=your-formspark-form-id
+VITE_GEMINI_API_KEY=your-gemini-api-key
 ```
 
-> **Tip:** In the Google Cloud Console, add `http://localhost:8080` to the list of authorized JavaScript origins for local development.
+| Variable | Used for | Required |
+| --- | --- | --- |
+| `VITE_GOOGLE_CLIENT_ID` | Google sign-in. Without it, sign-in is unavailable. | Yes |
+| `VITE_GEMINI_API_KEY` | AI polish | No |
+| `VITE_FORMSPARK_FORM_ID` | The contact form | No |
 
-### 3. Start the dev server
+Then start the dev server, which listens on http://localhost:8080.
 
-```bash
-npm run dev        # or: bun dev
+```sh
+npm run dev
 ```
 
-The app will be available at **http://localhost:8080**.
+## Google Cloud setup
 
----
+1. In Google Cloud Console, create or pick a project and enable the Gmail API.
+2. Configure the OAuth consent screen and add the `https://www.googleapis.com/auth/gmail.send` scope. Add no other scopes.
+3. Under Credentials, create an OAuth 2.0 client ID of type Web application.
+4. Add authorised JavaScript origins: `http://localhost:8080` and the origin of your deployment (`https://automailr.nishantjoshi.me` for the production site).
+5. Put the client ID in `VITE_GOOGLE_CLIENT_ID`.
 
-## Available Scripts
+The production app is verified by Google, so signing in there shows no "unverified app" screen. A client ID you create yourself is not verified until you submit it for review. While it is in testing, only the test users you list on the consent screen can sign in, and they see the warning screen.
 
-| Script               | Description                                   |
-| -------------------- | --------------------------------------------- |
-| `npm run dev`        | Start the Vite dev server (port 8080, HMR)    |
-| `npm run build`      | Production build                              |
-| `npm run build:dev`  | Development build (includes component tagger) |
-| `npm run preview`    | Preview the production build locally          |
-| `npm run lint`       | Lint with ESLint                              |
-| `npm test`           | Run tests once (Vitest)                       |
-| `npm run test:watch` | Run tests in watch mode                       |
+## Gemini key
 
----
+Optional. AI polish is the only feature that uses it.
 
-## Project Structure
+The key ships in the client bundle by design. There is no server to hold it, and the owner accepted that risk instead of adding a proxy or asking each user for their own key (DECISIONS.md, D3 and D4). Anyone can read it from the deployed JavaScript, so restrict it in Google Cloud:
 
-```
+- Application restriction: HTTP referrers, set to the deployed origin (`https://automailr.nishantjoshi.me/*` in production, plus `http://localhost:8080/*` for development).
+- API restriction: Generative Language API only.
+- A hard daily quota cap on that API, plus a budget alert.
+
+Referrer restrictions stop other websites from using the key in a browser. They do not stop someone who sets the header by hand, so the quota cap is what bounds the damage. The site keeps `Referrer-Policy: strict-origin-when-cross-origin` so the restriction keeps working for the site itself.
+
+## Scripts
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Vite dev server on port 8080 |
+| `npm run build` | Production build into `dist` |
+| `npm run build:dev` | Build in development mode |
+| `npm run preview` | Serve the built `dist` locally |
+| `npm run lint` | ESLint over the project |
+| `npm test` | Run the Vitest suites once |
+| `npm run test:watch` | Vitest in watch mode |
+
+## Deploy
+
+Automailr deploys to Vercel as a static build: build command `npm run build`, output directory `dist`. Set `VITE_GOOGLE_CLIENT_ID`, `VITE_GEMINI_API_KEY` and `VITE_FORMSPARK_FORM_ID` in the project's environment variables; Vite reads them at build time, so redeploy after changing them.
+
+`vercel.json` rewrites every path to `index.html` for the single-page router and sets security headers: `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options: DENY` and `Cross-Origin-Opener-Policy`. It also sets a Content-Security-Policy, currently as `Content-Security-Policy-Report-Only`, so violations are reported in the browser console but nothing is blocked yet. If you change the inline script in `index.html`, update its sha256 in the policy.
+
+## Project layout
+
+```text
 src/
-├── main.tsx                     # Entry point
-├── App.tsx                      # Root: providers (OAuth, Query, Theme, Auth, Router)
-├── AnimatedRoutes.tsx           # Routes with auth guards + animated transitions
-├── index.css                    # Tailwind directives & global styles
-│
-├── pages/                       # Full-page views
-│   ├── Home.tsx                 #   / — Marketing landing page
-│   ├── Landing.tsx              #   /login — Google sign-in
-│   ├── Dashboard.tsx            #   /app/:session/:step — Mail-merge wizard
-│   ├── Help.tsx                 #   /help — FAQ (protected)
-│   ├── Contact.tsx              #   /contact — Formspark contact form
-│   ├── PrivacyPolicy.tsx        #   /privacy
-│   ├── TermsOfService.tsx       #   /terms
-│   └── NotFound.tsx             #   404
-│
-├── components/
-│   ├── AppNav.tsx               # Authenticated nav bar
-│   ├── Footer.tsx               # Global footer
-│   ├── Stepper.tsx              # 4-step progress indicator
-│   ├── PageTransition.tsx       # Framer Motion wrapper
-│   ├── steps/                   # Wizard step components
-│   │   ├── CSVUpload.tsx        #   Step 1 — Upload & validate CSV
-│   │   ├── Compose.tsx          #   Step 2 — Subject + body + templates
-│   │   ├── Attachments.tsx      #   Step 3 — File attachments
-│   │   └── PreviewSend.tsx      #   Step 4 — Preview + send + retry
-│   └── ui/                      # ~50 shadcn/ui primitives
-│
-├── contexts/
-│   ├── AuthContext.tsx           # OAuth state, encrypted persistence, auto-logout
-│   └── ThemeContext.tsx          # Dark/light theme
-│
-├── constants/
-│   └── templates.ts             # 4 built-in email templates
-│
-├── hooks/
-│   ├── use-mobile.tsx           # Mobile breakpoint hook
-│   └── use-toast.ts             # Toast hook
-│
-├── utils/
-│   ├── csvParser.ts             # PapaParse wrapper + validation
-│   ├── gmailSender.ts           # MIME builder + Gmail API sender
-│   ├── placeholders.ts          # {{placeholder}} replacement (XSS-safe)
-│   └── secureStorage.ts         # AES-256-GCM encrypted storage
-│
-├── lib/
-│   └── utils.ts                 # cn() helper (clsx + tailwind-merge)
-│
-└── test/
-    └── setup.ts                 # Vitest setup
+  pages/              Landing, SignIn, Wizard, Help, Contact, Privacy, Terms, NotFound
+  components/
+    wizard/           The three steps, wizard state, sender and constants
+    ui/               shadcn/ui primitives
+    (top level)       Shell: site header, app nav, footer, theme toggle
+  utils/              csvParser, placeholders, gmailSender, geminiClient, secureStorage
+  contexts/           AuthContext, ThemeContext
+  hooks/              useGoogleSignIn, useAIPolish
+  lib/                env and small helpers
+design/bakeoff/       The three design directions compared before the redesign
+DESIGN.md             The design system
+DECISIONS.md          Decisions and the log of what was done
+PLAN.md               The plan and its progress
 ```
 
----
+Stack: React 19, TypeScript 6, Vite 8, Tailwind CSS 4, React Router 8, Radix UI, TipTap 3, PapaParse, DOMPurify, `@react-oauth/google`, Vitest 5. Fonts (Archivo, Geist, Geist Mono) are self-hosted through Fontsource.
 
-## How It Works
+## Design
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  1. Upload   │ ──► │  2. Compose  │ ──► │ 3. Attach    │ ──► │ 4. Preview   │
-│     CSV      │     │    Email     │     │    Files     │     │   & Send     │
-└──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
-```
+`DESIGN.md` describes the colour, type and layout rules, and the voice used for interface copy. `design/bakeoff/` holds the three directions that were compared; open `design/bakeoff/compare.html` in a browser to see them side by side.
 
-1. **Upload CSV** — Parse and validate your recipient list (must contain an `email` column).
-2. **Compose** — Write your email using the rich-text editor with `{{column_name}}` placeholders, or pick a template.
-3. **Attach Files** — Optionally add attachments (up to 25 MB total).
-4. **Preview & Send** — Review each personalized email, then send all. Track progress in real time, and retry any failures.
+## Tests
 
----
+`npm test` runs 154 tests in 5 files with Vitest, happy-dom and fake-indexeddb:
 
-## Security
+- `csvParser`: the `email` column, row limit, header trimming, invalid addresses.
+- `placeholders`: `{{field}}` substitution, escaping, and finding unknown fields.
+- `gmailSender`: building the MIME message, headers, attachments and API errors.
+- `geminiClient`: requests, error messages and response handling.
+- `secureStorage`: AES-GCM round trips, key creation and removal.
 
-Automailr takes security seriously despite being a client-side app:
+## Licence
 
-| Layer                   | Detail                                                                                                                                                                                                                                   |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Encrypted storage**   | OAuth tokens and user PII are encrypted with **AES-256-GCM** before being placed in `sessionStorage`. The encryption key is a **non-extractable** `CryptoKey` stored in IndexedDB — raw key bytes can never be read, even by JavaScript. |
-| **Unique IV per write** | Every value is encrypted with a fresh random 96-bit IV so identical data produces different ciphertext.                                                                                                                                  |
-| **Forward secrecy**     | On logout, the encryption key is deleted from IndexedDB, making old ciphertext permanently unrecoverable.                                                                                                                                |
-| **Token lifecycle**     | Access tokens auto-expire after 55 minutes (ahead of Google's 60-min window) and are cleared from storage.                                                                                                                               |
-| **Minimal OAuth scope** | Only `gmail.send` is requested — no read access to your inbox.                                                                                                                                                                           |
-| **XSS prevention**      | All CSV values are HTML-escaped (`& < > " '`) before template injection.                                                                                                                                                                 |
-| **MIME safety**         | Attachment filenames are sanitized to prevent header injection.                                                                                                                                                                          |
-| **No server**           | Data never touches a third-party server. Gmail API calls go directly from your browser to Google.                                                                                                                                        |
+MIT Non-Commercial License. Free for personal, educational, research and open-source use; not for commercial purposes. See [LICENSE](LICENSE).
 
----
+## Contact
 
-## Environment Variables
-
-| Variable                 | Required | Description                            |
-| ------------------------ | -------- | -------------------------------------- |
-| `VITE_GOOGLE_CLIENT_ID`  | **Yes**  | Google OAuth 2.0 Client ID             |
-| `VITE_FORMSPARK_FORM_ID` | No       | Formspark form ID for the contact page |
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes (`git commit -m "Add my feature"`)
-4. Push to the branch (`git push origin feature/my-feature`)
-5. Open a Pull Request
-
----
-
-## License
-
-This project is licensed under a **Non-Commercial** license — free for personal, educational, and open-source use. Commercial use is not permitted. See [LICENSE](LICENSE) for details.
+contact@nishantjoshi.me, or [open an issue on GitHub](https://github.com/nishantjoshi-007/Automailr/issues).
