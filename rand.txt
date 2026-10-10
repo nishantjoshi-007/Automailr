@@ -1,5 +1,0 @@
-so i am trying to clean this up entirely, it has two branches, i wanna make it to one main branch, clean up ui, right now it
-    looks like ai-slop, we clean it up, do a security review and update/modify/change dependency and anything else if needed. so
-    first is pull both branch, analyze and understand it, learn the diff between two and see if we can just delete one or how to
-    proceed, give me list in which order we should do and how we should do. think hard and be thorough with it, this just mainly
-    planning and figureing out part.

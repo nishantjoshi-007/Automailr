@@ -12,8 +12,6 @@ import {
   ChevronLeft,
   HelpCircle,
   FileSpreadsheet,
-  Lock,
-  Shield,
   Send,
   Upload,
   Pencil,
@@ -21,7 +19,6 @@ import {
   Eye,
   Zap,
   AlertTriangle,
-  ExternalLink,
   Lightbulb,
   CheckCircle2,
   Copy,
@@ -424,62 +421,6 @@ carol@example.com,Carol,Williams,Initech`;
             </TabsContent>
           </Tabs>
         </motion.div>
-
-        {/* ─── Security & Privacy panel ─── */}
-        {/* <motion.div variants={item}>
-          <Card className="glass border-border/60 overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500" />
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Shield className="h-5 w-5 text-green-500" />
-                Security & Privacy
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid sm:grid-cols-3 gap-4">
-                {[
-                  {
-                    icon: Lock,
-                    title: "No Backend",
-                    desc: "Everything runs in your browser. Your data never touches our servers.",
-                    color: "text-green-500 bg-green-500/10",
-                  },
-                  {
-                    icon: Shield,
-                    title: "Session Storage",
-                    desc: "Your OAuth token lives in session storage and is cleared when you close the tab.",
-                    color: "text-blue-500 bg-blue-500/10",
-                  },
-                  {
-                    icon: Eye,
-                    title: "Minimal Permissions",
-                    desc: "Only gmail.send scope is requested — we can't read or delete your emails.",
-                    color: "text-violet-500 bg-violet-500/10",
-                  },
-                ].map((card) => (
-                  <div key={card.title} className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-2">
-                    <div className={`inline-flex p-2 rounded-lg ${card.color}`}>
-                      <card.icon className="h-4 w-4" />
-                    </div>
-                    <p className="font-semibold text-sm text-foreground">{card.title}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{card.desc}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                You can revoke access at any time via{" "}
-                <a
-                  href="https://myaccount.google.com/permissions"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline inline-flex items-center gap-1"
-                >
-                  Google Permissions <ExternalLink className="h-3 w-3" />
-                </a>
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div> */}
 
         {/* ─── Keyboard shortcuts / tips strip ─── */}
         <motion.div variants={item}>

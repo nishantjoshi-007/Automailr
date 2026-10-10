@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Footer } from "@/components/Footer";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { motion } from "framer-motion";
-import { ChevronLeft, Sun, Moon, CheckCircle2, MessageSquare, Mail, Send } from "lucide-react";
+import { ChevronLeft, Sun, Moon, CheckCircle2, Mail, Send } from "lucide-react";
 import { PageTransition } from "@/components/PageTransition";
 
 const FORMSPARK_FORM_ID = import.meta.env.VITE_FORMSPARK_FORM_ID || "";

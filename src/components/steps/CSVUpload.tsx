@@ -3,7 +3,6 @@ import { Upload, FileSpreadsheet, Download, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { parseCSV, downloadSampleCSV, type CSVData } from "@/utils/csvParser";
 
 interface CSVUploadProps {
@@ -115,14 +114,6 @@ export function CSVUpload({ csvData, onCSVParsed }: CSVUploadProps) {
             <CardTitle className="text-base">Preview & Placeholders</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* <div className="flex flex-wrap gap-2">
-              {csvData.headers.map((h) => (
-                <Badge key={h} variant="secondary" className="font-mono text-xs">
-                  {`{{${h}}}`}
-                </Badge>
-              ))}
-            </div> */}
-
             <div className="max-h-64 overflow-auto rounded-lg border border-border">
               <Table>
                 <TableHeader>

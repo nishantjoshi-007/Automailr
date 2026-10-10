@@ -104,31 +104,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [accessToken, logout]);
 
   const login = useCallback(async (token: string) => {
-    console.log("[DEBUG] login() called with token:", token?.slice(0, 20) + "...");
     setAccessToken(token);
 
-    console.log("[DEBUG] Storing token to secureStorage...");
     try {
       await Promise.all([
         secureStorage.setItem("automailr_token", token),
         secureStorage.setItem("automailr_token_ts", String(Date.now())),
       ]);
-      console.log("[DEBUG] secureStorage.setItem completed");
     } catch (err) {
-      console.error("[DEBUG] secureStorage.setItem FAILED:", err);
+      console.warn("[Automailr] Failed to persist session:", err);
     }
 
     try {
-      console.log("[DEBUG] Fetching user profile...");
       const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("[DEBUG] Profile fetch response:", res.status);
       if (!res.ok) {
         throw new Error(`Profile fetch failed: ${res.status}`);
       }
       const data = await res.json();
-      console.log("[DEBUG] Profile data:", data.email);
       const profile: UserProfile = {
         name: data.name || "",
         email: data.email || "",
@@ -136,9 +130,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       setUser(profile);
       await secureStorage.setItem("automailr_user", JSON.stringify(profile));
-      console.log("[DEBUG] User profile stored");
     } catch (err) {
-      console.error("[DEBUG] Failed to fetch user profile:", err);
+      console.warn("[Automailr] Failed to fetch user profile:", err);
       setUser({ name: "Unknown", email: "", avatar: "" });
     }
   }, []);

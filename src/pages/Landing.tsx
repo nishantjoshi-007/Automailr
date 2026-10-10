@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, HelpCircle, Sun, Moon, ArrowLeft } from "lucide-react";
+import { AlertTriangle, Sun, Moon } from "lucide-react";
 import { isGoogleConfigured } from "@/App";
 import { Footer } from "@/components/Footer";
 import { GoogleIcon } from "@/components/GoogleIcon";
@@ -17,37 +17,25 @@ function GoogleLoginButton() {
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      console.log("[DEBUG] onSuccess fired, token:", tokenResponse.access_token?.slice(0, 20) + "...");
       try {
         await login(tokenResponse.access_token);
-        console.log("[DEBUG] login() completed, navigating to /app");
         navigate("/app");
-      } catch (err) {
-        console.error("[DEBUG] login() threw:", err);
+      } catch {
         alert("Google sign-in failed. Please try again.");
       }
     },
-    onError: (error) => {
-      console.error("[DEBUG] onError fired:", error);
+    onError: () => {
       alert("Google sign-in failed. Please try again.");
     },
-    onNonOAuthError: (error) => {
-      console.error("[DEBUG] onNonOAuthError fired:", error);
-    },
     scope: "https://www.googleapis.com/auth/gmail.send",
-    prompt: "select_account", // <-- Add this to force the account selection screen
+    prompt: "select_account", // force the account selection screen
   });
-
-  console.log("[DEBUG] GoogleLoginButton rendered, origin:", window.location.origin);
 
   return (
     <Button
       size="lg"
       className="w-full gap-3 text-base h-12 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
-      onClick={() => {
-        console.log("[DEBUG] Sign-in button clicked");
-        googleLogin();
-      }}
+      onClick={() => googleLogin()}
     >
       <GoogleIcon className="h-5 w-5" />
       Sign in with Google
