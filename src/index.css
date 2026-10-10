@@ -1,75 +1,161 @@
+/*
+  Automailr design tokens — direction "A + C, accent only" (DESIGN.md).
+  Light values live on :root, dark values on .dark (set on <html> before first
+  paint by the inline script in index.html and kept in sync by ThemeContext).
+  Tailwind utilities read them through the @theme block below.
+*/
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
-@utility container {
-  margin-inline: auto;
-  padding-inline: 2rem;
-  /* v4 ships per-breakpoint container max-widths; v3 config had only 2xl: 1400px */
-  @media (width >= 40rem) {
-    max-width: none;
-  }
-  @media (width >= 1400px) {
-    max-width: 1400px;
-  }
+:root {
+  /* Neutrals: white canvas with a faint cool cast */
+  --bg: oklch(0.985 0.002 190);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.965 0.004 190);
+  --line: oklch(0.915 0.005 190);
+  --line-strong: oklch(0.62 0.01 200);
+
+  /* Ink: headings and body, secondary copy, labels and hints */
+  --ink: oklch(0.2 0.012 220);
+  --ink-2: oklch(0.38 0.012 220);
+  --ink-3: oklch(0.5 0.01 220);
+
+  /* The one accent: ink blue */
+  --accent: oklch(0.47 0.15 255);
+  --accent-hover: oklch(0.42 0.14 255);
+  --on-accent: oklch(0.99 0.002 250);
+  --accent-ink: oklch(0.47 0.15 255);
+  --accent-soft: oklch(0.935 0.025 250);
+
+  /* State only, never decoration */
+  --pos: oklch(0.5 0.13 150);
+  --pos-soft: oklch(0.95 0.04 150);
+  --neg: oklch(0.53 0.19 27);
+  --neg-soft: oklch(0.95 0.03 27);
+
+  /* The single polarity-flipped block (privacy promise) */
+  --invert-bg: oklch(0.2 0.012 220);
+  --invert-ink: oklch(0.95 0.004 190);
+  --invert-muted: oklch(0.76 0.008 200);
+  --invert-line: oklch(0.32 0.01 220);
+  --invert-accent: oklch(0.72 0.12 250);
+  --invert-on-accent: oklch(0.17 0.012 258);
+
+  --elev:
+    0 1px 2px oklch(0.2 0.012 220 / 0.05),
+    0 16px 40px -18px oklch(0.2 0.012 220 / 0.18);
+
+  color-scheme: light;
+}
+
+.dark {
+  --bg: oklch(0.165 0.006 220);
+  --surface: oklch(0.205 0.007 220);
+  --surface-2: oklch(0.235 0.008 220);
+  --line: oklch(0.29 0.008 220);
+  --line-strong: oklch(0.55 0.01 220);
+
+  --ink: oklch(0.95 0.004 190);
+  --ink-2: oklch(0.82 0.006 200);
+  --ink-3: oklch(0.7 0.008 210);
+
+  --accent: oklch(0.72 0.12 250);
+  --accent-hover: oklch(0.77 0.11 250);
+  --on-accent: oklch(0.17 0.012 258);
+  --accent-ink: oklch(0.76 0.11 250);
+  --accent-soft: oklch(0.29 0.05 255);
+
+  --pos: oklch(0.75 0.15 150);
+  --pos-soft: oklch(0.27 0.05 150);
+  --neg: oklch(0.72 0.16 25);
+  --neg-soft: oklch(0.28 0.06 27);
+
+  --invert-bg: oklch(0.235 0.008 220);
+  --invert-ink: oklch(0.95 0.004 190);
+  --invert-muted: oklch(0.76 0.008 200);
+  --invert-line: oklch(0.32 0.01 220);
+  --invert-accent: oklch(0.72 0.12 250);
+  --invert-on-accent: oklch(0.17 0.012 258);
+
+  --elev:
+    0 1px 2px oklch(0 0 0 / 0.3),
+    0 16px 40px -18px oklch(0 0 0 / 0.6);
+
+  color-scheme: dark;
 }
 
 @theme inline {
-  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  /* Type. Archivo carries the width axis (wdth.css), used 104–118% on display. */
+  --font-display:
+    "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-mono:
+    "Geist Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
+  /* Direction tokens (use these in new code) */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-pos: var(--pos);
+  --color-pos-soft: var(--pos-soft);
+  --color-neg: var(--neg);
+  --color-neg-soft: var(--neg-soft);
+  --color-invert-bg: var(--invert-bg);
+  --color-invert-ink: var(--invert-ink);
+  --color-invert-muted: var(--invert-muted);
+  --color-invert-line: var(--invert-line);
+  --color-invert-accent: var(--invert-accent);
+  --color-invert-on-accent: var(--invert-on-accent);
 
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  /* shadcn aliases, so the Radix primitives in components/ui map onto the
+     same palette. New code should prefer the direction tokens above. */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--ink-3);
+  --color-accent-foreground: var(--on-accent);
+  --color-destructive: var(--neg);
+  --color-destructive-foreground: var(--surface);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--accent-ink);
 
-  --animate-gradient: gradient 8s ease infinite;
-  --animate-aurora: aurora 60s linear infinite;
+  /* Radius ladder: controls 8–12, cards 16–22 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-2xl: 28px;
+
+  /* One elevation, used sparingly (hero product card, popovers) */
+  --shadow-elev: var(--elev);
+
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
-  --animate-fade-in-up: fade-in-up 0.3s ease-out;
-  --animate-fade-out-down: fade-out-down 0.3s ease-out;
 
-  @keyframes gradient {
-    0%,
-    100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-  @keyframes aurora {
-    from {
-      background-position:
-        50% 50%,
-        50% 50%;
-    }
-    to {
-      background-position:
-        350% 50%,
-        350% 50%;
-    }
-  }
   @keyframes accordion-down {
     from {
       height: 0;
@@ -86,115 +172,57 @@
       height: 0;
     }
   }
-  @keyframes fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes fade-out-down {
-    from {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    to {
-      opacity: 0;
-      transform: translateY(-12px);
-    }
-  }
 }
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 10%;
+@utility container {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
+}
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 10%;
+/* Display type: headlines and the numbers that matter */
+@utility heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 104%;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
+@utility numeral {
+  font-family: var(--font-display);
+  font-weight: 850;
+  font-stretch: 112%;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+}
 
-    --primary: 263 70% 58%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 240 5% 93%;
-    --secondary-foreground: 240 10% 10%;
-
-    --muted: 240 5% 93%;
-    --muted-foreground: 240 5% 40%;
-
-    --accent: 263 70% 58%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 240 6% 85%;
-    --input: 240 6% 85%;
-    --ring: 263 70% 58%;
-
-    --radius: 0.75rem;
-
-    --white-gradient: repeating-linear-gradient(
-      100deg,
-      #ffffff 0%,
-      #ffffff 7%,
-      transparent 10%,
-      transparent 12%,
-      #ffffff 16%
-    );
-    --dark-gradient: repeating-linear-gradient(
-      100deg,
-      #000000 0%,
-      #000000 7%,
-      transparent 10%,
-      transparent 12%,
-      #000000 16%
-    );
-    --aurora: repeating-linear-gradient(100deg, #8b5cf6 10%, #3b82f6 15%, #8b5cf6 20%, #3b82f6 25%, #8b5cf6 30%);
-  }
-
-  .dark {
-    --background: 240 20% 3.5%;
-    --foreground: 210 40% 96%;
-
-    --card: 240 18% 7.5%;
-    --card-foreground: 210 40% 96%;
-
-    --popover: 240 18% 7.5%;
-    --popover-foreground: 210 40% 96%;
-
-    --primary: 263 70% 58%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 240 12% 14%;
-    --secondary-foreground: 210 40% 96%;
-
-    --muted: 240 12% 14%;
-    --muted-foreground: 240 5% 55%;
-
-    --accent: 263 70% 58%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 240 5% 18%;
-    --input: 240 5% 18%;
-    --ring: 263 70% 58%;
-
-    --radius: 0.75rem;
-  }
+@utility num {
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   button:not(:disabled),
@@ -202,205 +230,123 @@
     cursor: pointer;
   }
 
-  body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: "Plus Jakarta Sans", sans-serif;
+  :focus-visible {
+    outline: 2px solid var(--color-accent-ink);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-ink);
+  }
+
+  code,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
   }
 }
 
-/* Glass effect utility */
-.glass {
-  background: hsl(0 0% 100% / 0.7);
-  backdrop-filter: blur(16px);
-  border: 1px solid hsl(0 0% 0% / 0.08);
+/* {{field}} token, used inside editor and preview markup where React
+   classes can't reach */
+.tok {
+  display: inline-flex;
+  align-items: baseline;
+  padding: 0.05em 0.42em;
+  margin: 0 0.04em;
+  border-radius: 6px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklch, var(--color-accent-ink) 22%, transparent);
 }
 
-.dark .glass {
-  background: hsl(240 18% 7.5% / 0.6);
-  border: 1px solid hsl(0 0% 100% / 0.07);
-}
-
-/* TipTap editor styles */
+/* TipTap editor */
 .tiptap-editor .ProseMirror {
-  @apply min-h-[200px] p-4 outline-hidden text-foreground;
+  min-height: 300px;
+  padding: 18px 20px 22px;
+  font-size: 16px;
+  line-height: 1.68;
+  outline: none;
+  overflow-wrap: anywhere;
+  color: var(--color-ink);
 }
 
 .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
-  @apply text-muted-foreground pointer-events-none float-left h-0;
   content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--color-ink-3);
+  pointer-events: none;
 }
 
-.tiptap-editor .ProseMirror p {
-  @apply mb-2;
+.tiptap-editor .ProseMirror p + p,
+.tiptap-editor .ProseMirror p + ul,
+.tiptap-editor .ProseMirror p + ol,
+.tiptap-editor .ProseMirror ul + p,
+.tiptap-editor .ProseMirror ol + p {
+  margin-top: 12px;
 }
 
 .tiptap-editor .ProseMirror ul {
-  @apply list-disc pl-6 mb-2;
+  list-style: disc;
+  padding-left: 1.4em;
 }
 
 .tiptap-editor .ProseMirror ol {
-  @apply list-decimal pl-6 mb-2;
+  list-style: decimal;
+  padding-left: 1.4em;
 }
 
-.tiptap-editor .ProseMirror strong {
-  @apply font-bold;
+.tiptap-editor .ProseMirror blockquote {
+  margin: 12px 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--color-line);
+  color: var(--color-ink-2);
 }
 
-.tiptap-editor .ProseMirror em {
-  @apply italic;
+.tiptap-editor .ProseMirror h1,
+.tiptap-editor .ProseMirror h2,
+.tiptap-editor .ProseMirror h3 {
+  font-family: var(--font-display);
+  font-weight: 750;
+  font-stretch: 104%;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
 }
 
-/* Pulse animation for stepper */
-@keyframes pulse-ring {
-  0% {
-    box-shadow: 0 0 0 0 hsl(263 70% 58% / 0.5);
-  }
-  70% {
-    box-shadow: 0 0 0 8px hsl(263 70% 58% / 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 hsl(263 70% 58% / 0);
-  }
+.tiptap-editor .ProseMirror h1 {
+  font-size: 1.5rem;
+}
+.tiptap-editor .ProseMirror h2 {
+  font-size: 1.3rem;
+}
+.tiptap-editor .ProseMirror h3 {
+  font-size: 1.15rem;
 }
 
-.animate-pulse-ring {
-  animation: pulse-ring 2s infinite;
+.tiptap-editor .ProseMirror a {
+  color: var(--color-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-/* Step transition animations */
-@keyframes step-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes step-fade-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-12px);
-  }
-}
-
-.step-enter {
-  animation: step-fade-in 0.3s ease-out forwards;
-}
-
-.step-exit {
-  animation: step-fade-out 0.2s ease-in forwards;
-}
-
-/* ── Success checkmark animation ─────────────────── */
-.success-checkmark-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: success-scale-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes success-scale-in {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.success-checkmark {
-  color: hsl(var(--primary));
-}
-
-.success-checkmark-circle {
-  stroke-dasharray: 166;
-  stroke-dashoffset: 166;
-  animation: success-circle-draw 0.8s 0.3s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-
-@keyframes success-circle-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-.success-checkmark-check {
-  stroke-dasharray: 48;
-  stroke-dashoffset: 48;
-  animation: success-check-draw 0.4s 0.9s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-
-@keyframes success-check-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* Fade-in with delay for the "All emails sent!" text */
-@keyframes fade-in-up-delay {
-  0% {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up-delay {
-  opacity: 0;
-  animation: fade-in-up-delay 0.5s 1.2s ease-out forwards;
-}
-
-/* ── Stepper completed state animations ─────────── */
-@keyframes stepper-pop {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.stepper-completed-pop {
-  animation: stepper-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.stepper-completed-label {
-  opacity: 0;
-  animation: fade-in-up-delay 0.4s 0.35s ease-out forwards;
-}
-
-/* Respect prefers-reduced-motion: stop decorative infinite animations */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 
-  .animate-aurora,
-  .animate-gradient,
-  .animate-pulse-ring,
-  .animate-pulse {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

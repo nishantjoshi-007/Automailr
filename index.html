@@ -10,7 +10,10 @@
     />
 
     <!-- Favicon -->
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Open Graph (Facebook, LinkedIn, Discord, etc.) -->
     <meta property="og:type" content="website" />
@@ -35,16 +38,10 @@
 
     <!-- Additional SEO -->
     <meta name="author" content="Nishant Joshi" />
-    <meta name="theme-color" content="#6D28D9" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f9fafa" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c0f10" />
     <link rel="canonical" href="https://automailr.nishantjoshi.me/" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
     <!-- If this script changes, update its sha256 in the CSP in vercel.json. -->
