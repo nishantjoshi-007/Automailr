@@ -85,9 +85,10 @@ tabular) for the numbers that carry meaning; `num` for tabular figures
 anywhere. Width beyond the defaults: `font-stretch-[118%]`.
 
 Scale (desktop → phone with `clamp`):
-- Hero h1 `clamp(2.6rem, 1.6rem + 3vw, 4.4rem)`
+- Hero h1 `clamp(2.6rem, 1.6rem + 3vw, 4.4rem)`, line-height 0.98,
+  tracking -0.035em, width 106 %, `max-width: 13ch`
 - Page h1 (wizard) `clamp(1.7rem, 1.3rem + 1vw, 2.2rem)`
-- Section h2 `clamp(1.8rem, 1.3rem + 1.5vw, 2.6rem)`
+- Section h2 `clamp(2rem, 1.3rem + 2vw, 3.1rem)`, line-height 1.02
 - Card h3 1.45rem at 750 / 104%
 - Big numerals `clamp(2.8rem, 1.7rem + 2.6vw, 4.4rem)`
 - Body 16 px, secondary 15–15.5 px, hints and captions 13.5–14 px
