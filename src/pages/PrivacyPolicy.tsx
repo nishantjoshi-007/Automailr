@@ -88,10 +88,11 @@ export default function PrivacyPolicy() {
               <dd>
                 Your subject and message, with the <code>{"{{fields}}"}</code> still in place, are sent to Google&rsquo;s
                 Gemini API to be rewritten. Nothing else is sent: never your recipient list, your CSV or your
-                attachments. Automailr uses Gemini&rsquo;s free tier. Under Google&rsquo;s terms for its unpaid
-                services, Google may use what you send, and the rewritten text it returns, to improve its products and
-                models, and human reviewers may read it. That text doesn&rsquo;t get the data protections Google gives
-                paid use, so don&rsquo;t polish anything confidential or sensitive. The details are in the{" "}
+                attachments. Automailr uses the Gemini API as a paid service. Under Google&rsquo;s terms for paid use,
+                Google doesn&rsquo;t use your text or its responses to improve its products, but it logs them for a
+                limited time to detect abuse and policy violations and for any required legal disclosures. Treat it like
+                anything you send to a third party: don&rsquo;t polish text you wouldn&rsquo;t want processed by Google.
+                The details are in the{" "}
                 <a href="https://ai.google.dev/gemini-api/terms" {...external}>
                   Gemini API Additional Terms
                 </a>
@@ -144,7 +145,10 @@ export default function PrivacyPolicy() {
           </ProseSection>
 
           <ProseSection id="children" title={SECTIONS.children}>
-            <p>Automailr is not meant for anyone under 13.</p>
+            <p>
+              Automailr is not meant for anyone under 13. AI polish is for users aged 18 or over, as Google&rsquo;s
+              Gemini terms require.
+            </p>
           </ProseSection>
 
           <ProseSection id="international" title={SECTIONS.international}>

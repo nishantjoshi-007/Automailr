@@ -322,8 +322,8 @@ function Privacy() {
           <p className="mt-9 max-w-[52rem] border-t border-invert-line pt-6 text-[14.5px] text-invert-muted">
             AI polish is optional. If you use it, your subject and message, with the{" "}
             <Tok name="fields" className="bg-invert-line/60! text-invert-ink! shadow-none!" /> still in place, go to
-            Google’s Gemini API on its free tier, where Google may use them to improve its models. Your recipient list
-            doesn’t.
+            Google’s Gemini API under its paid-use terms, so Google doesn’t use them to improve its products. Your
+            recipient list never goes to Gemini.
           </p>
         </div>
       </div>

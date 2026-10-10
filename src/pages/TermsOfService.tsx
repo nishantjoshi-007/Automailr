@@ -108,13 +108,13 @@ export default function TermsOfService() {
 
           <ProseSection id="ai-polish" title={SECTIONS["ai-polish"]}>
             <p>
-              AI polish is optional. If you use it, your subject and message are sent to Google&rsquo;s Gemini API on its
-              free tier, and the{" "}
+              AI polish is optional. If you use it, your subject and message are sent to Google&rsquo;s Gemini API as a
+              paid service, and the{" "}
               <a href="https://ai.google.dev/gemini-api/terms" {...external}>
                 Gemini API Additional Terms
               </a>{" "}
-              apply to that text. Under those terms Google may use it to improve its products, including with human
-              review, so don&rsquo;t polish anything confidential. I don&rsquo;t control or warrant what Gemini writes
+              apply to that text. AI polish is for users aged 18 or over, which Google&rsquo;s Gemini terms require; if
+              you are younger, send your message as you wrote it. I don&rsquo;t control or warrant what Gemini writes
               back: it can be wrong, change your meaning or drop a detail. Review the rewritten version before you send
               it, because once you send it, it is your message.
             </p>

@@ -38,7 +38,7 @@ Leaves the browser, and when:
 | Vercel | The site's files, and cookie-free page-view counts through Vercel Web Analytics | Loading the site |
 | Formspark | Name, email address and message, plus a hidden honeypot field that bots fill in and people leave empty | Only when you send the contact form |
 
-AI polish uses Gemini's free tier. Under Google's terms for unpaid Gemini API use, Google may use the text you send, and the response, to improve its products and models, including with human review, and that text does not get the data protections of the paid tier. Don't polish anything confidential.
+AI polish runs on a Google Cloud project with billing enabled, so Google treats it as a paid service. Under Google's Gemini API terms for paid use, Google doesn't use the prompts or responses to improve its products; it logs them for a limited time to detect abuse and policy violations and for any required legal disclosures. AI polish is for users aged 18 or over, as those terms require. Treat it like anything you send to a third party: don't polish text you wouldn't want processed by Google.
 
 ## Run it locally
 

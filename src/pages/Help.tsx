@@ -407,13 +407,14 @@ export default function Help() {
               or your attachments.
             </p>
             <p>
-              Automailr uses Gemini&rsquo;s free tier. Under Google&rsquo;s{" "}
+              Automailr uses the Gemini API as a paid service. Under Google&rsquo;s{" "}
               <a href="https://ai.google.dev/gemini-api/terms" {...external}>
                 Gemini API Additional Terms
-              </a>
-              , Google may use what you send, and what it sends back, to improve its products and models, and human
-              reviewers may read it. So don&rsquo;t polish anything confidential or sensitive, and read the rewritten
-              version before you send it.
+              </a>{" "}
+              for paid use, Google doesn&rsquo;t use your text or its responses to improve its products, but it logs
+              them for a limited time to detect abuse and policy violations. Treat it like anything you send to a third
+              party: don&rsquo;t polish text you wouldn&rsquo;t want processed by Google. AI polish is for users aged 18
+              or over, as Google&rsquo;s terms require. Read the rewritten version before you send it.
             </p>
           </ProseSection>
 
