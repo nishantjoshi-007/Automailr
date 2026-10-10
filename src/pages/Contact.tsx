@@ -1,5 +1,4 @@
-﻿import { useState, FormEvent } from "react";
-import { useFormspark } from "@formspark/use-formspark";
+import { useState, FormEvent } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,18 +16,26 @@ const FORMSPARK_FORM_ID = import.meta.env.VITE_FORMSPARK_FORM_ID || "";
 export default function Contact() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const [submit, submitting] = useFormspark({ formId: FORMSPARK_FORM_ID });
+  const [submitting, setSubmitting] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setSubmitting(true);
     try {
-      await submit(Object.fromEntries(new FormData(e.currentTarget)));
+      const res = await fetch(`https://submit-form.com/${FORMSPARK_FORM_ID}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(e.currentTarget))),
+      });
+      if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
       setSucceeded(true);
     } catch {
       setError("Something went wrong sending your message. Please try again or email us directly.");
+    } finally {
+      setSubmitting(false);
     }
   };
 

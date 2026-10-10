@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { GoogleIcon } from "@/components/GoogleIcon";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { PageTransition } from "@/components/PageTransition";
 
 function GoogleLoginButton() {
@@ -21,11 +22,11 @@ function GoogleLoginButton() {
         await login(tokenResponse.access_token);
         navigate("/app");
       } catch {
-        alert("Google sign-in failed. Please try again.");
+        toast.error("Google sign-in failed. Please try again.");
       }
     },
     onError: () => {
-      alert("Google sign-in failed. Please try again.");
+      toast.error("Google sign-in failed. Please try again.");
     },
     scope: "https://www.googleapis.com/auth/gmail.send",
     prompt: "select_account", // force the account selection screen
