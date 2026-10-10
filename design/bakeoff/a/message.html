@@ -36,6 +36,7 @@
   --muted: oklch(0.5 0.01 220);
   --accent: oklch(0.8 0.12 182);
   --accent-edge: oklch(0.68 0.11 184);
+  --accent-hover: oklch(0.76 0.125 182);
   --on-accent: oklch(0.2 0.012 220);
   --accent-ink: oklch(0.47 0.08 186);
   --accent-soft: oklch(0.95 0.035 182);
@@ -45,6 +46,10 @@
   --invert-ink: oklch(0.95 0.004 190);
   --invert-muted: oklch(0.76 0.008 200);
   --invert-line: oklch(0.32 0.01 220);
+  --invert-accent: oklch(0.8 0.12 182);
+  --invert-on-accent: oklch(0.2 0.012 220);
+  --invert-tok-bg: oklch(0.3 0.045 184);
+  --invert-tok-ink: oklch(0.84 0.115 182);
   --shadow: 0 1px 2px oklch(0.2 0.012 220 / 0.05), 0 16px 40px -18px oklch(0.2 0.012 220 / 0.18);
   --f-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
   --f-ui: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -64,6 +69,7 @@
     --muted: oklch(0.7 0.008 210);
     --accent: oklch(0.8 0.12 182);
     --accent-edge: oklch(0.8 0.12 182);
+    --accent-hover: oklch(0.76 0.125 182);
     --on-accent: oklch(0.2 0.012 220);
     --accent-ink: oklch(0.84 0.115 182);
     --accent-soft: oklch(0.3 0.045 184);
@@ -73,6 +79,10 @@
     --invert-ink: oklch(0.95 0.004 190);
     --invert-muted: oklch(0.76 0.008 200);
     --invert-line: oklch(0.32 0.01 220);
+    --invert-accent: oklch(0.8 0.12 182);
+    --invert-on-accent: oklch(0.2 0.012 220);
+    --invert-tok-bg: oklch(0.3 0.045 184);
+    --invert-tok-ink: oklch(0.84 0.115 182);
     --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 16px 40px -18px oklch(0 0 0 / 0.6);
     color-scheme: dark;
   }
@@ -88,6 +98,7 @@
   --muted: oklch(0.7 0.008 210);
   --accent: oklch(0.8 0.12 182);
   --accent-edge: oklch(0.8 0.12 182);
+  --accent-hover: oklch(0.76 0.125 182);
   --on-accent: oklch(0.2 0.012 220);
   --accent-ink: oklch(0.84 0.115 182);
   --accent-soft: oklch(0.3 0.045 184);
@@ -97,6 +108,10 @@
   --invert-ink: oklch(0.95 0.004 190);
   --invert-muted: oklch(0.76 0.008 200);
   --invert-line: oklch(0.32 0.01 220);
+  --invert-accent: oklch(0.8 0.12 182);
+  --invert-on-accent: oklch(0.2 0.012 220);
+  --invert-tok-bg: oklch(0.3 0.045 184);
+  --invert-tok-ink: oklch(0.84 0.115 182);
   --shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 16px 40px -18px oklch(0 0 0 / 0.6);
   color-scheme: dark;
 }
@@ -137,7 +152,7 @@ code, .mono { font-family: var(--f-mono); font-size: 0.9em; }
   border: 1px solid transparent; transition: background-color .15s, border-color .15s, transform .15s;
 }
 .btn-primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent-edge); }
-.btn-primary:hover { background: oklch(0.76 0.125 182); }
+.btn-primary:hover { background: var(--accent-hover); }
 .btn-primary:active { transform: translateY(1px); }
 .btn-quiet { background: var(--surface); color: var(--ink); border-color: var(--line); }
 .btn-quiet:hover { border-color: var(--line-strong); }

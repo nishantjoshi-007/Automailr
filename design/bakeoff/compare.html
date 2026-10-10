@@ -48,7 +48,7 @@ header p { margin: 0; color: var(--muted); }
 <body>
 <header>
   <h1>Automailr redesign: three directions</h1>
-  <p>Each direction has two pages: the landing page and the Message step of the wizard (step 2 of 3). All three use the same copy and sample data, so only the design differs. Pick a favourite, then reveal. The Theme switch here drives every entry, and each entry’s own light/dark button stays in sync with it.</p>
+  <p>Each entry has two pages: the landing page and the Message step of the wizard (step 2 of 3). All entries use the same copy and sample data, so only the design differs. Round 2 adds two mixes next to A: <b>A + C</b> (A’s layout in C’s full colour system) and <b>A + C, accent only</b> (A’s neutrals with C’s blue). Flip A ↔ A + C ↔ A + C, accent only on both pages and both themes. The Theme switch here drives every entry, and each entry’s own light/dark button stays in sync with it.</p>
 </header>
 
 <div class="bar" role="toolbar" aria-label="Compare entries">
@@ -82,6 +82,8 @@ header p { margin: 0; color: var(--muted); }
   // key = folder, label = button text, made = hidden reveal text.
   const ENTRIES = [
     { key: 'a', label: 'A', made: 'Clean product · Wise + Supabase + Cal · Archivo + Geist · teal accent, dark text on it' },
+    { key: 'ac', label: 'A + C', made: 'Round 2 · A’s layout, type and components with C’s complete colour system (graphite neutrals + ink-blue accent)' },
+    { key: 'ac-accent', label: 'A + C, accent only', made: 'Round 2 · A’s layout and A’s white/charcoal neutrals; only the teal accent swapped for C’s ink blue' },
     { key: 'b', label: 'B', made: 'Warm editorial · Zapier + Claude + Cursor · Newsreader + Hanken Grotesk · rust accent' },
     { key: 'c', label: 'C', made: 'Utility console · IBM Carbon + Vercel + Coinbase · IBM Plex Sans + Plex Mono · ink-blue accent' },
   ];
