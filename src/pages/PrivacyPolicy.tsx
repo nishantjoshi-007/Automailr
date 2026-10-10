@@ -71,8 +71,9 @@ export default function PrivacyPolicy() {
             <dl>
               <dt>Google sign-in and the Gmail API</dt>
               <dd>
-                You sign in with Google, which asks you to grant one permission, <code>gmail.send</code>. The emails you
-                send go from your browser straight to the Gmail API. Google handles them under the{" "}
+                You sign in with Google, which asks you to grant <code>gmail.send</code>, plus your basic profile (name,
+                email address and picture) so the app can show who is signed in. The emails you send go from your
+                browser straight to the Gmail API. Google handles them under the{" "}
                 <a href="https://policies.google.com/privacy" {...external}>
                   Google Privacy Policy
                 </a>
@@ -99,12 +100,14 @@ export default function PrivacyPolicy() {
 
           <ProseSection id="permissions" title={SECTIONS.permissions}>
             <p>
-              <code>gmail.send</code> is the only permission Automailr asks for. It lets Automailr send email from your
-              account, and nothing else: it can&rsquo;t read, search or delete anything in your mailbox.
+              Automailr asks for <code>gmail.send</code>, plus your basic Google profile (name, email address and
+              picture) so it can show who is signed in. <code>gmail.send</code> lets Automailr send email from your
+              account. It can&rsquo;t read, search or delete anything in your mailbox.
             </p>
             <p>
-              Automailr is verified by Google, so there is no &ldquo;unverified app&rdquo; screen when you sign in. You
-              can revoke its access at any time at{" "}
+              Automailr is verified by Google, so there is no &ldquo;unverified app&rdquo; screen when you sign in.
+              Signing out destroys the encrypted token and its key in this browser. It does not revoke the grant at
+              Google: the token simply expires within the hour. You can revoke Automailr&rsquo;s access at any time at{" "}
               <a href="https://myaccount.google.com/permissions" {...external}>
                 myaccount.google.com/permissions
               </a>
@@ -114,8 +117,14 @@ export default function PrivacyPolicy() {
 
           <ProseSection id="retention" title={SECTIONS.retention}>
             <p>
-              Your sign-in token is removed when you sign out or close the tab, and it stops working after{" "}
-              <span className="num whitespace-nowrap">55&#8239;minutes</span>. Your CSV rows, message and send results
+              Signing out destroys the encrypted sign-in token and its key in this browser, and closing the tab removes
+              the token too. This does not revoke the grant at Google: the token simply expires within the hour, and
+              Automailr stops using it after <span className="num whitespace-nowrap">55&#8239;minutes</span>. To revoke
+              the grant, use{" "}
+              <a href="https://myaccount.google.com/permissions" {...external}>
+                myaccount.google.com/permissions
+              </a>
+              . Your CSV rows, message and send results
               are removed when you sign out or start a new batch. Attachments are gone when the page reloads or closes.
               Automailr keeps no copies anywhere else.
             </p>

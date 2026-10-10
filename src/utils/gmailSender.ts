@@ -63,7 +63,9 @@ export function buildMimeMessage(
   const boundary = "automailr_boundary_" + Date.now();
 
   let mime = "";
-  mime += `From: ${sanitizeHeaderValue(from)}\r\n`;
+  // No profile email (userinfo failed): leave From out and Gmail fills in the account's address.
+  const sender = sanitizeHeaderValue(from);
+  if (sender) mime += `From: ${sender}\r\n`;
   mime += `To: ${sanitizeHeaderValue(to)}\r\n`;
   mime += `Subject: ${subject ? `=?UTF-8?B?${utf8ToBase64(subject)}?=` : ""}\r\n`;
   mime += "MIME-Version: 1.0\r\n";
@@ -80,10 +82,16 @@ export function buildMimeMessage(
     mime += utf8ToBase64(htmlBody) + "\r\n";
 
     for (const att of attachments) {
-      // Sanitize filename: strip CRLF and escape double-quotes to prevent MIME header injection.
-      // filename* carries the RFC 2231 UTF-8 form so non-ASCII names survive.
-      const safeName = sanitizeHeaderValue(att.name).replace(/"/g, "'");
-      const encodedName = encodeURIComponent(safeName);
+      // Sanitize filename: strip CRLF and replace double-quotes to prevent MIME header injection,
+      // and escape backslashes inside the quoted-string form.
+      // filename* carries the RFC 2231 UTF-8 form so non-ASCII names survive; encodeURIComponent
+      // leaves '()*! alone, which RFC 5987 does not allow there, so those are percent-encoded too.
+      const plainName = sanitizeHeaderValue(att.name).replace(/"/g, "'");
+      const safeName = plainName.replace(/\\/g, "\\\\");
+      const encodedName = encodeURIComponent(plainName).replace(
+        /['()*!]/g,
+        (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+      );
       const safeType = sanitizeMimeType(att.type);
       mime += `--${boundary}\r\n`;
       mime += `Content-Type: ${safeType}; name="${safeName}"\r\n`;
@@ -102,6 +110,14 @@ export interface SendResult {
   email: string;
   success: boolean;
   error?: string;
+  /** HTTP status of a refused request; absent on success and on network errors. */
+  status?: number;
+  /** Google's reason for a refusal: `error.errors[0].reason`, else `error.status`. */
+  reason?: string;
+}
+
+interface GoogleErrorBody {
+  error?: { message?: string; status?: string; errors?: Array<{ reason?: string }> };
 }
 
 export async function sendEmail(
@@ -134,14 +150,17 @@ export async function sendEmail(
 
     if (!response.ok) {
       // Error bodies are normally JSON, but proxies/outages can return HTML.
-      let message = `HTTP ${response.status}`;
+      const status = response.status;
+      let message = `HTTP ${status}`;
+      let reason: string | undefined;
       try {
-        const err = await response.json();
+        const err = (await response.json()) as GoogleErrorBody | null;
         if (err?.error?.message) message = err.error.message;
+        reason = err?.error?.errors?.[0]?.reason || err?.error?.status || undefined;
       } catch {
         /* keep the HTTP status message */
       }
-      return { email: recipient, success: false, error: message };
+      return { email: recipient, success: false, error: message, status, ...(reason ? { reason } : {}) };
     }
 
     return { email: recipient, success: true };

@@ -16,6 +16,8 @@ export const UPLOAD_BYTES_PER_SEC = 2 * 1024 * 1024;
 export const UPLOAD_OVERHEAD = 1.78;
 /** The send loop pauses for a fresh sign-in when the token has less than this left (M1). */
 export const PAUSE_BEFORE_EXPIRY_MS = 90 * 1000;
+/** Wait before the single retry of a row Gmail rate-limited (L2). */
+export const RATE_LIMIT_BACKOFF_MS = 30 * 1000;
 /** Margin the Google token must have beyond the estimate (D42). */
 export const TOKEN_MARGIN_MS = 60 * 1000;
 /** secureStorage key for the wizard state (D38). */

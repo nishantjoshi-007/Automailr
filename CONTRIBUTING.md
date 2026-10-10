@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for looking. Automailr is a small, client-side app, and I keep it that way on purpose: no server, no database, one Google permission. Changes that fit that shape are welcome.
+Thanks for looking. Automailr is a small, client-side app, and I keep it that way on purpose: no server, no database, one Gmail permission. Changes that fit that shape are welcome.
 
 ## Before you start
 

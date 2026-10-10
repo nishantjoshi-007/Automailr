@@ -1,10 +1,9 @@
 import { isValidEmail } from "@/utils/csvParser";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import DOMPurify from "dompurify";
 import { Check, ChevronLeft, ChevronRight, CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { replacePlaceholdersMarked } from "@/utils/placeholders";
-import { fieldsUsed, joinAnd, nameLine, rowEmail, emailKey } from "./preview";
+import { fieldsUsed, joinAnd, nameLine, rowEmail, emailKey, sanitizePreview } from "./preview";
 import type { CsvState } from "./state";
 import { card, cardTitle } from "./ui";
 
@@ -67,7 +66,7 @@ export function PreviewCard({ csv, from, subject, body, linkedField = null, onLi
   const bodyRef = useRef<HTMLDivElement>(null);
 
   const html = useMemo(
-    () => DOMPurify.sanitize(replacePlaceholdersMarked(body, row, csv.headers)),
+    () => sanitizePreview(replacePlaceholdersMarked(body, row, csv.headers)),
     [body, row, csv.headers],
   );
 
@@ -130,7 +129,7 @@ export function PreviewCard({ csv, from, subject, body, linkedField = null, onLi
         {body.replace(/<[^>]*>/g, "").trim() ? (
           <div
             ref={bodyRef}
-            className={cn("min-h-[220px] px-5 pt-[18px] pb-5 text-[15px] leading-[1.68] text-ink-2 [overflow-wrap:anywhere] max-[720px]:px-4", bodyStyles)}
+            className={cn("isolate min-h-[220px] px-5 [contain:paint] pt-[18px] pb-5 text-[15px] leading-[1.68] text-ink-2 [overflow-wrap:anywhere] max-[720px]:px-4", bodyStyles)}
             dangerouslySetInnerHTML={{ __html: html }}
           />
         ) : (

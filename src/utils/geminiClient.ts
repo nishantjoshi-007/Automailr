@@ -1,3 +1,5 @@
+import DOMPurify from "dompurify";
+
 export interface PolishResult {
   subject: string;
   body: string;
@@ -49,6 +51,19 @@ const MESSAGES = {
   parse: "Failed to parse AI response. Please try again.",
   format: "AI returned an unexpected format. Please try again.",
 } as const;
+
+/** The tags the prompt allows in the body; anything else the model returns is dropped (L7). */
+const BODY_TAGS = ["p", "strong", "em", "ul", "ol", "li", "br"];
+
+/** Holds Gemini's body to the prompt's tags, with no attributes. */
+export function sanitizePolishedBody(html: string): string {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: BODY_TAGS, ALLOWED_ATTR: [] });
+}
+
+/** Gemini's subject as plain text on one line. */
+export function sanitizePolishedSubject(subject: string): string {
+  return stripHtmlTags(subject).replace(/\s*\n\s*/g, " ");
+}
 
 /** Subset of the `generateContent` response that this module reads. */
 interface GenerateContentResponse {
@@ -252,7 +267,11 @@ export async function polishEmail(subject: string, bodyHtml: string, signal?: Ab
     throw new Error(MESSAGES.format);
   }
 
-  const result = parsed as PolishResult;
+  // The model's output is untrusted HTML: keep only what the prompt allows.
+  const result: PolishResult = {
+    subject: sanitizePolishedSubject((parsed as PolishResult).subject),
+    body: sanitizePolishedBody((parsed as PolishResult).body),
+  };
 
   // Ensure we never return empty strings if the original had content
   if (!result.subject.trim() && subject.trim()) {

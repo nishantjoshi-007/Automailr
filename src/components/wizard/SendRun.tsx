@@ -64,7 +64,11 @@ export function SendingView({ progress, from }: { progress: RunProgress; from: s
       {progress.paused ? (
         <ReauthNotice
           email={from}
-          message={`Paused: your sign-in ${gone ? "has expired" : "is about to expire"}. Sign in again to continue.`}
+          message={
+            progress.paused === "permission"
+              ? "Paused: Google refused the send permission. Sign in again and tick the box for sending email on your behalf."
+              : `Paused: your sign-in ${gone ? "has expired" : "is about to expire"}. Sign in again to continue.`
+          }
         />
       ) : (
         <p className="text-[15.5px] text-ink-2 [overflow-wrap:anywhere]">

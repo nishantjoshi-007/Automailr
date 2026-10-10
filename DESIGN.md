@@ -176,7 +176,7 @@ recolour the mark outside `ink`, `on-accent` or `accent`.
 
 Plain, specific, first-person-free. Say what the thing does and the number
 that matters: "Up to 5,000 recipients", "250 ms between sends", "`gmail.send`
-is the only permission asked for". No "we", no social proof, no "seamless",
+is the only Gmail permission asked for". No "we", no social proof, no "seamless",
 "powerful", "effortless", no emoji, no exclamation marks. Buttons name the
 outcome. Errors say what happened and what to do next.
 

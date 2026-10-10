@@ -277,11 +277,12 @@ const PROMISES: { icon: LucideIcon; title: string; body: ReactNode }[] = [
     title: "Send-only permission",
     body: (
       <>
-        Google sign-in asks for one scope,{" "}
+        Google sign-in asks for{" "}
         <code className="text-invert-ink" translate="no">
           gmail.send
         </code>
-        . Automailr can send email as you. It can’t read, search or delete anything in your inbox.
+        , plus your basic profile (name, email address and picture) to show who is signed in. Automailr can send email
+        as you. It can’t read, search or delete anything in your inbox.
       </>
     ),
   },

@@ -411,12 +411,14 @@ export default function Help() {
 
           <ProseSection id="permissions" title={SECTIONS.permissions}>
             <p>
-              Automailr asks Google for one permission, <code>gmail.send</code>. It lets Automailr send email as you. It
-              can&rsquo;t read, search or delete anything in your mailbox. The app is verified by Google, so there&rsquo;s
-              no &ldquo;unverified app&rdquo; screen when you sign in.
+              Automailr asks Google for <code>gmail.send</code>, which lets it send email as you. It also gets your basic
+              Google profile (name, email address and picture) so it can show who is signed in. It can&rsquo;t read,
+              search or delete anything in your mailbox. The app is verified by Google, so there&rsquo;s no
+              &ldquo;unverified app&rdquo; screen when you sign in.
             </p>
             <p>
-              You can revoke access at any time at{" "}
+              Signing out destroys the encrypted token and its key in this browser. It doesn&rsquo;t revoke the grant
+              at Google: the token simply expires within the hour. You can revoke access at any time at{" "}
               <a href="https://myaccount.google.com/permissions" {...external}>
                 myaccount.google.com/permissions
               </a>

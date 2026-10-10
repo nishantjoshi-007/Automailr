@@ -68,6 +68,8 @@ function ContactForm({ formId }: { formId: string }) {
   return (
     <>
       <form onSubmit={handleSubmit} className="mt-8 grid gap-5" aria-busy={sending}>
+        {/* Honeypot: hidden from people; Formspark drops submissions where a bot filled it in. */}
+        <input type="text" name="_honeypot" className="sr-only" tabIndex={-1} autoComplete="off" aria-hidden="true" />
         <div className="grid gap-2">
           <Label htmlFor="contact-name" className="text-[14.5px]">
             Name

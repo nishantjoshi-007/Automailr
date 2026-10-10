@@ -1,8 +1,37 @@
+import DOMPurify from "dompurify";
 import { isValidEmail } from "@/utils/csvParser";
 import { findPlaceholders } from "@/utils/placeholders";
 import { stripHtmlTags } from "@/utils/geminiClient";
 import { MAX_ATTACHMENT_BYTES, THIN } from "./constants";
 import type { CsvState } from "./state";
+
+/**
+ * The preview's own DOMPurify instance, so its hook never touches other
+ * sanitising (L1). HTML profile only; no styles, forms, popovers or ids
+ * that could restyle, overlay or post from the page. `class` and `data-*`
+ * stay: the `.fill` spans need them.
+ */
+const previewPurifier = DOMPurify();
+const PREVIEW_CONFIG = {
+  USE_PROFILES: { html: true },
+  FORBID_TAGS: ["style", "form", "input", "button", "select", "option", "textarea", "dialog"],
+  FORBID_ATTR: ["id", "name", "popover", "popovertarget", "command", "commandfor", "tabindex"],
+};
+
+previewPurifier.addHook("afterSanitizeAttributes", (node) => {
+  // Links open in a new tab instead of navigating the wizard away.
+  if (node.tagName === "A") {
+    node.setAttribute("target", "_blank");
+    node.setAttribute("rel", "noopener noreferrer");
+  }
+  // Gmail drops `position` too; without it nothing can cover the page.
+  if (node instanceof HTMLElement && node.style.position) node.style.removeProperty("position");
+});
+
+/** Sanitises the filled-in body for the preview card. */
+export function sanitizePreview(html: string): string {
+  return previewPurifier.sanitize(html, PREVIEW_CONFIG);
+}
 
 /** The column holding addresses: "email" in any capitalisation. */
 export function emailKey(headers: readonly string[]): string {

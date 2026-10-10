@@ -10,8 +10,11 @@
  *    subsequent reads/writes are fast.
  *
  * Why this matters:
- *  - Data at rest in storage is ciphertext, not readable by casual inspection,
- *    rogue browser extensions that enumerate storage keys, or physical access.
+ *  - Data at rest in storage is ciphertext. That protects it from another
+ *    origin and from a plain-text read of storage (a copied sessionStorage
+ *    dump, casual inspection). It does not protect it from someone with this
+ *    browser profile: the key sits in the same profile's IndexedDB and any
+ *    script running on this origin can use it.
  *  - The key is non-extractable: even code with access to IndexedDB can only
  *    *use* the key through SubtleCrypto, never export the raw bytes.
  *  - Each value is encrypted with a unique random IV, so identical plaintexts

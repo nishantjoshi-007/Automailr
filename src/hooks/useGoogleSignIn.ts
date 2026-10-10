@@ -1,8 +1,11 @@
 import { useCallback, useState } from "react";
-import { useGoogleLogin } from "@react-oauth/google";
+import { hasGrantedAllScopesGoogle, useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/contexts/AuthContext";
 
-/** The only Google permission Automailr asks for: send mail as the user. */
+/**
+ * The permission Automailr needs: send mail as the user. The library also
+ * asks for the basic profile (openid, email, profile) on every sign-in.
+ */
 export const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 
 interface UseGoogleSignInOptions {
@@ -36,6 +39,13 @@ export function useGoogleSignIn({ reauthEmail, onSuccess, onError }: UseGoogleSi
     prompt: reauthEmail ? "" : "select_account",
     hint: reauthEmail,
     onSuccess: async (token) => {
+      // Granular consent lets the user untick sending; without it every send would fail (L2).
+      if (!hasGrantedAllScopesGoogle(token, GMAIL_SEND_SCOPE)) {
+        fail(
+          "Google sign-in finished without the send permission. Sign in again and tick the box for sending email on your behalf.",
+        );
+        return;
+      }
       try {
         await login(token.access_token, token.expires_in);
         setBusy(false);

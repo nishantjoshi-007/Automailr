@@ -2,19 +2,44 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isValidEmail } from "@/utils/csvParser";
 import { prepareAttachments, sendEmail, type Attachment, type SendResult } from "@/utils/gmailSender";
 import { replacePlaceholders, replacePlaceholdersPlain } from "@/utils/placeholders";
-import { PAUSE_BEFORE_EXPIRY_MS, SEND_DELAY_MS } from "./constants";
+import { PAUSE_BEFORE_EXPIRY_MS, RATE_LIMIT_BACKOFF_MS, SEND_DELAY_MS } from "./constants";
 import { emailKey, plural } from "./preview";
 import type { CsvState, RowResult, WizardState, WizardUpdate } from "./state";
 
-/** Gmail's answers to an expired or revoked token. */
+/** Fallback only, for a refusal without an HTTP status: Gmail's wording for a bad token. */
 const AUTH_ERROR = /HTTP 401|invalid.?(authentication.?)?credentials|authError|UNAUTHENTICATED/i;
+/** 403 reasons meaning the token lacks the gmail.send grant. */
+const SCOPE_REASONS = new Set(["insufficientPermissions", "ACCESS_TOKEN_SCOPE_INSUFFICIENT", "PERMISSION_DENIED"]);
+/** Short-term limits: worth one retry after a pause. */
+const RATE_REASONS = new Set(["rateLimitExceeded", "userRateLimitExceeded"]);
+/** The day's quota: no retry, the rest waits for another day. */
+const QUOTA_REASONS = new Set(["dailyLimitExceeded", "quotaExceeded"]);
 
 export const STOPPED = "Stopped";
 /** Kept for results saved before M1, when a 401 ended the run. */
 export const SIGN_IN_EXPIRED = "Sign-in expired";
+/** Rows left when Gmail's sending limit stops the run start with this (L2). */
+export const GMAIL_LIMIT = "Gmail's limit was reached";
 
-/** Why the loop is waiting: the token is about to run out, or it is gone or refused. */
-export type PauseReason = "expiring" | "unauthorized";
+/** How the loop treats one reply from Gmail (L2, I9). */
+export type Verdict = "sent" | "unauthorized" | "permission" | "rateLimit" | "quota" | "failed";
+
+export function verdictOf(res: SendResult): Verdict {
+  if (res.success) return "sent";
+  const { status, reason = "" } = res;
+  if (status === 401) return "unauthorized";
+  if (status === 403 && SCOPE_REASONS.has(reason)) return "permission";
+  if (QUOTA_REASONS.has(reason)) return "quota";
+  if (status === 429 || RATE_REASONS.has(reason)) return "rateLimit";
+  if (status === undefined && AUTH_ERROR.test(res.error ?? "")) return "unauthorized";
+  return "failed";
+}
+
+/**
+ * Why the loop is waiting: the token is about to run out, it is gone or
+ * refused (401), or Google says it lacks the send permission (403).
+ */
+export type PauseReason = "expiring" | "unauthorized" | "permission";
 
 export interface RunProgress {
   total: number;
@@ -144,8 +169,13 @@ export function useSender({ csv, subject, body, files, token, expiresAt, from, u
         return;
       }
 
-      /** Sends one row, pausing for a fresh sign-in first or after a 401; null when stopped while paused. */
+      /**
+       * Sends one row. Pauses for a fresh sign-in first, or after a 401 / missing
+       * permission, then sends the same row again; retries a rate-limited row once
+       * after a 30 s wait. Null when stopped while waiting.
+       */
       const dispatch = async (row: Record<string, string>, to: string): Promise<SendResult | null> => {
+        let retried = false;
         for (;;) {
           let auth = authRef.current;
           if (needsSignIn(auth)) {
@@ -163,17 +193,28 @@ export function useSender({ csv, subject, body, files, token, expiresAt, from, u
             replacePlaceholders(body, row),
             attachments,
           );
-          if (res.success || !AUTH_ERROR.test(res.error ?? "")) return res;
-          // Refused token: leave the row as it was and send it again after the sign-in.
-          report("unauthorized");
-          await waitForSignIn(auth);
-          if (signal.aborted) return null;
-          report();
+          const verdict = verdictOf(res);
+          if (verdict === "unauthorized" || verdict === "permission") {
+            // Refused token: leave the row as it was and send it again after the sign-in.
+            report(verdict);
+            await waitForSignIn(auth);
+            if (signal.aborted) return null;
+            report();
+            continue;
+          }
+          if (verdict === "rateLimit" && !retried) {
+            retried = true;
+            await sleep(RATE_LIMIT_BACKOFF_MS, signal);
+            if (signal.aborted) return null;
+            continue;
+          }
+          return res;
         }
       };
 
       let first = true;
-      for (const i of indices) {
+      for (let k = 0; k < indices.length; k++) {
+        const i = indices[k];
         if (signal.aborted) break;
         const row = csv.rows[i];
         const to = toOf(i);
@@ -190,6 +231,14 @@ export function useSender({ csv, subject, body, files, token, expiresAt, from, u
         report();
         const res = await dispatch(row, to);
         if (!res) break;
+        const verdict = verdictOf(res);
+        if (verdict === "rateLimit" || verdict === "quota") {
+          // Gmail's limit: this row and every one after it stay not sent, with the reason.
+          const error = `${GMAIL_LIMIT} (${res.reason ?? `HTTP ${res.status ?? "error"}`})`;
+          const rest = indices.slice(k).filter((j) => csv.rows[j] && isValidEmail(toOf(j)));
+          setRows(update, new Map(rest.map((j) => [j, { status: "notSent", error }])));
+          break;
+        }
         if (res.success) {
           sent++;
           setRows(update, new Map([[i, { status: "sent", error: undefined }]]));
@@ -220,6 +269,8 @@ export interface Outcome {
   /** Rows the batch meant to send (valid emails). */
   total: number;
   expired: boolean;
+  /** Gmail's sending limit stopped the run (L2). */
+  limited: boolean;
 }
 
 export function outcomeOf(results: RowResult[]): Outcome {
@@ -232,18 +283,22 @@ export function outcomeOf(results: RowResult[]): Outcome {
     skipped,
     total: results.length - skipped,
     expired: results.some((r) => r.status === "notSent" && r.error === SIGN_IN_EXPIRED),
+    limited: results.some((r) => r.status === "notSent" && (r.error ?? "").startsWith(GMAIL_LIMIT)),
   };
 }
 
 export function outcomeTitle(o: Outcome): { title: string; sentence: string } {
   const n = (x: number) => x.toLocaleString("en");
   if (o.notSent > 0) {
-    const title = `${o.expired ? "Sign-in expired" : "Stopped"}. ${n(o.sent)} sent, ${n(o.notSent)} not sent.`;
-    const sentence = o.expired
-      ? "Sign in again, then send the ones not sent."
-      : o.failed > 0
-        ? `${plural(o.failed, "failed", "failed")} too. You can retry ${o.failed === 1 ? "it" : "them"} and send the rest below.`
-        : "The ones not sent can be sent now.";
+    const lead = o.limited ? "Google paused sending" : o.expired ? "Sign-in expired" : "Stopped";
+    const title = `${lead}. ${n(o.sent)} sent, ${n(o.notSent)} not sent.`;
+    const sentence = o.limited
+      ? "Gmail's limit was reached. Try the rest later."
+      : o.expired
+        ? "Sign in again, then send the ones not sent."
+        : o.failed > 0
+          ? `${plural(o.failed, "failed", "failed")} too. You can retry ${o.failed === 1 ? "it" : "them"} and send the rest below.`
+          : "The ones not sent can be sent now.";
     return { title, sentence };
   }
   if (o.failed > 0) {

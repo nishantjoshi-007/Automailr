@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { secureStorage } from "@/utils/secureStorage";
 import { STORAGE_KEY } from "./constants";
 
@@ -28,6 +28,8 @@ export interface RowResult {
 
 export interface WizardState {
   sessionId: string;
+  /** The Google account the batch belongs to; a different account never sees it (L4). */
+  ownerEmail: string;
   csv: CsvState | null;
   subject: string;
   /** HTML from TipTap or the HTML textarea. */
@@ -41,8 +43,8 @@ export interface WizardState {
 
 export type WizardUpdate = Partial<WizardState> | ((s: WizardState) => WizardState);
 
-export function freshState(sessionId: string): WizardState {
-  return { sessionId, csv: null, subject: "", body: "", polish: null, attachmentNames: [], results: null };
+export function freshState(sessionId: string, ownerEmail = ""): WizardState {
+  return { sessionId, ownerEmail, csv: null, subject: "", body: "", polish: null, attachmentNames: [], results: null };
 }
 
 export function makeSessionId(): string {
@@ -75,11 +77,17 @@ let warnedQuota = false;
 
 /**
  * The wizard's state for the session in the URL: hydrated from encrypted
- * sessionStorage on mount (only when the stored session id matches),
- * persisted 300 ms after the last change.
+ * sessionStorage on mount (only when the stored session id matches and the
+ * batch belongs to the signed-in account), persisted 300 ms after the last
+ * change while someone is signed in. `ownerEmail` is the signed-in user's
+ * email, or null when there is no user.
  */
-export function useWizardState(sessionId: string | undefined) {
-  const [store, setStore] = useState<{ id: string; state: WizardState } | null>(null);
+export function useWizardState(sessionId: string | undefined, ownerEmail: string | null) {
+  const [store, setStore] = useState<{ id: string; state: WizardState; foreignCleared?: boolean } | null>(null);
+  const ownerRef = useRef(ownerEmail);
+  useEffect(() => {
+    ownerRef.current = ownerEmail;
+  }, [ownerEmail]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -89,14 +97,27 @@ export function useWizardState(sessionId: string | undefined) {
       .catch(() => null)
       .then((raw) => {
         if (cancelled) return;
+        const owner = ownerRef.current ?? "";
         let restored: WizardState | null = null;
+        let foreignCleared = false;
         try {
           const parsed: unknown = raw ? JSON.parse(raw) : null;
-          if (isWizardState(parsed) && parsed.sessionId === sessionId) restored = { ...freshState(sessionId), ...parsed };
+          if (isWizardState(parsed) && parsed.sessionId === sessionId) {
+            const stored = typeof parsed.ownerEmail === "string" ? parsed.ownerEmail : "";
+            if (stored && stored !== owner) {
+              // Another Google account's batch in this tab: drop it, never show it.
+              secureStorage.removeItem(STORAGE_KEY);
+              foreignCleared = true;
+            } else {
+              restored = { ...freshState(sessionId), ...parsed, ownerEmail: stored || owner };
+            }
+          }
         } catch {
           /* corrupt state: start fresh */
         }
-        setStore((cur) => (cur?.id === sessionId ? cur : { id: sessionId, state: restored ?? freshState(sessionId) }));
+        setStore((cur) =>
+          cur?.id === sessionId ? cur : { id: sessionId, state: restored ?? freshState(sessionId, owner), foreignCleared },
+        );
       });
     return () => {
       cancelled = true;
@@ -104,11 +125,15 @@ export function useWizardState(sessionId: string | undefined) {
   }, [sessionId]);
 
   const state = store && store.id === sessionId ? store.state : null;
+  const foreignCleared = Boolean(store && store.id === sessionId && store.foreignCleared);
 
   useEffect(() => {
-    if (!state) return;
+    // No user, no saving: a save racing sign-out must not write the batch back (L4).
+    if (!state || ownerEmail === null) return;
     const t = setTimeout(() => {
-      secureStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch((err: unknown) => {
+      if (ownerRef.current === null) return;
+      const owned = state.ownerEmail ? state : { ...state, ownerEmail };
+      secureStorage.setItem(STORAGE_KEY, JSON.stringify(owned)).catch((err: unknown) => {
         if (!warnedQuota) {
           warnedQuota = true;
           console.warn("[Automailr] Couldn't save the wizard state; it stays in memory only.", err);
@@ -116,7 +141,7 @@ export function useWizardState(sessionId: string | undefined) {
       });
     }, 300);
     return () => clearTimeout(t);
-  }, [state]);
+  }, [state, ownerEmail]);
 
   const update = useCallback((u: WizardUpdate) => {
     setStore((cur) => {
@@ -129,8 +154,8 @@ export function useWizardState(sessionId: string | undefined) {
   /** Clears storage and starts an empty batch under `newId`. */
   const reset = useCallback((newId: string) => {
     secureStorage.removeItem(STORAGE_KEY);
-    setStore({ id: newId, state: freshState(newId) });
+    setStore({ id: newId, state: freshState(newId, ownerRef.current ?? "") });
   }, []);
 
-  return { state, update, reset };
+  return { state, update, reset, foreignCleared };
 }

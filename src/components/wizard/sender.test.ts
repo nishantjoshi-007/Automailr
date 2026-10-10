@@ -1,8 +1,8 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendEmail } from "@/utils/gmailSender";
-import { PAUSE_BEFORE_EXPIRY_MS, SEND_DELAY_MS } from "./constants";
-import { STOPPED, useSender } from "./sender";
+import { PAUSE_BEFORE_EXPIRY_MS, RATE_LIMIT_BACKOFF_MS, SEND_DELAY_MS } from "./constants";
+import { GMAIL_LIMIT, STOPPED, outcomeOf, outcomeTitle, useSender, verdictOf } from "./sender";
 import { freshState, type CsvState, type WizardState, type WizardUpdate } from "./state";
 
 vi.mock("@/utils/gmailSender", () => ({
@@ -192,5 +192,179 @@ describe("useSender pause and resume (M1)", () => {
 
     expect(statuses()).toEqual(["sent", "sent", "failed", "sent", "sent"]);
     expect(send).toHaveBeenCalledTimes(5);
+  });
+});
+
+/** Runs a whole batch with the default auth and returns the hook. */
+async function runAll(advanceBy: number) {
+  const hook = setup({ token: "tok", expiresAt: T0 + HOUR });
+  let run!: Promise<void>;
+  act(() => {
+    run = hook.result.current.start(ALL);
+  });
+  await advance(advanceBy);
+  return { ...hook, run };
+}
+
+describe("useSender status and reason handling (L2)", () => {
+  it("pauses on a 401 status and re-sends the row after a sign-in", async () => {
+    send.mockImplementation(async (token, _from, to) =>
+      token === "tok" && to === "r2@example.com"
+        ? { email: to, success: false, error: "Request had invalid authentication credentials.", status: 401 }
+        : { email: to, success: true },
+    );
+    const { result, signIn, run } = await runAll(3 * SEND_DELAY_MS);
+
+    expect(result.current.progress).toMatchObject({ paused: "unauthorized", sent: 2, current: { index: 2 } });
+    signIn("fresh", Date.now() + HOUR);
+    await advance(10 * SEND_DELAY_MS);
+    await act(() => run);
+    expect(statuses()).toEqual(["sent", "sent", "sent", "sent", "sent"]);
+  });
+
+  it("pauses on 403 insufficientPermissions as a permission problem, then resumes", async () => {
+    send.mockImplementation(async (token, _from, to) =>
+      token === "tok" && to === "r1@example.com"
+        ? { email: to, success: false, error: "Insufficient Permission", status: 403, reason: "insufficientPermissions" }
+        : { email: to, success: true },
+    );
+    const { result, signIn, run } = await runAll(2 * SEND_DELAY_MS);
+
+    expect(result.current.progress).toMatchObject({ paused: "permission", sent: 1, failed: 0, current: { index: 1 } });
+    await advance(60 * 1000);
+    expect(send).toHaveBeenCalledTimes(2);
+
+    signIn("fresh", Date.now() + HOUR);
+    await advance(10 * SEND_DELAY_MS);
+    await act(() => run);
+    expect(tokensUsed()[2]).toEqual(["fresh", "r1@example.com"]);
+    expect(statuses()).toEqual(["sent", "sent", "sent", "sent", "sent"]);
+  });
+
+  it("records a 403 with another reason as failed, without pausing", async () => {
+    send.mockImplementation(async (_token, _from, to) =>
+      to === "r1@example.com"
+        ? { email: to, success: false, error: "Delegation denied", status: 403, reason: "forbidden" }
+        : { email: to, success: true },
+    );
+    const { run } = await runAll(10 * SEND_DELAY_MS);
+    await act(() => run);
+    expect(statuses()).toEqual(["sent", "failed", "sent", "sent", "sent"]);
+  });
+
+  it("retries a rate-limited row once after 30 s and carries on when it goes through", async () => {
+    let refused = false;
+    send.mockImplementation(async (_token, _from, to) => {
+      if (to === "r2@example.com" && !refused) {
+        refused = true;
+        return { email: to, success: false, error: "User-rate limit exceeded", status: 429, reason: "userRateLimitExceeded" };
+      }
+      return { email: to, success: true };
+    });
+    const { result, run } = await runAll(3 * SEND_DELAY_MS);
+
+    expect(send).toHaveBeenCalledTimes(3);
+    await advance(RATE_LIMIT_BACKOFF_MS - 1000);
+    expect(send).toHaveBeenCalledTimes(3); // still waiting
+    await advance(1000 + 10 * SEND_DELAY_MS);
+    await act(() => run);
+
+    expect(send).toHaveBeenCalledTimes(6);
+    expect(statuses()).toEqual(["sent", "sent", "sent", "sent", "sent"]);
+    expect(result.current.running).toBe(false);
+  });
+
+  it("stops the run when the retry is rate-limited too: the row and the rest are not sent, with the reason", async () => {
+    send.mockImplementation(async (_token, _from, to) =>
+      to === "r2@example.com"
+        ? { email: to, success: false, error: "Rate Limit Exceeded", status: 403, reason: "rateLimitExceeded" }
+        : { email: to, success: true },
+    );
+    const { result, run } = await runAll(3 * SEND_DELAY_MS + RATE_LIMIT_BACKOFF_MS + 10 * SEND_DELAY_MS);
+    await act(() => run);
+
+    expect(send).toHaveBeenCalledTimes(4); // r0, r1, r2, r2 again
+    expect(result.current.running).toBe(false);
+    expect(state.results?.map((r) => [r.status, r.error ?? null])).toEqual([
+      ["sent", null],
+      ["sent", null],
+      ["notSent", `${GMAIL_LIMIT} (rateLimitExceeded)`],
+      ["notSent", `${GMAIL_LIMIT} (rateLimitExceeded)`],
+      ["notSent", `${GMAIL_LIMIT} (rateLimitExceeded)`],
+    ]);
+  });
+
+  it("stops at once on a 429 without a reason after its single retry", async () => {
+    send.mockImplementation(async (_token, _from, to) =>
+      to === "r0@example.com" ? { email: to, success: false, error: "HTTP 429", status: 429 } : { email: to, success: true },
+    );
+    const { run } = await runAll(RATE_LIMIT_BACKOFF_MS + 10 * SEND_DELAY_MS);
+    await act(() => run);
+
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(state.results?.every((r) => r.status === "notSent" && r.error === `${GMAIL_LIMIT} (HTTP 429)`)).toBe(true);
+  });
+
+  it("stops at once on dailyLimitExceeded, with no retry", async () => {
+    send.mockImplementation(async (_token, _from, to) =>
+      to === "r3@example.com"
+        ? { email: to, success: false, error: "Daily Limit Exceeded", status: 403, reason: "dailyLimitExceeded" }
+        : { email: to, success: true },
+    );
+    const { result, run } = await runAll(4 * SEND_DELAY_MS);
+    await act(() => run);
+
+    expect(send).toHaveBeenCalledTimes(4);
+    expect(result.current.running).toBe(false);
+    expect(statuses()).toEqual(["sent", "sent", "sent", "notSent", "notSent"]);
+    expect(state.results?.[4].error).toBe(`${GMAIL_LIMIT} (dailyLimitExceeded)`);
+  });
+});
+
+describe("verdictOf (L2, I9)", () => {
+  const fail = (extra: { status?: number; reason?: string; error?: string }) => ({ email: "a@b.co", success: false, ...extra });
+
+  it("reads the status and reason, not the message", () => {
+    expect(verdictOf({ email: "a@b.co", success: true })).toBe("sent");
+    expect(verdictOf(fail({ status: 401, error: "anything" }))).toBe("unauthorized");
+    expect(verdictOf(fail({ status: 403, reason: "insufficientPermissions" }))).toBe("permission");
+    expect(verdictOf(fail({ status: 403, reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT" }))).toBe("permission");
+    expect(verdictOf(fail({ status: 403, reason: "PERMISSION_DENIED" }))).toBe("permission");
+    expect(verdictOf(fail({ status: 429 }))).toBe("rateLimit");
+    expect(verdictOf(fail({ status: 403, reason: "userRateLimitExceeded" }))).toBe("rateLimit");
+    expect(verdictOf(fail({ status: 403, reason: "dailyLimitExceeded" }))).toBe("quota");
+    expect(verdictOf(fail({ status: 429, reason: "quotaExceeded" }))).toBe("quota");
+    expect(verdictOf(fail({ status: 400, error: "Invalid credentials" }))).toBe("failed");
+  });
+
+  it("falls back to the message text only when there is no status", () => {
+    expect(verdictOf(fail({ error: "Request had invalid authentication credentials." }))).toBe("unauthorized");
+    expect(verdictOf(fail({ error: "Failed to fetch" }))).toBe("failed");
+  });
+});
+
+describe("outcomeTitle", () => {
+  it("names Google's pause when Gmail's limit stopped the run", () => {
+    const results = [
+      ...Array.from({ length: 17 }, (_, i) => ({ index: i, email: `s${i}@x.co`, status: "sent" as const })),
+      ...Array.from({ length: 23 }, (_, i) => ({
+        index: 17 + i,
+        email: `n${i}@x.co`,
+        status: "notSent" as const,
+        error: `${GMAIL_LIMIT} (dailyLimitExceeded)`,
+      })),
+    ];
+    expect(outcomeTitle(outcomeOf(results))).toEqual({
+      title: "Google paused sending. 17 sent, 23 not sent.",
+      sentence: "Gmail's limit was reached. Try the rest later.",
+    });
+  });
+
+  it("still says Stopped for a run the user stopped", () => {
+    const results = [
+      { index: 0, email: "a@x.co", status: "sent" as const },
+      { index: 1, email: "b@x.co", status: "notSent" as const, error: STOPPED },
+    ];
+    expect(outcomeTitle(outcomeOf(results)).title).toBe("Stopped. 1 sent, 1 not sent.");
   });
 });

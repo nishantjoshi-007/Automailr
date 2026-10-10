@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { isGeminiConfigured, MIN_BODY_CHARS, polishEmail } from "./geminiClient";
+import { isGeminiConfigured, MIN_BODY_CHARS, polishEmail, sanitizePolishedBody } from "./geminiClient";
 
 const BODY_HTML = "<p>Hi {{first_name}}, just checking in about <strong>our meeting</strong> next week.</p>";
 const BODY_TEXT = "Hi {{first_name}}, just checking in about our meeting next week.";
@@ -156,6 +156,39 @@ describe("response parsing", () => {
       subject: "Original subject",
       body: BODY_HTML,
     });
+  });
+});
+
+describe("output sanitising (L7)", () => {
+  it("keeps only the tags the prompt allows, with no attributes", async () => {
+    fetchMock.mockResolvedValue(
+      modelReply(
+        JSON.stringify({
+          subject: "Hi",
+          body: '<p class="x" style="color:red" onclick="alert(1)">Hi {{first_name}},</p><ul><li><strong>One</strong></li><li><em>Two</em><br></li></ul><img src="https://e.com/t.gif"><script>alert(1)</script>',
+        }),
+      ),
+    );
+
+    const { body } = await polishEmail("Subject", BODY_HTML);
+
+    expect(body).toBe("<p>Hi {{first_name}},</p><ul><li><strong>One</strong></li><li><em>Two</em><br></li></ul>");
+  });
+
+  it("unwraps disallowed tags but keeps their text", () => {
+    expect(sanitizePolishedBody('<h1>Title</h1>')).toBe("Title");
+    expect(sanitizePolishedBody('<a href="https://e.com">link</a>')).toBe("link");
+    expect(sanitizePolishedBody("<ol><li>a</li></ol>")).toBe("<ol><li>a</li></ol>");
+  });
+
+  it("strips tags from the subject and keeps it on one line", async () => {
+    fetchMock.mockResolvedValue(
+      modelReply(JSON.stringify({ subject: "<b>Quick</b> check-in<br>for {{first_name}}", body: "<p>B</p>" })),
+    );
+
+    const { subject } = await polishEmail("Subject", BODY_HTML);
+
+    expect(subject).toBe("Quick check-in for {{first_name}}");
   });
 });
 

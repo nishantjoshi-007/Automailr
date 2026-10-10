@@ -59,7 +59,7 @@ export function WizardShell() {
   const navigate = useNavigate();
   const { user, accessToken, expiresAt, expired } = useAuth();
   const from = user?.email ?? "";
-  const { state, update, reset } = useWizardState(sessionId);
+  const { state, update, reset, foreignCleared } = useWizardState(sessionId, user ? user.email : null);
   const [files, setFiles] = useState<File[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const now = useNow();
@@ -251,6 +251,12 @@ export function WizardShell() {
             {results && !running ? title : ""}
           </p>
         </div>
+
+        {foreignCleared && !results && (
+          <p role="status" className="mb-6 max-w-[720px] rounded-md bg-surface-2 px-3.5 py-[11px] text-[14.5px] text-ink-2">
+            This tab had a batch for another Google account. It was cleared.
+          </p>
+        )}
 
         {expired && !running && user && (
           <ReauthNotice

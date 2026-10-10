@@ -65,20 +65,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [expired, setExpired] = useState(false);
 
-  /** The only path that destroys the session: the Sign out button. */
+  /**
+   * The only path that destroys the session: the Sign out button. The key
+   * goes first, so anything still being written with it is unreadable, then
+   * the stored values are removed (L4).
+   */
   const clearSession = useCallback(async () => {
     setAccessToken(null);
     setUser(null);
     setExpiresAt(null);
     setExpired(false);
+    // Destroy the encryption key so old ciphertext is unrecoverable
+    await secureStorage.destroyKey();
     secureStorage.removeItem(KEY_TOKEN);
     secureStorage.removeItem(KEY_DEADLINE);
     secureStorage.removeItem(KEY_LEGACY_TS);
     secureStorage.removeItem(KEY_USER);
     // The wizard's CSV rows and message must not outlive the session (D38).
     secureStorage.removeItem(KEY_WIZARD);
-    // Destroy the encryption key so old ciphertext is unrecoverable
-    await secureStorage.destroyKey();
   }, []);
 
   /** The token ran out: drop it, keep the user, the key and the wizard state. */

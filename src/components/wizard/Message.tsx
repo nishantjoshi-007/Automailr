@@ -75,12 +75,22 @@ export function Message({ state, csv, from, files, onFiles, onMessage, onTemplat
     },
   });
 
+  const htmlModeRef = useRef(htmlMode);
+  useEffect(() => {
+    htmlModeRef.current = htmlMode;
+  }, [htmlMode]);
+
   // Template, polish and version switches change `body` from outside the editor.
   useEffect(() => {
     if (!editor || body === lastEmitted.current) return;
     lastEmitted.current = body;
     editor.commands.setContent(body, { emitUpdate: false });
-  }, [body, editor]);
+    // In rich-text mode, send what the editor shows: TipTap's version of that HTML (L7).
+    // The HTML textarea is left alone; there the raw HTML is what you see and send.
+    if (htmlModeRef.current || !hasText(body)) return;
+    const shown = editor.getHTML();
+    if (shown !== body) onBody(shown);
+  }, [body, editor, onBody]);
 
   useEffect(() => {
     if (editor && !editor.isDestroyed) editor.view.dispatch(editor.state.tr.setMeta(fieldTokensKey, csv.headers));

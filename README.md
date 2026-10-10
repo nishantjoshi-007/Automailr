@@ -21,7 +21,7 @@ If the sign-in runs out partway through a batch, sending pauses, the rest are ma
 
 ## Privacy and permissions
 
-Automailr asks Google for one permission, `gmail.send`. It can send email as you. It cannot read, search or delete anything in your mailbox.
+Automailr asks Google for `gmail.send`, plus your basic profile (name, email address and picture) so the app can show who is signed in. It can send email as you. It cannot read, search or delete anything in your mailbox. Signing out destroys the encrypted token and its key in this browser; it does not revoke the grant at Google. The token simply expires within the hour, and you can revoke the grant at <https://myaccount.google.com/permissions>.
 
 Stays in the browser:
 
@@ -106,7 +106,7 @@ Referrer restrictions stop other websites from using the key in a browser. They 
 
 Automailr deploys to Vercel as a static build: build command `npm run build`, output directory `dist`. Set `VITE_GOOGLE_CLIENT_ID`, `VITE_GEMINI_API_KEY` and `VITE_FORMSPARK_FORM_ID` in the project's environment variables; Vite reads them at build time, so redeploy after changing them.
 
-`vercel.json` rewrites every path to `index.html` for the single-page router and sets security headers: `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options: DENY` and `Cross-Origin-Opener-Policy`. It also sets a Content-Security-Policy, currently as `Content-Security-Policy-Report-Only`, so violations are reported in the browser console but nothing is blocked yet. If you change the inline script in `index.html`, update its sha256 in the policy.
+`vercel.json` rewrites every path to `index.html` for the single-page router and sets security headers: `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options: DENY` and `Cross-Origin-Opener-Policy`. It also sets an enforcing `Content-Security-Policy`, so anything outside the policy is blocked. If you change the inline script in `index.html`, update its sha256 in the policy.
 
 ## Project layout
 

@@ -175,6 +175,21 @@ describe("buildMimeMessage", () => {
         expect(mime).not.toContain('evil"');
       });
 
+      it("escapes backslashes in the quoted filename (I3)", () => {
+        const mime = buildMimeMessage(from, to, "Hi", html, [textAttachment({ name: "a\\b.txt" })]);
+
+        expect(mime).toContain('filename="a\\\\b.txt"');
+        expect(mime).toContain('name="a\\\\b.txt"');
+        expect(mime).toContain("filename*=UTF-8''a%5Cb.txt");
+      });
+
+      it("percent-encodes '()*! in filename* (I3)", () => {
+        const mime = buildMimeMessage(from, to, "Hi", html, [textAttachment({ name: "it's (final)*!.txt" })]);
+
+        expect(mime).toContain("filename*=UTF-8''it%27s%20%28final%29%2A%21.txt\r\n");
+        expect(mime).toContain(`filename="it's (final)*!.txt"`);
+      });
+
       it("keeps the number of lines the same as for a benign filename", () => {
         const benign = buildMimeMessage(from, to, "Hi", html, [textAttachment({ name: "evil.txt" })]);
         const evil = buildMimeMessage(from, to, "Hi", html, [textAttachment({ name: 'evil"\r\nX-Injected: 1.txt' })]);
@@ -182,6 +197,21 @@ describe("buildMimeMessage", () => {
         const count = (m: string) => m.split("\r\n").length;
         expect(count(evil)).toBe(count(benign));
       });
+    });
+  });
+
+  describe("From header (I4)", () => {
+    it("omits From when the sender address is empty, so Gmail fills it in", () => {
+      const { headers } = splitMime(buildMimeMessage("", to, "Hi", html, []));
+
+      expect(headers.split("\r\n").some((l) => l.startsWith("From:"))).toBe(false);
+      expect(headers).toContain(`To: ${to}`);
+    });
+
+    it("omits From when the address is only whitespace or line breaks", () => {
+      const { headers } = splitMime(buildMimeMessage(" \r\n ", to, "Hi", html, []));
+
+      expect(headers.split("\r\n").some((l) => l.startsWith("From:"))).toBe(false);
     });
   });
 
@@ -403,7 +433,7 @@ describe("sendEmail", () => {
 
       const result = await sendEmail(token, from, to, "Hello", "<p>Hi</p>", []);
 
-      expect(result).toEqual({ email: to, success: false, error: "Rate Limit Exceeded" });
+      expect(result).toEqual({ email: to, success: false, error: "Rate Limit Exceeded", status: 403 });
     });
 
     it("falls back to the HTTP status when the error body has no message", async () => {
@@ -411,7 +441,7 @@ describe("sendEmail", () => {
 
       const result = await sendEmail(token, from, to, "Hello", "<p>Hi</p>", []);
 
-      expect(result).toEqual({ email: to, success: false, error: "HTTP 500" });
+      expect(result).toEqual({ email: to, success: false, error: "HTTP 500", status: 500 });
     });
 
     it("falls back to the HTTP status when error has no message field", async () => {
@@ -419,7 +449,59 @@ describe("sendEmail", () => {
 
       const result = await sendEmail(token, from, to, "Hello", "<p>Hi</p>", []);
 
-      expect(result).toEqual({ email: to, success: false, error: "HTTP 401" });
+      expect(result).toEqual({ email: to, success: false, error: "HTTP 401", status: 401 });
+    });
+
+    it("returns the status and Google's errors[0].reason (L2)", async () => {
+      fetchMock.mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({
+          error: {
+            code: 403,
+            message: "Request had insufficient authentication scopes.",
+            errors: [{ message: "Insufficient Permission", domain: "global", reason: "insufficientPermissions" }],
+            status: "PERMISSION_DENIED",
+          },
+        }),
+      });
+
+      const result = await sendEmail(token, from, to, "Hello", "<p>Hi</p>", []);
+
+      expect(result).toEqual({
+        email: to,
+        success: false,
+        error: "Request had insufficient authentication scopes.",
+        status: 403,
+        reason: "insufficientPermissions",
+      });
+    });
+
+    it("falls back to error.status for the reason when errors[] is missing (L2)", async () => {
+      fetchMock.mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => ({ error: { code: 429, message: "Too many requests", status: "RESOURCE_EXHAUSTED" } }),
+      });
+
+      const result = await sendEmail(token, from, to, "Hello", "<p>Hi</p>", []);
+
+      expect(result).toMatchObject({ success: false, status: 429, reason: "RESOURCE_EXHAUSTED" });
+    });
+
+    it("keeps the status when the error body is not JSON, with no reason (L2)", async () => {
+      fetchMock.mockResolvedValue({
+        ok: false,
+        status: 429,
+        json: async () => {
+          throw new SyntaxError("Unexpected token <");
+        },
+      });
+
+      const result = await sendEmail(token, from, to, "Hello", "<p>Hi</p>", []);
+
+      expect(result).toEqual({ email: to, success: false, error: "HTTP 429", status: 429 });
+      expect("reason" in result).toBe(false);
     });
 
     it("reports failure (not a throw) when the error body is not JSON", async () => {
