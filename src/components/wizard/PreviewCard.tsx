@@ -1,9 +1,10 @@
+import { isValidEmail } from "@/utils/csvParser";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import DOMPurify from "dompurify";
 import { Check, ChevronLeft, ChevronRight, CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { replacePlaceholdersMarked } from "@/utils/placeholders";
-import { fieldsUsed, joinAnd, nameLine, rowEmail } from "./preview";
+import { fieldsUsed, joinAnd, nameLine, rowEmail, emailKey } from "./preview";
 import type { CsvState } from "./state";
 import { card, cardTitle } from "./ui";
 
@@ -55,9 +56,14 @@ const bodyStyles =
 
 export function PreviewCard({ csv, from, subject, body, linkedField = null, onLink, className }: PreviewCardProps) {
   const [rawIndex, setIndex] = useState(0);
-  const count = csv.rows.length;
+  // Only rows that will actually be sent to, so "Recipient 1 of N" matches every other count.
+  const rows = useMemo(() => {
+    const key = emailKey(csv.headers);
+    return csv.rows.filter((r) => isValidEmail(r[key] ?? ""));
+  }, [csv]);
+  const count = rows.length;
   const index = Math.min(rawIndex, Math.max(0, count - 1));
-  const row = csv.rows[index] ?? NO_ROW;
+  const row = rows[index] ?? NO_ROW;
   const bodyRef = useRef<HTMLDivElement>(null);
 
   const html = useMemo(

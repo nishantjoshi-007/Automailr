@@ -48,14 +48,14 @@ const router = createBrowserRouter([
     id: "root",
     HydrateFallback: RouteFallback,
     children: [
-      { index: true, lazy: page(() => import("./pages/Home")) },
+      { index: true, lazy: page(() => import("./pages/Landing")) },
       {
         element: (
           <PublicOnly>
             <Outlet />
           </PublicOnly>
         ),
-        children: [{ path: "login", lazy: page(() => import("./pages/Landing")) }],
+        children: [{ path: "login", lazy: page(() => import("./pages/SignIn")) }],
       },
       {
         element: (
@@ -63,7 +63,7 @@ const router = createBrowserRouter([
             <Outlet />
           </ProtectedRoute>
         ),
-        children: [{ path: "app/*", lazy: page(() => import("./pages/Dashboard")) }],
+        children: [{ path: "app/*", lazy: page(() => import("./pages/Wizard")) }],
       },
       // Public since 5b: AppNav renders the marketing header when signed out.
       { path: "help", lazy: page(() => import("./pages/Help")) },

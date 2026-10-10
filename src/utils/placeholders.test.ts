@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   findPlaceholders,
-  hasUnresolvedPlaceholders,
   replacePlaceholders,
   replacePlaceholdersMarked,
   replacePlaceholdersPlain,
@@ -129,50 +128,6 @@ describe("replacePlaceholders", () => {
     it("inserts $-patterns literally (they are not interpreted as regex backreferences)", () => {
       expect(replacePlaceholders("{{v}}", { v: "$& $1 $$ $`" })).toBe("$&amp; $1 $$ $`");
     });
-  });
-});
-
-describe("hasUnresolvedPlaceholders", () => {
-  it("is true when a placeholder remains", () => {
-    expect(hasUnresolvedPlaceholders("Hello {{name}}")).toBe(true);
-  });
-
-  it("is true for keys with underscores and digits", () => {
-    expect(hasUnresolvedPlaceholders("{{first_name_2}}")).toBe(true);
-  });
-
-  it("is false when there are no placeholders", () => {
-    expect(hasUnresolvedPlaceholders("Hello Alice")).toBe(false);
-  });
-
-  it("is false for the empty string", () => {
-    expect(hasUnresolvedPlaceholders("")).toBe(false);
-  });
-
-  it("is false for malformed placeholders", () => {
-    expect(hasUnresolvedPlaceholders("{{ name }}")).toBe(false);
-    expect(hasUnresolvedPlaceholders("{{}}")).toBe(false);
-    expect(hasUnresolvedPlaceholders("{name}")).toBe(false);
-    expect(hasUnresolvedPlaceholders("{{first-name}}")).toBe(false);
-    expect(hasUnresolvedPlaceholders("{{name}")).toBe(false);
-  });
-
-  it("is true when at least one of several placeholders remains", () => {
-    expect(hasUnresolvedPlaceholders("Hi Bob, your code is {{code}}")).toBe(true);
-  });
-
-  it("is false after every placeholder has been resolved", () => {
-    const resolved = replacePlaceholders("Hi {{a}} {{b}}", { a: "x", b: "y" });
-    expect(hasUnresolvedPlaceholders(resolved)).toBe(false);
-  });
-
-  it("is true after replacePlaceholders leaves an unknown placeholder behind", () => {
-    const partial = replacePlaceholders("Hi {{a}} {{missing}}", { a: "x" });
-    expect(hasUnresolvedPlaceholders(partial)).toBe(true);
-  });
-
-  it("is false when a resolved value is empty", () => {
-    expect(hasUnresolvedPlaceholders(replacePlaceholders("Hi {{a}}", { a: "" }))).toBe(false);
   });
 });
 

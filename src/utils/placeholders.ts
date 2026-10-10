@@ -19,11 +19,6 @@ export function replacePlaceholders(template: string, data: Record<string, strin
   });
 }
 
-/** Check if any unresolved placeholders remain in the text. */
-export function hasUnresolvedPlaceholders(text: string): boolean {
-  return /\{\{\w+\}\}/.test(text);
-}
-
 const has = (data: Record<string, string>, key: string) => Object.prototype.hasOwnProperty.call(data, key);
 
 /**

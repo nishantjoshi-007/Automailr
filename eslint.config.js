@@ -20,7 +20,15 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      "react-refresh/only-export-components": [
+        "warn",
+        {
+          allowConstantExport: true,
+          // Intentional co-exports: cva variant objects next to their
+          // component, context hooks next to their provider, sonner's toast.
+          allowExportNames: ["buttonVariants", "badgeVariants", "useAuth", "useTheme", "toast"],
+        },
+      ],
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
@@ -30,11 +38,9 @@ export default defineConfig([
           ignoreRestSiblings: true,
         },
       ],
-      // React Compiler rules (react-hooks v7). Only the current wizard
-      // (Dashboard.tsx, PreviewSend.tsx) trips them and it is rewritten in
-      // Phase 5c; promote both back to "error" once that lands.
-      "react-hooks/refs": "warn",
-      "react-hooks/set-state-in-effect": "warn",
+      // React Compiler rules (react-hooks v7).
+      "react-hooks/refs": "error",
+      "react-hooks/set-state-in-effect": "error",
     },
   },
 ]);
