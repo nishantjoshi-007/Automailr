@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router";
-import { ChevronDown, CircleHelp, LogOut } from "lucide-react";
+import { ChevronDown, CircleHelp, LogOut, Send } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Brand } from "@/components/Brand";
@@ -166,9 +166,17 @@ export function AppNav() {
         <Brand to="/app" />
 
         <NavLink
-          to="/help"
+          to="/app"
           viewTransition
           className={cn(navLinkClass, "ml-auto inline-flex items-center gap-2 py-2 max-md:px-2")}
+        >
+          <Send aria-hidden="true" className="size-[18px]" strokeWidth={1.8} />
+          <span className="max-md:sr-only">Send</span>
+        </NavLink>
+        <NavLink
+          to="/help"
+          viewTransition
+          className={cn(navLinkClass, "inline-flex items-center gap-2 py-2 max-md:px-2")}
         >
           <CircleHelp aria-hidden="true" className="size-[18px]" strokeWidth={1.8} />
           <span className="max-md:sr-only">Help</span>
