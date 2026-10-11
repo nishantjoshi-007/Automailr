@@ -165,7 +165,7 @@ reveals, no spring libraries. `prefers-reduced-motion` collapses everything.
 ## Logo
 
 The mark is an "A" cut by a forward arrow: the letter and the send in one
-shape. Files in `public/`: `logo.svg` (mark, `currentColor`), `favicon.svg`,
+shape. Files in `public/`: `logo.svg` (the mark on the accent tile), `favicon.svg`,
 `favicon.ico`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`,
 `og-image.png`. In the top bar it sits in a 32 px `accent` tile (9 px radius)
 in `on-accent`, next to the wordmark "Automailr" set in Archivo 750 / 108% /
