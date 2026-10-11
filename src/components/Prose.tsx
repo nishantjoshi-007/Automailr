@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { BackToSending } from "@/components/BackToSending";
 
 export interface ProseTocItem {
   id: string;
@@ -106,7 +105,6 @@ export function Prose({ title, intro, meta, toc, children, className }: ProsePro
     >
       <div className={cn("max-w-[72ch]", proseClass)}>
         <header>
-          <BackToSending />
           <h1 className="heading text-[clamp(1.7rem,1.3rem+1vw,2.2rem)] text-ink">{title}</h1>
           {intro && <p className="mt-4 text-[1.08rem] leading-[1.55] text-ink-2">{intro}</p>}
           {meta && <p className="mt-3 text-[14px] text-ink-3">{meta}</p>}

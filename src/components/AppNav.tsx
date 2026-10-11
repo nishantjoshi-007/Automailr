@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router";
-import { ChevronDown, CircleHelp, LogOut, Send } from "lucide-react";
+import { ChevronDown, CircleHelp, LogOut, Moon, Send, Sun } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Brand } from "@/components/Brand";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/contexts/ThemeContext";
 import { SiteHeader, SkipLink, navLinkClass } from "@/components/SiteHeader";
 import { cn } from "@/lib/utils";
 
@@ -19,12 +20,22 @@ interface AccountMenuProps {
   name: string;
   email: string;
   avatar?: string;
+  /** Whether the Send entry applies (it is pointless on the wizard itself). */
+  showSend: boolean;
   onSignOut: () => void;
 }
 
-/** Avatar button with a one-item menu (the email, then Sign out). Hand-written menu button pattern. */
-function AccountMenu({ name, email, avatar, onSignOut }: AccountMenuProps) {
+const menuItemClass =
+  "flex min-h-10 w-full items-center gap-2.5 rounded-sm px-2.5 text-left text-[14.5px] font-medium text-ink no-underline transition-colors duration-150 hover:bg-surface-2 focus-visible:bg-surface-2";
+
+/**
+ * Avatar button with the account menu. On desktop it holds the email and Sign
+ * out; below `md` it also takes Send, Help and the theme switch, which leave
+ * the bar so a phone gets one target instead of four.
+ */
+function AccountMenu({ name, email, avatar, showSend, onSignOut }: AccountMenuProps) {
   const { pathname } = useLocation();
+  const { theme, toggleTheme } = useTheme();
   // Open "for" one pathname, so a route change closes it.
   const [openFor, setOpenFor] = useState<string | null>(null);
   const open = openFor === pathname;
@@ -129,6 +140,28 @@ function AccountMenu({ name, email, avatar, onSignOut }: AccountMenuProps) {
           {email}
         </div>
         <div role="separator" className="-mx-1.5 my-1.5 h-px bg-line" />
+        {/* Phone-only entries: the bar hides these below md. */}
+        <div role="none" className="md:hidden">
+          {showSend && (
+            <NavLink to="/app" viewTransition role="menuitem" tabIndex={-1} onClick={() => setOpenFor(null)} className={menuItemClass}>
+              <Send aria-hidden="true" className="size-[17px] text-ink-2" strokeWidth={1.8} />
+              Send
+            </NavLink>
+          )}
+          <NavLink to="/help" viewTransition role="menuitem" tabIndex={-1} onClick={() => setOpenFor(null)} className={menuItemClass}>
+            <CircleHelp aria-hidden="true" className="size-[17px] text-ink-2" strokeWidth={1.8} />
+            Help
+          </NavLink>
+          <button type="button" role="menuitem" tabIndex={-1} onClick={toggleTheme} className={menuItemClass}>
+            {theme === "dark" ? (
+              <Sun aria-hidden="true" className="size-[17px] text-ink-2" strokeWidth={1.8} />
+            ) : (
+              <Moon aria-hidden="true" className="size-[17px] text-ink-2" strokeWidth={1.8} />
+            )}
+            {theme === "dark" ? "Light theme" : "Dark theme"}
+          </button>
+          <div role="separator" className="-mx-1.5 my-1.5 h-px bg-line" />
+        </div>
         <button
           type="button"
           role="menuitem"
@@ -137,7 +170,7 @@ function AccountMenu({ name, email, avatar, onSignOut }: AccountMenuProps) {
             setOpenFor(null);
             onSignOut();
           }}
-          className="flex min-h-10 w-full items-center gap-2.5 rounded-sm px-2.5 text-left text-[14.5px] font-medium text-ink transition-colors duration-150 hover:bg-surface-2 focus-visible:bg-surface-2"
+          className={menuItemClass}
         >
           <LogOut aria-hidden="true" className="size-[17px] text-ink-2" strokeWidth={1.8} />
           Sign out
@@ -151,6 +184,8 @@ function AccountMenu({ name, email, avatar, onSignOut }: AccountMenuProps) {
 export function AppNav() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const onWizard = pathname === "/app" || pathname.startsWith("/app/");
 
   if (!user) return <SiteHeader />;
 
@@ -165,26 +200,29 @@ export function AppNav() {
       <div className="mx-auto flex min-h-[64px] w-full max-w-[1380px] items-center gap-2.5 px-[clamp(16px,3vw,40px)]">
         <Brand to="/app" />
 
-        <NavLink
-          to="/app"
-          viewTransition
-          className={cn(navLinkClass, "ml-auto inline-flex items-center gap-2 py-2 max-md:px-2")}
-        >
-          <Send aria-hidden="true" className="size-[18px]" strokeWidth={1.8} />
-          <span className="max-md:sr-only">Send</span>
-        </NavLink>
-        <NavLink
-          to="/help"
-          viewTransition
-          className={cn(navLinkClass, "inline-flex items-center gap-2 py-2 max-md:px-2")}
-        >
-          <CircleHelp aria-hidden="true" className="size-[18px]" strokeWidth={1.8} />
-          <span className="max-md:sr-only">Help</span>
-        </NavLink>
+        <div className="ml-auto hidden items-center gap-2.5 md:flex">
+          {!onWizard && (
+            <NavLink to="/app" viewTransition className={cn(navLinkClass, "inline-flex items-center gap-2 py-2")}>
+              <Send aria-hidden="true" className="size-[18px]" strokeWidth={1.8} />
+              Send
+            </NavLink>
+          )}
+          <NavLink to="/help" viewTransition className={cn(navLinkClass, "inline-flex items-center gap-2 py-2")}>
+            <CircleHelp aria-hidden="true" className="size-[18px]" strokeWidth={1.8} />
+            Help
+          </NavLink>
+          <ThemeToggle />
+        </div>
 
-        <ThemeToggle />
-
-        <AccountMenu name={user.name} email={user.email} avatar={user.avatar} onSignOut={() => void signOut()} />
+        <div className="ml-auto md:ml-0">
+          <AccountMenu
+            name={user.name}
+            email={user.email}
+            avatar={user.avatar}
+            showSend={!onWizard}
+            onSignOut={() => void signOut()}
+          />
+        </div>
       </div>
     </header>
   );
