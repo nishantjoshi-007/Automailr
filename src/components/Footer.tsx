@@ -34,11 +34,13 @@ interface FooterProps {
   compact?: boolean;
   /** Use the app bar's wider container (the wizard's width) instead of `container`. */
   wide?: boolean;
+  /** Show the "Start sending" button in the top row (the landing only). */
+  cta?: boolean;
 }
 
 const wideClass = "mx-auto w-full max-w-[1380px] px-[clamp(16px,3vw,40px)]";
 
-export function Footer({ className, compact = false, wide = false }: FooterProps) {
+export function Footer({ className, compact = false, wide = false, cta = false }: FooterProps) {
   const { accessToken } = useAuth();
 
   if (compact) {
@@ -63,11 +65,13 @@ export function Footer({ className, compact = false, wide = false }: FooterProps
             <p className="max-w-[34rem] text-[15px] text-ink-2">
               Free, open-source mail merge for Gmail. Licensed for personal, non-commercial use.
             </p>
-            <Button asChild className="px-[18px] font-semibold max-[460px]:w-full">
-              <Link to={accessToken ? "/app" : "/login"} viewTransition>
-                Start sending
-              </Link>
-            </Button>
+            {cta && (
+              <Button asChild className="px-[18px] font-semibold max-[460px]:w-full">
+                <Link to={accessToken ? "/app" : "/login"} viewTransition>
+                  Start sending
+                </Link>
+              </Button>
+            )}
           </div>
           <div className="mt-8 flex flex-wrap justify-between gap-x-6 gap-y-3 border-t border-line pt-6 text-sm text-ink-3">
             <FooterLinks />

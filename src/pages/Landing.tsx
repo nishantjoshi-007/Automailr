@@ -397,7 +397,7 @@ export default function Home() {
         <Privacy />
         <Limits />
       </main>
-      <Footer />
+      <Footer cta />
     </div>
   );
 }

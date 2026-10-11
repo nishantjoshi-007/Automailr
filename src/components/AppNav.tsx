@@ -163,7 +163,7 @@ export function AppNav() {
     <header className="relative z-20 border-b border-line bg-surface">
       <SkipLink />
       <div className="mx-auto flex min-h-[64px] w-full max-w-[1380px] items-center gap-2.5 px-[clamp(16px,3vw,40px)]">
-        <Brand />
+        <Brand to="/app" />
 
         <NavLink
           to="/help"
