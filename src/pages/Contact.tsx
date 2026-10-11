@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from "react";
 import { AlertCircle, Check } from "lucide-react";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppNav } from "@/components/AppNav";
 import { Footer } from "@/components/Footer";
 import { Prose } from "@/components/Prose";
 import { Button } from "@/components/ui/button";
@@ -137,7 +137,7 @@ function ContactForm({ formId }: { formId: string }) {
 export default function Contact() {
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader />
+      <AppNav />
       <main id="main">
         <Prose title="Contact">
           <p>

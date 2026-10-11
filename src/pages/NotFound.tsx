@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppNav } from "@/components/AppNav";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 
@@ -8,7 +8,7 @@ export default function NotFound() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader />
+      <AppNav />
       <main id="main" className="container">
         <div className="mx-auto max-w-[560px] py-[clamp(48px,10vw,128px)] text-center">
           <h1 className="heading text-[clamp(1.9rem,1.4rem+1.6vw,2.6rem)] text-ink">This page doesn&rsquo;t exist.</h1>

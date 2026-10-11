@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppNav } from "@/components/AppNav";
 import { Footer } from "@/components/Footer";
 import { Prose, ProseSection } from "@/components/Prose";
 
@@ -32,7 +32,7 @@ const external = { target: "_blank", rel: "noopener" } as const;
 export default function TermsOfService() {
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader />
+      <AppNav />
       <main id="main">
         <Prose
           title="Terms of use"
