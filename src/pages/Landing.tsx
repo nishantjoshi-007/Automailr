@@ -10,7 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppNav } from "@/components/AppNav";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -394,7 +394,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader />
+      <AppNav />
       <main id="main" className="flex-1">
         <Hero ctaTo={ctaTo} />
         <Steps />
