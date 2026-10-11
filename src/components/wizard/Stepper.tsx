@@ -57,18 +57,18 @@ export function Stepper({ sessionId, current, subs, linksDisabled }: StepperProp
               </span>
             </>
           );
-          const row = "flex min-w-0 items-center gap-3 max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-2";
+          const row = "flex min-w-0 items-center gap-3 max-[720px]:flex-col max-[720px]:items-center max-[720px]:gap-2 max-[720px]:text-center";
           return (
             <li
               key={step}
               aria-current={state === "current" ? "step" : undefined}
               className={cn(
-                "group relative flex min-w-0 flex-1 items-center gap-3 py-2.5 last:flex-[0_1_auto] max-[720px]:items-start max-[720px]:py-2 max-[720px]:last:flex-1",
+                "group relative flex min-w-0 flex-1 items-center gap-3 py-2.5 last:flex-[0_1_auto] max-[720px]:justify-center max-[720px]:items-start max-[720px]:py-2 max-[720px]:last:flex-1",
                 // the connector between steps: in the row at ≥ 720 px; below, the items stack dot over
                 // label, so it is drawn through the dot's centre (8 px padding + 16 px), from 8 px past
                 // the dot to the item's right edge
                 i < STEPS.length - 1 &&
-                  "after:ml-2 after:mr-1 after:h-[1.5px] after:min-w-4 after:flex-1 after:bg-line after:content-[''] max-[720px]:after:absolute max-[720px]:after:top-[23.25px] max-[720px]:after:right-0 max-[720px]:after:left-10 max-[720px]:after:m-0 max-[720px]:after:min-w-0",
+                  "after:ml-2 after:mr-1 after:h-[1.5px] after:min-w-4 after:flex-1 after:bg-line after:content-[''] max-[720px]:after:absolute max-[720px]:after:top-[23.25px] max-[720px]:after:left-[calc(50%+24px)] max-[720px]:after:right-[calc(-50%+18px)] max-[720px]:after:m-0 max-[720px]:after:min-w-0",
                 state === "done" && "after:bg-accent-ink/50",
               )}
             >
