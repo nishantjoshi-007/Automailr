@@ -21,7 +21,6 @@ export function SkipLink() {
 
 const NAV_LINKS = [
   { to: "/help", label: "Help" },
-  { to: "/contact", label: "Contact" },
 ] as const;
 
 export const navLinkClass =
@@ -30,7 +29,7 @@ export const navLinkClass =
 const iconButtonClass =
   "inline-grid size-10 flex-none place-items-center rounded-md border border-line bg-surface text-ink-2 transition-[border-color,color] duration-150 hover:border-line-strong hover:text-ink";
 
-/** Public / marketing header: brand, Help, Contact, theme toggle, "Start sending". */
+/** Public / marketing header: brand, Help, theme toggle, "Start sending". */
 export function SiteHeader() {
   const { accessToken } = useAuth();
   const { pathname } = useLocation();
