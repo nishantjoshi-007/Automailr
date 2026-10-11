@@ -63,9 +63,8 @@ export default function Landing() {
           </span>
           <h1 className="heading mt-5 text-[1.7rem]">Sign in to start sending.</h1>
           <p className="mt-3 text-[15.5px] text-ink-2">
-            Automailr asks Google for <code translate="no">gmail.send</code>, so it can send email as you, plus your
-            basic profile (name, email address and picture) to show who is signed in. It can’t read, search or delete
-            your mail.
+            Automailr asks Google for permission to send email from your account, and to see your name, email address
+            and photo so it can show who’s signed in. It can’t read, search or delete your mail.
           </p>
 
           <div className="mt-6">
