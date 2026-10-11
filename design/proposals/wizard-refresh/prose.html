@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text pages · Wizard refresh · Automailr</title>
+<meta name="theme-color" content="#f9fafa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c0f10" media="(prefers-color-scheme: dark)">
+<script>
+  /* Theme bootstrap, runs before first paint: ?theme= > saved choice > system setting. */
+  (function () {
+    var k = 'automailr-theme';
+    try {
+      var q = new URLSearchParams(location.search).get('theme');
+      if (q === 'light' || q === 'dark') localStorage.setItem(k, q);
+      else if (q === 'system') localStorage.removeItem(k);
+      var s = localStorage.getItem(k);
+      if (s === 'light' || s === 'dark') document.documentElement.setAttribute('data-theme', s);
+    } catch (e) {}
+  })();
+</script>
+<link rel="stylesheet" href="proposal.css">
+<style>
+.pf { container-type: inline-size; background: var(--bg); border-block: 1px solid var(--line); overflow: hidden; }
+.bleed { margin-inline: calc(-1 * clamp(16px, 3vw, 40px)); }
+.pf.phone { width: 390px; max-width: 100%; border: 1px solid var(--line); border-radius: var(--r-lg); }
+.pf .appbar-in { padding-inline: clamp(16px, 3cqw, 40px); max-width: 1380px; margin-inline: auto; }
+.pc { max-width: 1240px; margin-inline: auto; padding: clamp(40px, 6cqw, 88px) clamp(16px, 4cqw, 48px) 56px; }
+.prose { font-size: 16px; line-height: 1.65; color: var(--ink-2); }
+.prose h1 { font-family: var(--f-display); font-weight: 800; font-stretch: 104%; letter-spacing: -0.03em; line-height: 1.05; text-wrap: balance; color: var(--ink); font-size: clamp(1.7rem, 1.3rem + 1cqw, 2.2rem); }
+.prose .intro { margin-top: 16px; font-size: 1.08rem; line-height: 1.55; }
+.prose h2 { font-family: var(--f-display); font-size: 1.5rem; font-weight: 750; font-stretch: 104%; line-height: 1.15; letter-spacing: -0.015em; color: var(--ink); }
+.prose h3 { font-size: 1.12rem; font-weight: 650; line-height: 1.3; color: var(--ink); }
+.prose code { border-radius: 6px; background: var(--surface-2); padding: 0.1em 0.35em; color: var(--ink); }
+.prose .body { margin-top: 24px; }
+.prose .body.after-toc { margin-top: 48px; }
+.prose section > h2 + * { margin-top: 12px; }
+.toc-top { margin-top: 40px; border-block: 1px solid var(--line); padding-block: 20px; }
+.toc-label { font-size: 13.5px; font-weight: 500; color: var(--ink-3); }
+.toc-top ol { margin-top: 12px; columns: 2; column-gap: 32px; font-size: 15px; }
+.toc-top li { break-inside: avoid; padding-bottom: 6px; }
+.toc-top a, .rail a { color: var(--ink-2); text-decoration: none; }
+.toc-top a:hover, .rail a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.steps { margin-top: 24px; display: grid; gap: 24px; }
+.steps li { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); column-gap: 16px; }
+.steps .n { padding-top: 2px; font-family: var(--f-display); font-weight: 850; font-stretch: 118%; letter-spacing: -0.04em; line-height: 1; font-size: 2.4rem; color: var(--ink); font-variant-numeric: tabular-nums lining-nums; }
+.steps p { margin-top: 6px; }
+/* Option A: the same column, centred */
+.col { max-width: 72ch; }
+.col.centred { margin-inline: auto; }
+/* Option B: article left, contents rail right */
+.with-rail { display: grid; grid-template-columns: minmax(0, 72ch) 240px; gap: 64px; align-items: start; }
+.rail { position: sticky; top: 88px; }
+.rail ol { margin-top: 10px; display: grid; gap: 2px; font-size: 14px; }
+.rail a { display: block; padding: 4px 0 4px 12px; border-left: 2px solid transparent; }
+.rail a[aria-current="true"] { color: var(--ink); border-left-color: var(--accent); }
+@container (max-width: 1023px) {
+  .toc-top, .rail { display: none; }
+  .prose .body.after-toc { margin-top: 24px; }
+  .with-rail { display: block; }
+  .with-rail > .col { max-width: 72ch; }
+}
+@container (max-width: 720px) {
+  .pf .appbar .help span { display: none; }
+  .pf .appbar .help { padding: 8px; }
+}
+.pc-line { margin-top: 12px; font-size: 13.5px; color: var(--ink-3); max-width: 90ch; }
+.pc-line b { color: var(--ink-2); font-weight: 600; }
+.opt { margin-top: 48px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#p-a">Skip to the options</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-arrow-l" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  <symbol id="i-list-ol" viewBox="0 0 24 24"><path d="M10 6h11M10 12h11M10 18h11M4 4h1v5M4 9h2M6 19H4c0-1.2 2-1.8 2-3 0-.8-.7-1.2-1.4-1.1-.4.1-.6.3-.6.6"/></symbol>
+  <symbol id="i-quote" viewBox="0 0 24 24"><path d="M5 7h5v5c0 3-1.6 5-4.5 5.8M14 7h5v5c0 3-1.6 5-4.5 5.8"/></symbol>
+  <symbol id="i-bold" viewBox="0 0 24 24"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z"/></symbol>
+  <symbol id="i-italic" viewBox="0 0 24 24"><path d="M19 4h-9M14 20H5M15 4 9 20"/></symbol>
+  <symbol id="i-strike" viewBox="0 0 24 24"><path d="M16 5H9.5a3.5 3.5 0 0 0-1.9 6.4M15 13.5a3.5 3.5 0 0 1-2.5 5.5H6M4 12h16"/></symbol>
+  <symbol id="i-heading" viewBox="0 0 24 24"><path d="M6 4v16M17 4v16M6 12h11"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5M12 16.5h.01"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.94 15.5a2 2 0 0 0-1.44-1.44l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0l1.58 6.13a2 2 0 0 0 1.44 1.44l6.13 1.58a.5.5 0 0 1 0 .96l-6.13 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/><path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+</svg>
+
+<div class="doc">
+<div class="doc-top">
+  <a class="back" href="index.html"><svg aria-hidden="true" class="i"><use href="#i-chev-l"/></svg>All screens</a>
+  <h1>6 · Help, Privacy and Terms</h1>
+  <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+</div>
+<ul class="doc-notes">
+  <li>Today the 72ch article column is pinned to the left of the 1240&#8239;px container, so the right third of a 1440&#8239;px screen is empty. Two fixes, shown on the top of the Help page; Privacy and Terms use the same layout.</li>
+  <li>The 1440&#8239;px frames run edge to edge, so they are the real width. Below 1024&#8239;px the contents list is hidden in both options, as it is today, so the two 390&#8239;px frames look the same.</li>
+  <li>The app bar is option A from the app bar page.</li>
+</ul>
+<section class="opt" aria-labelledby="p-a">
+  <div class="opt-h"><h2 id="p-a">Option A: centred column</h2></div>
+  <p class="opt-p">The same 72ch column, centred with <code>margin-inline: auto</code>. “On this page” stays at the top, as now.</p>
+  <p class="cap">1440&#8239;px</p>
+  <div class="pf bleed"><header class="appbar">
+  <div class="wide appbar-in">
+    <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+    <a class="help" href="#"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg><span>Help</span></a>
+    <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+    <div class="acct">
+      <button type="button" class="acct-btn" data-menu-btn aria-haspopup="menu" aria-expanded="false" aria-controls="acct-menu-7" aria-label="Account: sam.rivera@gmail.com">
+        <span class="avatar" aria-hidden="true">SR</span><svg aria-hidden="true" class="i"><use href="#i-chev-d"/></svg>
+      </button>
+      <div class="menu" id="acct-menu-7" role="menu" hidden>
+        <p class="menu-email">sam.rivera@gmail.com</p><div class="menu-sep" role="separator"></div><button type="button" class="menu-item" role="menuitem"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg>Sign out</button>
+      </div>
+    </div>
+  </div>
+</header><main><div class="pc"><article class="col centred prose"><header><h1>Help</h1><p class="intro">How Automailr works, what your CSV needs, and what happens when you send.</p></header><nav class="toc-top" aria-label="On this page"><p class="toc-label">On this page</p><ol><li><a href="#three-steps">Three steps</a></li><li><a href="#your-csv">Your CSV</a></li><li><a href="#fields">Fields</a></li><li><a href="#attachments">Attachments</a></li><li><a href="#sending">Sending</a></li><li><a href="#ai-polish">AI polish</a></li><li><a href="#permissions">Permissions and privacy</a></li><li><a href="#questions">Questions</a></li></ol></nav><div class="body after-toc"><section><h2>Three steps</h2>
+            <p>Recipients, message, review. You can go back to any step before anything is sent.</p>
+            <ol class="steps">
+              <li><span class="n" aria-hidden="true">1</span><div><h3>Recipients</h3><p>Upload a CSV with an <code>email</code> column, plus any columns you want in the message, like first_name or company. Up to <span class="num">5,000</span> rows. Rows with an invalid or blank email are skipped and listed in the results.</p></div></li>
+              <li><span class="n" aria-hidden="true">2</span><div><h3>Message</h3><p>Write once, and click a column name to drop in a field like <span class="tok" translate="no"><span class="tok-b" aria-hidden="true">{{</span>company<span class="tok-b" aria-hidden="true">}}</span></span>. Attach files if you need to. The preview shows each person’s copy as you type.</p></div></li>
+              <li><span class="n" aria-hidden="true">3</span><div><h3>Review &amp; send</h3><p>Step through every recipient’s email, then send from your Gmail. Messages go out one at a time, <span class="num" style="white-space:nowrap">250&#8239;ms</span> apart, and any that fail can be retried.</p></div></li>
+            </ol>
+          </section></div></article></div></main></div>
+  <p class="cap">390&#8239;px</p>
+  <div class="pf phone"><header class="appbar">
+  <div class="wide appbar-in">
+    <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+    <a class="help" href="#"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg><span>Help</span></a>
+    <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+    <div class="acct">
+      <button type="button" class="acct-btn" data-menu-btn aria-haspopup="menu" aria-expanded="false" aria-controls="acct-menu-8" aria-label="Account: sam.rivera@gmail.com">
+        <span class="avatar" aria-hidden="true">SR</span><svg aria-hidden="true" class="i"><use href="#i-chev-d"/></svg>
+      </button>
+      <div class="menu" id="acct-menu-8" role="menu" hidden>
+        <p class="menu-email">sam.rivera@gmail.com</p><div class="menu-sep" role="separator"></div><button type="button" class="menu-item" role="menuitem"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg>Sign out</button>
+      </div>
+    </div>
+  </div>
+</header><main><div class="pc"><article class="col centred prose"><header><h1>Help</h1><p class="intro">How Automailr works, what your CSV needs, and what happens when you send.</p></header><nav class="toc-top" aria-label="On this page"><p class="toc-label">On this page</p><ol><li><a href="#three-steps">Three steps</a></li><li><a href="#your-csv">Your CSV</a></li><li><a href="#fields">Fields</a></li><li><a href="#attachments">Attachments</a></li><li><a href="#sending">Sending</a></li><li><a href="#ai-polish">AI polish</a></li><li><a href="#permissions">Permissions and privacy</a></li><li><a href="#questions">Questions</a></li></ol></nav><div class="body after-toc"><section><h2>Three steps</h2>
+            <p>Recipients, message, review. You can go back to any step before anything is sent.</p>
+            <ol class="steps">
+              <li><span class="n" aria-hidden="true">1</span><div><h3>Recipients</h3><p>Upload a CSV with an <code>email</code> column, plus any columns you want in the message, like first_name or company. Up to <span class="num">5,000</span> rows. Rows with an invalid or blank email are skipped and listed in the results.</p></div></li>
+              <li><span class="n" aria-hidden="true">2</span><div><h3>Message</h3><p>Write once, and click a column name to drop in a field like <span class="tok" translate="no"><span class="tok-b" aria-hidden="true">{{</span>company<span class="tok-b" aria-hidden="true">}}</span></span>. Attach files if you need to. The preview shows each person’s copy as you type.</p></div></li>
+              <li><span class="n" aria-hidden="true">3</span><div><h3>Review &amp; send</h3><p>Step through every recipient’s email, then send from your Gmail. Messages go out one at a time, <span class="num" style="white-space:nowrap">250&#8239;ms</span> apart, and any that fail can be retried.</p></div></li>
+            </ol>
+          </section></div></article></div></main></div>
+  <p class="pc-line"><b>Pros:</b> the smallest change, and the page reads as balanced. <b>Cons:</b> wide empty margins on both sides, and the contents list scrolls away once you start reading.</p>
+</section>
+<section class="opt" aria-labelledby="p-b">
+  <div class="opt-h"><h2 id="p-b">Option B: sticky contents rail</h2><span class="rec">Recommended</span></div>
+  <p class="opt-p">The article stays left at 72ch. “On this page” moves into a 240&#8239;px rail on the right, starting level with the title and sticking 88&#8239;px from the top as you scroll. The current section is in <code>ink</code> with a 2&#8239;px accent bar.</p>
+  <p class="cap">1440&#8239;px</p>
+  <div class="pf bleed"><header class="appbar">
+  <div class="wide appbar-in">
+    <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+    <a class="help" href="#"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg><span>Help</span></a>
+    <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+    <div class="acct">
+      <button type="button" class="acct-btn" data-menu-btn aria-haspopup="menu" aria-expanded="false" aria-controls="acct-menu-9" aria-label="Account: sam.rivera@gmail.com">
+        <span class="avatar" aria-hidden="true">SR</span><svg aria-hidden="true" class="i"><use href="#i-chev-d"/></svg>
+      </button>
+      <div class="menu" id="acct-menu-9" role="menu" hidden>
+        <p class="menu-email">sam.rivera@gmail.com</p><div class="menu-sep" role="separator"></div><button type="button" class="menu-item" role="menuitem"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg>Sign out</button>
+      </div>
+    </div>
+  </div>
+</header><main><div class="pc with-rail"><article class="col prose"><header><h1>Help</h1><p class="intro">How Automailr works, what your CSV needs, and what happens when you send.</p></header><div class="body after-toc"><section><h2>Three steps</h2>
+            <p>Recipients, message, review. You can go back to any step before anything is sent.</p>
+            <ol class="steps">
+              <li><span class="n" aria-hidden="true">1</span><div><h3>Recipients</h3><p>Upload a CSV with an <code>email</code> column, plus any columns you want in the message, like first_name or company. Up to <span class="num">5,000</span> rows. Rows with an invalid or blank email are skipped and listed in the results.</p></div></li>
+              <li><span class="n" aria-hidden="true">2</span><div><h3>Message</h3><p>Write once, and click a column name to drop in a field like <span class="tok" translate="no"><span class="tok-b" aria-hidden="true">{{</span>company<span class="tok-b" aria-hidden="true">}}</span></span>. Attach files if you need to. The preview shows each person’s copy as you type.</p></div></li>
+              <li><span class="n" aria-hidden="true">3</span><div><h3>Review &amp; send</h3><p>Step through every recipient’s email, then send from your Gmail. Messages go out one at a time, <span class="num" style="white-space:nowrap">250&#8239;ms</span> apart, and any that fail can be retried.</p></div></li>
+            </ol>
+          </section></div></article>
+        <nav class="rail" aria-label="On this page"><p class="toc-label">On this page</p><ol><li><a href="#three-steps" aria-current="true">Three steps</a></li><li><a href="#your-csv">Your CSV</a></li><li><a href="#fields">Fields</a></li><li><a href="#attachments">Attachments</a></li><li><a href="#sending">Sending</a></li><li><a href="#ai-polish">AI polish</a></li><li><a href="#permissions">Permissions and privacy</a></li><li><a href="#questions">Questions</a></li></ol></nav></div></main></div>
+  <p class="cap">390&#8239;px</p>
+  <div class="pf phone"><header class="appbar">
+  <div class="wide appbar-in">
+    <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+    <a class="help" href="#"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg><span>Help</span></a>
+    <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+    <div class="acct">
+      <button type="button" class="acct-btn" data-menu-btn aria-haspopup="menu" aria-expanded="false" aria-controls="acct-menu-10" aria-label="Account: sam.rivera@gmail.com">
+        <span class="avatar" aria-hidden="true">SR</span><svg aria-hidden="true" class="i"><use href="#i-chev-d"/></svg>
+      </button>
+      <div class="menu" id="acct-menu-10" role="menu" hidden>
+        <p class="menu-email">sam.rivera@gmail.com</p><div class="menu-sep" role="separator"></div><button type="button" class="menu-item" role="menuitem"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg>Sign out</button>
+      </div>
+    </div>
+  </div>
+</header><main><div class="pc with-rail"><article class="col prose"><header><h1>Help</h1><p class="intro">How Automailr works, what your CSV needs, and what happens when you send.</p></header><div class="body after-toc"><section><h2>Three steps</h2>
+            <p>Recipients, message, review. You can go back to any step before anything is sent.</p>
+            <ol class="steps">
+              <li><span class="n" aria-hidden="true">1</span><div><h3>Recipients</h3><p>Upload a CSV with an <code>email</code> column, plus any columns you want in the message, like first_name or company. Up to <span class="num">5,000</span> rows. Rows with an invalid or blank email are skipped and listed in the results.</p></div></li>
+              <li><span class="n" aria-hidden="true">2</span><div><h3>Message</h3><p>Write once, and click a column name to drop in a field like <span class="tok" translate="no"><span class="tok-b" aria-hidden="true">{{</span>company<span class="tok-b" aria-hidden="true">}}</span></span>. Attach files if you need to. The preview shows each person’s copy as you type.</p></div></li>
+              <li><span class="n" aria-hidden="true">3</span><div><h3>Review &amp; send</h3><p>Step through every recipient’s email, then send from your Gmail. Messages go out one at a time, <span class="num" style="white-space:nowrap">250&#8239;ms</span> apart, and any that fail can be retried.</p></div></li>
+            </ol>
+          </section></div></article>
+        <nav class="rail" aria-label="On this page"><p class="toc-label">On this page</p><ol><li><a href="#three-steps" aria-current="true">Three steps</a></li><li><a href="#your-csv">Your CSV</a></li><li><a href="#fields">Fields</a></li><li><a href="#attachments">Attachments</a></li><li><a href="#sending">Sending</a></li><li><a href="#ai-polish">AI polish</a></li><li><a href="#permissions">Permissions and privacy</a></li><li><a href="#questions">Questions</a></li></ol></nav></div></main></div>
+  <p class="pc-line"><b>Pros:</b> fills the empty third with something useful, and the contents stay in reach on long pages like Privacy and Terms. <b>Cons:</b> the current-section highlight needs a little scroll tracking, and the layout differs between desktop and tablet.</p>
+</section>
+</div>
+<script src="theme.js"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@ import { isValidEmail } from "@/utils/csvParser";
 import { prepareAttachments, sendEmail, type Attachment, type SendResult } from "@/utils/gmailSender";
 import { replacePlaceholders, replacePlaceholdersPlain } from "@/utils/placeholders";
 import { PAUSE_BEFORE_EXPIRY_MS, RATE_LIMIT_BACKOFF_MS, SEND_DELAY_MS } from "./constants";
-import { cell, emailKey, plural, rowView } from "./preview";
+import { cell, emailKey, rowView } from "./preview";
 import type { CsvState, RowResult, WizardState, WizardUpdate } from "./state";
 
 /** Fallback only, for a refusal without an HTTP status: Gmail's wording for a bad token. */
@@ -287,8 +287,13 @@ export function outcomeOf(results: RowResult[]): Outcome {
   };
 }
 
+/**
+ * `title` is the run's outcome (the hidden h1, announced when sending ends);
+ * `sentence` is the one status line under the numbers, empty when all were sent.
+ */
 export function outcomeTitle(o: Outcome): { title: string; sentence: string } {
   const n = (x: number) => x.toLocaleString("en");
+  const retry = (x: number) => `${n(x)} failed. You can retry ${x === 1 ? "it" : "them"} below.`;
   if (o.notSent > 0) {
     const lead = o.limited ? "Google paused sending" : o.expired ? "Sign-in expired" : "Stopped";
     const title = `${lead}. ${n(o.sent)} sent, ${n(o.notSent)} not sent.`;
@@ -297,20 +302,10 @@ export function outcomeTitle(o: Outcome): { title: string; sentence: string } {
       : o.expired
         ? "Sign in again, then send the ones not sent."
         : o.failed > 0
-          ? `${plural(o.failed, "failed", "failed")} too. You can retry ${o.failed === 1 ? "it" : "them"} and send the rest below.`
-          : "The ones not sent can be sent now.";
+          ? `Stopped. ${retry(o.failed)}`
+          : "Stopped.";
     return { title, sentence };
   }
-  if (o.failed > 0) {
-    return {
-      title: `${n(o.sent)} of ${n(o.total)} sent.`,
-      sentence: `${n(o.failed)} failed. You can retry ${o.failed === 1 ? "it" : "them"} below.`,
-    };
-  }
-  return {
-    title: `All ${n(o.sent)} sent.`,
-    sentence: o.skipped
-      ? `Every recipient with a valid address got their copy. ${plural(o.skipped, "row was", "rows were")} skipped.`
-      : "Every recipient got their copy.",
-  };
+  if (o.failed > 0) return { title: `${n(o.sent)} of ${n(o.total)} sent.`, sentence: retry(o.failed) };
+  return { title: `All ${n(o.sent)} sent.`, sentence: "" };
 }

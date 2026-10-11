@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sparkles, X } from "lucide-react";
+import { Tooltip } from "@/components/Tooltip";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ import { FieldTokens, fieldTokensKey } from "./placeholderDecorations";
 import { PreviewCard } from "./PreviewCard";
 import { hasText } from "./preview";
 import type { CsvState, WizardState } from "./state";
-import { card, hint, lbl, seg, segBtn } from "./ui";
+import { card, lbl } from "./ui";
 
 interface MessageProps {
   state: WizardState;
@@ -126,11 +126,52 @@ export function Message({ state, csv, from, files, onFiles, onMessage, onTemplat
     if (field !== linkedField) setLinkedField(field);
   };
 
-  const polishHint = polish
-    ? "Rewritten by Gemini. Your fields are unchanged, and your original is kept. Read it through before you send."
-    : !ai.meetsMin
-      ? `Write at least ${ai.minChars} characters to use AI polish (${ai.charCount} of ${ai.minChars}).`
-      : "Rewrites the subject and message with Google Gemini. Fields stay as they are, and you can switch back. Don’t polish anything you wouldn’t send to Google. For users 18 and over.";
+  const polishControl = !ai.available ? undefined : polish ? (
+    <div
+      role="group"
+      aria-label="Which version to use"
+      className="inline-flex h-9 rounded-sm border border-line bg-surface p-0.5 max-[720px]:flex-[1_0_100%]"
+    >
+      {(["original", "polished"] as const).map((v) => (
+        <button
+          key={v}
+          type="button"
+          aria-pressed={polish.showing === v}
+          onClick={() => ai.choose(v)}
+          className="rounded-[6px] px-2 text-[14px] font-[550] text-ink-2 transition-colors duration-150 hover:text-ink aria-pressed:bg-surface-2 aria-pressed:text-ink aria-pressed:shadow-[inset_0_0_0_1px_var(--color-line)] max-[720px]:flex-1"
+        >
+          {v === "original" ? "Original" : "Polished"}
+        </button>
+      ))}
+    </div>
+  ) : (
+    <Tooltip
+      content={
+        ai.meetsMin
+          ? "Rewrites the subject and message with Google Gemini. Fields stay as they are, and you can switch back. Don't polish anything you wouldn't send to Google. For users 18 and over."
+          : `Write at least ${ai.minChars} characters to use AI polish (${ai.charCount} of ${ai.minChars}).`
+      }
+      tipClassName="max-[720px]:right-auto max-[720px]:left-0"
+    >
+      {(tip) => (
+        <button
+          type="button"
+          aria-label={ai.busy ? "Polishing…" : "Polish with AI"}
+          aria-describedby={tip["aria-describedby"]}
+          aria-disabled={!ai.canPolish}
+          aria-busy={ai.busy || undefined}
+          onClick={() => void ai.run()}
+          className={cn(
+            "inline-flex h-9 items-center gap-1.5 rounded-sm border border-line bg-surface px-2 text-[14px] whitespace-nowrap text-ink-2 transition-colors duration-150 max-[720px]:w-9 max-[720px]:justify-center max-[720px]:px-0",
+            ai.canPolish ? "hover:border-line-strong hover:text-ink" : "cursor-not-allowed bg-surface-2 text-ink-3",
+          )}
+        >
+          <Sparkles aria-hidden="true" className="size-4" strokeWidth={1.8} />
+          <span className="max-[720px]:sr-only">{ai.busy ? "Polishing…" : "Polish"}</span>
+        </button>
+      )}
+    </Tooltip>
+  );
 
   return (
     <div className="grid grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] items-start gap-6 pb-8 max-[1080px]:grid-cols-1">
@@ -158,7 +199,7 @@ export function Message({ state, csv, from, files, onFiles, onMessage, onTemplat
           <span id="msg-lbl" className={lbl}>
             Message
           </span>
-          <div className="overflow-hidden rounded-md border border-line bg-surface transition-[border-color,box-shadow] duration-150 focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-soft">
+          <div className="rounded-md border border-line bg-surface transition-[border-color,box-shadow] duration-150 focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-soft">
             {editor && (
               <EditorToolbar
                 editor={editor}
@@ -166,6 +207,7 @@ export function Message({ state, csv, from, files, onFiles, onMessage, onTemplat
                 onHtmlMode={setHtmlMode}
                 hasContent={subject.trim().length > 0 || hasText(body)}
                 onTemplate={onTemplate}
+                polish={polishControl}
               />
             )}
             <div
@@ -185,10 +227,29 @@ export function Message({ state, csv, from, files, onFiles, onMessage, onTemplat
                 onFocus={() => {
                   lastTarget.current = "html";
                 }}
-                className="min-h-[300px] rounded-none border-0 px-5 py-[18px] font-mono text-[13.5px] leading-[1.6] focus-visible:ring-0 max-[720px]:min-h-[240px] max-[720px]:px-3.5"
+                className="min-h-[300px] rounded-none rounded-b-[11px] border-0 px-5 py-[18px] font-mono text-[13.5px] leading-[1.6] focus-visible:ring-0 max-[720px]:min-h-[240px] max-[720px]:px-3.5"
               />
             )}
           </div>
+          {ai.available && polish && (
+            <p className="mt-2 text-[13.5px] text-ink-3">
+              Rewritten by Gemini. Read it through before you send. Don&rsquo;t polish anything you wouldn&rsquo;t send to Google.
+              For users 18 and over.
+            </p>
+          )}
+          {ai.error && (
+            <p role="alert" className="mt-2 flex items-start gap-2 text-[14px] text-neg">
+              <span className="flex-1">{ai.error}</span>
+              <button
+                type="button"
+                aria-label="Dismiss the error"
+                className="grid size-7 place-items-center rounded-[7px] text-neg hover:bg-neg-soft"
+                onClick={ai.dismissError}
+              >
+                <X aria-hidden="true" className="size-4" strokeWidth={1.8} />
+              </button>
+            </p>
+          )}
         </div>
 
         <FieldChips
@@ -198,48 +259,6 @@ export function Message({ state, csv, from, files, onFiles, onMessage, onTemplat
           onInsert={insertField}
           onLink={setLinkedField}
         />
-
-        {ai.available && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-line pt-5">
-            {polish ? (
-              <div className={seg} role="group" aria-label="Which version to use">
-                {(["original", "polished"] as const).map((v) => (
-                  <button key={v} type="button" className={segBtn} aria-pressed={polish.showing === v} onClick={() => ai.choose(v)}>
-                    {v === "original" ? "Original" : "Polished"}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                aria-describedby="polish-hint"
-                aria-disabled={!ai.canPolish}
-                aria-busy={ai.busy || undefined}
-                className={cn(!ai.canPolish && !ai.busy && "cursor-not-allowed bg-surface-2 text-ink-3 hover:border-line")}
-                onClick={() => void ai.run()}
-              >
-                {ai.busy ? "Polishing…" : "Polish with AI"}
-              </Button>
-            )}
-            <p id="polish-hint" className={cn(hint, "flex-[1_1_260px]")}>
-              {polishHint}
-            </p>
-            {ai.error && (
-              <p role="alert" className="flex w-full items-start gap-2 text-[14px] text-neg">
-                <span className="flex-1">{ai.error}</span>
-                <button
-                  type="button"
-                  aria-label="Dismiss the error"
-                  className="grid size-7 place-items-center rounded-[7px] text-neg hover:bg-neg-soft"
-                  onClick={ai.dismissError}
-                >
-                  <X aria-hidden="true" className="size-4" strokeWidth={1.8} />
-                </button>
-              </p>
-            )}
-          </div>
-        )}
 
         <AttachmentsPanel files={files} onFiles={onFiles} savedNames={state.attachmentNames} />
       </section>

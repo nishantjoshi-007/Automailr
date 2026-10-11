@@ -3,8 +3,6 @@ import { Link } from "react-router";
 import {
   ArrowDown,
   Check,
-  ChevronLeft,
-  ChevronRight,
   FileSpreadsheet,
   Laptop,
   Lock,
@@ -170,14 +168,6 @@ function Hero({ ctaTo }: { ctaTo: string }) {
 const fragClass =
   "mt-auto grid gap-1.5 rounded-md border border-line bg-surface px-3.5 py-3 text-[13.5px] max-[900px]:col-start-2";
 
-function PagerChip({ icon: Icon }: { icon: LucideIcon }) {
-  return (
-    <span className="grid size-[26px] place-items-center rounded-[7px] border border-line text-ink-3">
-      <Icon className="size-3.5" strokeWidth={1.8} />
-    </span>
-  );
-}
-
 const STEPS: { title: string; body: ReactNode; frag: ReactNode }[] = [
   {
     title: "Recipients",
@@ -214,16 +204,10 @@ const STEPS: { title: string; body: ReactNode; frag: ReactNode }[] = [
   },
   {
     title: "Review & send",
-    body: "Step through every recipient’s email, then send from your Gmail. Messages go out one at a time, 250 ms apart, and any that fail can be retried.",
+    body: "Check the summary, then send from your Gmail. Messages go out one at a time, 250 ms apart, and any that fail can be retried.",
     frag: (
       <>
-        <div className="flex items-center justify-between gap-2.5">
-          <span className="num">Recipient 1 of 42</span>
-          <span className="inline-flex gap-1">
-            <PagerChip icon={ChevronLeft} />
-            <PagerChip icon={ChevronRight} />
-          </span>
-        </div>
+        <span className="num">40 recipients · 2 skipped</span>
         <span className="num text-ink-3">250{" "}ms between sends</span>
       </>
     ),

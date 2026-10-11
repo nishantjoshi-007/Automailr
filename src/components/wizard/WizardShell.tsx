@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { EmailTemplate } from "@/constants/templates";
 import { useAIPolish } from "@/hooks/useAIPolish";
 import { BottomBar } from "./BottomBar";
-import { LEGACY_SLUGS, SEND_DELAY_MS, STEPS, THIN, type Step } from "./constants";
+import { LEGACY_SLUGS, STEPS, type Step } from "./constants";
 import { Message } from "./Message";
 import { messageProblem, plural, totalBytes, validRowCount } from "./preview";
 import { Recipients } from "./Recipients";
@@ -25,6 +25,7 @@ import { ReauthNotice, ResultsView, SendingView } from "./SendRun";
 import { makeSessionId, useWizardState, withMessage, type CsvState, type RowResult } from "./state";
 import { Stepper } from "./Stepper";
 import { tokenTooShort, useNow } from "./timing";
+import { stage } from "./ui";
 
 function Loading() {
   return (
@@ -158,31 +159,14 @@ export function WizardShell() {
   // Shown in place of each step's own reason while the Google sign-in has expired (M1).
   const expiredReason = expired ? "Sign in again to continue." : null;
 
+  // The heading is visually hidden: the stepper names the step. It still takes focus on each phase change.
   let title: string;
-  let sentence: ReactNode;
-  if (running && sender.progress?.paused) {
-    title = "Paused";
-    sentence = "Sending carries on from the same email once you sign in again. Keep this tab open.";
-  } else if (running) {
-    title = "Sending…";
-    sentence = `One email every ${SEND_DELAY_MS}${THIN}ms. Keep this tab open.`;
-  } else if (results) {
-    ({ title, sentence } = outcomeTitle(outcomeOf(results)));
-  } else if (step === "recipients") {
-    title = "Add your recipients";
-    sentence = "Upload a CSV with an email column. Every other column becomes a field you can drop into the message.";
-  } else if (step === "message") {
-    title = "Write your message";
-    sentence = (
-      <>
-        It goes to each of your <b className="num font-[650] text-ink">{valid.toLocaleString("en")}</b> recipients, with the fields
-        filled in from their row.
-      </>
-    );
-  } else {
-    title = "Check, then send";
-    sentence = "Step through what each person receives. Nothing is sent until you press the button.";
-  }
+  if (running && sender.progress?.paused) title = "Paused";
+  else if (running) title = "Sending…";
+  else if (results) title = outcomeTitle(outcomeOf(results)).title;
+  else if (step === "recipients") title = "Add your recipients";
+  else if (step === "message") title = "Write your message";
+  else title = "Check, then send";
 
   const subs: Record<Step, string> = {
     recipients: csv ? `${valid.toLocaleString("en")} from ${fileName}` : "Upload a CSV",
@@ -193,18 +177,16 @@ export function WizardShell() {
   let bar: ReactNode = null;
   if (running) {
     bar = (
-      <BottomBar stepLabel="Step 3 of 3" reason={null}>
+      <BottomBar reason={null}>
         <Button variant="outline" className="px-[18px]" onClick={sender.stop}>
           Stop sending
         </Button>
-        <span className="text-[14.5px] text-ink-3 max-[720px]:hidden">Step 3 of 3</span>
       </BottomBar>
     );
   } else if (!results) {
     if (step === "recipients") {
       bar = (
         <BottomBar
-          stepLabel="Step 1 of 3"
           reason={
             expiredReason ?? (!csv ? "Upload a CSV to continue." : valid === 0 ? "None of the rows has a valid email address." : null)
           }
@@ -215,7 +197,6 @@ export function WizardShell() {
     } else if (step === "message") {
       bar = (
         <BottomBar
-          stepLabel="Step 2 of 3"
           onBack={() => go("recipients")}
           backDisabled={ai.busy}
           reason={expiredReason ?? (ai.busy ? "Polishing…" : problem)}
@@ -226,7 +207,6 @@ export function WizardShell() {
     } else {
       bar = (
         <BottomBar
-          stepLabel="Step 3 of 3"
           onBack={() => go("message")}
           reason={expiredReason ?? (short ? "Sign in again before sending." : null)}
           primaryLabel={`Send ${plural(valid, "email", "emails")}`}
@@ -238,22 +218,21 @@ export function WizardShell() {
 
   return (
     <>
-      <main id="main" className={`${wide} flex-1`}>
+      <main id="main" className={`${wide} flex flex-1 flex-col`}>
+        <h1 ref={h1Ref} tabIndex={-1} className="sr-only">
+          {title}
+        </h1>
+        <p className="sr-only" role="status">
+          {results && !running ? title : ""}
+        </p>
         <div className="pt-7 pb-6">
-          <Stepper sessionId={sessionId} current={step} subs={subs} linksDisabled={results !== null || running || ai.busy} />
-          <div className="mt-[26px] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1.5">
-            <h1 ref={h1Ref} tabIndex={-1} className="heading text-[clamp(1.7rem,1.3rem+1vw,2.2rem)]">
-              {title}
-            </h1>
-            <p className="text-[15.5px] text-ink-2">{sentence}</p>
+          <div className="mx-auto max-w-[760px]">
+            <Stepper sessionId={sessionId} current={step} subs={subs} linksDisabled={results !== null || running || ai.busy} />
           </div>
-          <p className="sr-only" role="status">
-            {results && !running ? title : ""}
-          </p>
         </div>
 
         {foreignCleared && !results && (
-          <p role="status" className="mb-6 max-w-[720px] rounded-md bg-surface-2 px-3.5 py-[11px] text-[14.5px] text-ink-2">
+          <p role="status" className="mx-auto mb-6 w-full max-w-[720px] rounded-md bg-surface-2 px-3.5 py-[11px] text-[14.5px] text-ink-2">
             This tab had a batch for another Google account. It was cleared.
           </p>
         )}
@@ -262,17 +241,20 @@ export function WizardShell() {
           <ReauthNotice
             email={user.email}
             message="Your Google sign-in expired. Sign in again to keep going."
-            className="mb-6 max-w-[720px]"
+            className="mx-auto mb-6 w-full max-w-[720px]"
           />
         )}
 
         {running && sender.progress ? (
-          <SendingView progress={sender.progress} from={from} />
+          <div className={stage}>
+            <SendingView progress={sender.progress} from={from} />
+          </div>
         ) : results ? (
           <ResultsView
             results={results}
             from={from}
             onRetry={(indices) => void sender.start(indices)}
+            retrying={running}
             onDownload={() => downloadResults(results, fileName)}
             onNewBatch={newBatch}
           />
@@ -290,7 +272,9 @@ export function WizardShell() {
             ai={ai}
           />
         ) : csv ? (
-          <Review state={state} csv={csv} from={from} files={files} validRows={valid} expiresAt={expiresAt} now={now} />
+          <div className={stage}>
+            <Review state={state} csv={csv} from={from} files={files} validRows={valid} expiresAt={expiresAt} now={now} />
+          </div>
         ) : null}
       </main>
 

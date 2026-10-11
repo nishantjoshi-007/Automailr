@@ -35,7 +35,7 @@ export function Stepper({ sessionId, current, subs, linksDisabled }: StepperProp
               >
                 {state === "done" ? <Check aria-hidden="true" className="size-4" strokeWidth={2.4} /> : i + 1}
               </span>
-              <span className="grid min-w-0">
+              <span className="grid min-w-0 max-w-[170px]">
                 <span
                   className={cn(
                     "text-[15px] font-[650] text-ink-2 max-[720px]:text-[13.5px]",
@@ -63,7 +63,7 @@ export function Stepper({ sessionId, current, subs, linksDisabled }: StepperProp
               key={step}
               aria-current={state === "current" ? "step" : undefined}
               className={cn(
-                "group relative flex min-w-0 flex-1 items-center gap-3 py-2.5 max-[720px]:py-2",
+                "group relative flex min-w-0 flex-1 items-center gap-3 py-2.5 last:flex-[0_1_auto] max-[720px]:py-2 max-[720px]:last:flex-1",
                 // the connector between steps
                 i < STEPS.length - 1 &&
                   "after:ml-2 after:mr-1 after:h-[1.5px] after:min-w-4 after:flex-1 after:bg-line after:content-[''] max-[720px]:after:hidden",

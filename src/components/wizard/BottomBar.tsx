@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip } from "@/components/Tooltip";
 import { cn } from "@/lib/utils";
 
 interface BottomBarProps {
-  stepLabel: string;
   onBack?: () => void;
   backDisabled?: boolean;
-  /** Why the primary action is unavailable; shown beside it. */
+  /** Why the primary action is unavailable: a tooltip on the button at ≥ 720 px, a line above the buttons below. */
   reason: string | null;
   primaryLabel?: ReactNode;
   onPrimary?: () => void;
@@ -16,7 +16,7 @@ interface BottomBarProps {
 }
 
 /** Sticky footer bar of the wizard (`.bar` in the reference). */
-export function BottomBar({ stepLabel, onBack, backDisabled, reason, primaryLabel, onPrimary, children }: BottomBarProps) {
+export function BottomBar({ onBack, backDisabled, reason, primaryLabel, onPrimary, children }: BottomBarProps) {
   const disabled = reason !== null;
   return (
     <div className="sticky bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom,0px)]">
@@ -29,34 +29,44 @@ export function BottomBar({ stepLabel, onBack, backDisabled, reason, primaryLabe
                 Back
               </Button>
             )}
-            <span className="mr-auto text-[14.5px] text-ink-3 max-[720px]:hidden">{stepLabel}</span>
-            <p
-              id="next-reason"
-              aria-live="polite"
-              className={cn(
-                "inline-flex items-center gap-2 text-[14.5px] text-ink-2 before:size-2 before:flex-none before:rounded-full before:bg-line-strong before:content-[''] max-[720px]:order-first max-[720px]:w-full",
-                !reason && "hidden",
-              )}
-            >
-              {reason}
+            {/* Screen readers hear the reason here at every width. */}
+            <p aria-live="polite" className="sr-only">
+              {reason ?? ""}
             </p>
-            {primaryLabel && (
-              <Button
-                id="bar-primary"
-                className={cn(
-                  "px-[18px] max-[720px]:flex-1",
-                  disabled &&
-                    "cursor-not-allowed border-line bg-surface-2 text-ink-3 hover:bg-surface-2 active:translate-y-0",
-                )}
-                aria-disabled={disabled}
-                aria-describedby={reason ? "next-reason" : undefined}
-                onClick={() => {
-                  if (!disabled) onPrimary?.();
-                }}
+            {/* Touch has no hover: below 720 px the reason is a visible line above the buttons. */}
+            {reason && (
+              <p
+                aria-hidden="true"
+                className="order-first inline-flex w-full items-center gap-2 text-[14.5px] text-ink-2 before:size-2 before:flex-none before:rounded-full before:bg-line-strong before:content-[''] min-[721px]:hidden"
               >
-                {primaryLabel}
-                <ArrowRight aria-hidden="true" className="size-[17px]" strokeWidth={1.8} />
-              </Button>
+                {reason}
+              </p>
+            )}
+            {primaryLabel && (
+              <Tooltip
+                content={reason}
+                className="ml-auto max-[720px]:flex-1"
+                tipClassName={cn("max-[720px]:hidden", !reason && "hidden")}
+              >
+                {(tip) => (
+                  <Button
+                    id="bar-primary"
+                    className={cn(
+                      "px-[18px] max-[720px]:w-full",
+                      disabled &&
+                        "cursor-not-allowed border-line bg-surface-2 text-ink-3 hover:bg-surface-2 active:translate-y-0",
+                    )}
+                    aria-disabled={disabled}
+                    aria-describedby={reason ? tip["aria-describedby"] : undefined}
+                    onClick={() => {
+                      if (!disabled) onPrimary?.();
+                    }}
+                  >
+                    {primaryLabel}
+                    <ArrowRight aria-hidden="true" className="size-[17px]" strokeWidth={1.8} />
+                  </Button>
+                )}
+              </Tooltip>
             )}
           </>
         )}

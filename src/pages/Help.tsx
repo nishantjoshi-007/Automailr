@@ -51,7 +51,7 @@ const STEPS: { name: string; body: ReactNode }[] = [
     body: (
       <>
         Write once, and click a column name to drop in a field like <Tok>company</Tok>. Attach files if you need to. The
-        preview shows each person&rsquo;s copy as you type.
+        preview shows each person&rsquo;s copy as you type, and you can step through every recipient there.
       </>
     ),
   },
@@ -59,7 +59,7 @@ const STEPS: { name: string; body: ReactNode }[] = [
     name: "Review & send",
     body: (
       <>
-        Step through every recipient&rsquo;s email, then send from your Gmail. Messages go out one at a time,{" "}
+        Check the summary, then send from your Gmail. Messages go out one at a time,{" "}
         <span className="num whitespace-nowrap">250&#8239;ms</span> apart, and any that fail can be retried.
       </>
     ),
@@ -401,7 +401,7 @@ export default function Help() {
 
           <ProseSection id="ai-polish" title={SECTIONS["ai-polish"]}>
             <p>
-              AI polish is optional. If you press Polish with AI, your subject and message, with the <Tok>fields</Tok>{" "}
+              AI polish is optional. If you press Polish in the editor toolbar, your subject and message, with the <Tok>fields</Tok>{" "}
               still in place, go to Google&rsquo;s Gemini API, and the rewritten version comes back for you to check.
               Your original is kept, and you can switch back. Nothing else is sent: never your recipient list, your CSV
               or your attachments.

@@ -84,7 +84,7 @@ export default function PrivacyPolicy() {
                 </a>
                 .
               </dd>
-              <dt>Google Gemini, only if you press &ldquo;Polish with AI&rdquo;</dt>
+              <dt>Google Gemini, only if you press &ldquo;Polish&rdquo; in the editor</dt>
               <dd>
                 Your subject and message, with the <code>{"{{fields}}"}</code> still in place, are sent to Google&rsquo;s
                 Gemini API to be rewritten. Nothing else is sent: never your recipient list, your CSV or your

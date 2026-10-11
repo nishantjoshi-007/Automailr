@@ -34,7 +34,7 @@ Leaves the browser, and when:
 | Recipient | What | When |
 | --- | --- | --- |
 | Google (OAuth and Gmail API) | Sign-in, and each email you send | Signing in and sending |
-| Google (Gemini API) | Your subject and message, with `{{fields}}` left in place. Never the recipient list, the CSV or attachments. | Only when you press Polish with AI |
+| Google (Gemini API) | Your subject and message, with `{{fields}}` left in place. Never the recipient list, the CSV or attachments. | Only when you press Polish in the editor |
 | Vercel | The site's files, and cookie-free page-view counts through Vercel Web Analytics | Loading the site |
 | Formspark | Name, email address and message, plus a hidden honeypot field that bots fill in and people leave empty | Only when you send the contact form |
 

@@ -7,7 +7,7 @@ import { downloadSampleCSV, isValidEmail, parseCSV } from "@/utils/csvParser";
 import { INVALID_ROWS_SHOWN, PREVIEW_ROWS } from "./constants";
 import { cell, emailKey, isUsableField, plural, UNUSABLE_FIELD_TITLE } from "./preview";
 import type { CsvState } from "./state";
-import { card, cardTitle, chip, dropOver, dropZone, linkish } from "./ui";
+import { card, cardTitle, chip, dropOver, dropZone, linkish, stage } from "./ui";
 
 interface RecipientsProps {
   csv: CsvState | null;
@@ -69,50 +69,52 @@ export function Recipients({ csv, onCsv }: RecipientsProps) {
 
   if (!csv) {
     return (
-      <section aria-label="Upload a CSV" className={cn(card, "mx-auto mb-8 grid max-w-[720px] gap-5 p-6 max-[720px]:p-4")}>
-        <button
-          type="button"
-          className={cn(dropZone, "py-10", over && dropOver)}
-          aria-busy={reading !== null}
-          aria-describedby="csv-hint"
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setOver(true);
-          }}
-          onDragLeave={() => setOver(false)}
-          onDrop={onDrop}
-        >
-          <Upload aria-hidden="true" className="size-[22px] text-ink-3" strokeWidth={1.8} />
-          {reading ? (
-            <span>Reading {reading}…</span>
-          ) : (
-            <span>
-              Drop a CSV here, or <span className={linkish}>choose a file</span>
+      <div className={stage}>
+        <section aria-label="Upload a CSV" className={cn(card, "mx-auto grid max-w-[720px] gap-5 p-6 max-[720px]:p-4")}>
+          <button
+            type="button"
+            className={cn(dropZone, "py-10", over && dropOver)}
+            aria-busy={reading !== null}
+            aria-describedby="csv-hint"
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setOver(true);
+            }}
+            onDragLeave={() => setOver(false)}
+            onDrop={onDrop}
+          >
+            <Upload aria-hidden="true" className="size-[22px] text-ink-3" strokeWidth={1.8} />
+            {reading ? (
+              <span>Reading {reading}…</span>
+            ) : (
+              <span>
+                Drop a CSV here, or <span className={linkish}>choose a file</span>
+              </span>
+            )}
+            <span id="csv-hint" className="text-[14px] text-ink-3">
+              A .csv with an email column. Up to 5,000 rows.
             </span>
-          )}
-          <span id="csv-hint" className="text-[14px] text-ink-3">
-            A .csv with an email column. Up to 5,000 rows.
-          </span>
-        </button>
-        {fileInput}
-        {errorLine}
-        <div>
-          <button type="button" className={cn(linkish, "text-[15px]")} onClick={downloadSampleCSV}>
-            Download a sample CSV
           </button>
-        </div>
-        <div className="border-t border-line pt-5">
-          <h2 className="mb-2 text-[14.5px] font-semibold">What the file needs</h2>
-          <ul className="grid list-disc gap-1 pl-5 text-[15px] text-ink-2 marker:text-ink-3">
-            <li>
-              An <code className="text-ink">email</code> column, in any capitalisation.
-            </li>
-            <li>One row per person.</li>
-            <li>Column names made of letters, numbers and underscores, if you want to use them as fields.</li>
-          </ul>
-        </div>
-      </section>
+          {fileInput}
+          {errorLine}
+          <div>
+            <button type="button" className={cn(linkish, "text-[15px]")} onClick={downloadSampleCSV}>
+              Download a sample CSV
+            </button>
+          </div>
+          <div className="border-t border-line pt-5">
+            <h2 className="mb-2 text-[14.5px] font-semibold">What the file needs</h2>
+            <ul className="grid list-disc gap-1 pl-5 text-[15px] text-ink-2 marker:text-ink-3">
+              <li>
+                An <code className="text-ink">email</code> column, in any capitalisation.
+              </li>
+              <li>One row per person.</li>
+              <li>Column names made of letters, numbers and underscores, if you want to use them as fields.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
     );
   }
 

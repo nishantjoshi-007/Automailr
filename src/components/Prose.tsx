@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export interface ProseTocItem {
@@ -35,16 +35,74 @@ interface ProseProps {
   intro?: ReactNode;
   /** A quiet line under the h1, e.g. "Last updated …". */
   meta?: ReactNode;
-  /** The h2s, listed as "On this page" at ≥ 1024 px. */
+  /** The h2s, listed in the "On this page" rail at ≥ 1024 px. */
   toc?: readonly ProseTocItem[];
   children: ReactNode;
   className?: string;
 }
 
-/** Article column for text pages (Help, Privacy, Terms, Contact): 72ch wide, page h1, optional contents list. */
-export function Prose({ title, intro, meta, toc, children, className }: ProseProps) {
+/** The toc entry whose h2 was the last to pass the top third of the viewport (scroll spy). */
+function useCurrentSection(ids: readonly string[]): string | null {
+  const [current, setCurrent] = useState<string | null>(ids[0] ?? null);
+  const key = ids.join(" ");
+  useEffect(() => {
+    const headings = key
+      .split(" ")
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (headings.length === 0 || typeof IntersectionObserver === "undefined") return;
+    const pick = () => {
+      const line = window.innerHeight * 0.3;
+      let at = headings[0].id;
+      for (const h of headings) if (h.getBoundingClientRect().top <= line) at = h.id;
+      setCurrent(at);
+    };
+    // Fires whenever a heading enters or leaves the top 30% of the viewport.
+    const io = new IntersectionObserver(pick, { rootMargin: "0px 0px -70% 0px" });
+    headings.forEach((h) => io.observe(h));
+    return () => io.disconnect();
+  }, [key]);
+  return current;
+}
+
+function TocRail({ toc }: { toc: readonly ProseTocItem[] }) {
+  const current = useCurrentSection(toc.map((t) => t.id));
   return (
-    <article className={cn("container py-[clamp(40px,6vw,88px)]", className)}>
+    <nav aria-labelledby="on-this-page" className="sticky top-[88px] hidden self-start lg:block">
+      <p id="on-this-page" className="text-[13.5px] font-medium text-ink-3">
+        On this page
+      </p>
+      <ol className="mt-2.5 grid list-none gap-0.5 pl-0 text-[14px]">
+        {toc.map((item) => (
+          <li key={item.id}>
+            <a
+              href={`#${item.id}`}
+              aria-current={current === item.id ? "location" : undefined}
+              className="block border-l-2 border-transparent py-1 pl-3 text-ink-2 no-underline transition-colors duration-150 hover:text-ink hover:underline hover:underline-offset-[3px] aria-[current=location]:border-accent aria-[current=location]:text-ink"
+            >
+              {item.title}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
+/**
+ * Article column for text pages (Help, Privacy, Terms, Contact): 72ch wide, page h1.
+ * With a toc, a sticky "On this page" rail sits beside the article at ≥ 1024 px.
+ */
+export function Prose({ title, intro, meta, toc, children, className }: ProseProps) {
+  const hasToc = Boolean(toc && toc.length > 0);
+  return (
+    <article
+      className={cn(
+        "container py-[clamp(40px,6vw,88px)]",
+        hasToc && "lg:grid lg:grid-cols-[minmax(0,72ch)_240px] lg:items-start lg:gap-16",
+        className,
+      )}
+    >
       <div className={cn("max-w-[72ch]", proseClass)}>
         <header>
           <h1 className="heading text-[clamp(1.7rem,1.3rem+1vw,2.2rem)] text-ink">{title}</h1>
@@ -52,33 +110,10 @@ export function Prose({ title, intro, meta, toc, children, className }: ProsePro
           {meta && <p className="mt-3 text-[14px] text-ink-3">{meta}</p>}
         </header>
 
-        {toc && toc.length > 0 && (
-          <nav aria-labelledby="on-this-page" className="mt-10 hidden border-y border-line py-5 lg:block">
-            <p id="on-this-page" className="text-[13.5px] font-medium text-ink-3">
-              On this page
-            </p>
-            <ol
-              className={cn(
-                "mt-3 list-none gap-x-8 pl-0 text-[15px]",
-                toc.length > 9 ? "columns-3" : "columns-2",
-              )}
-            >
-              {toc.map((item) => (
-                <li key={item.id} className="mt-0 break-inside-avoid pb-1.5">
-                  <a
-                    href={`#${item.id}`}
-                    className="text-ink-2 no-underline hover:text-ink hover:underline hover:underline-offset-[3px]"
-                  >
-                    {item.title}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-        )}
-
-        <div className={toc && toc.length > 0 ? "mt-12" : "mt-6"}>{children}</div>
+        <div className={hasToc ? "mt-12" : "mt-6"}>{children}</div>
       </div>
+
+      {toc && hasToc && <TocRail toc={toc} />}
     </article>
   );
 }

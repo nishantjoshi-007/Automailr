@@ -18,7 +18,6 @@ import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import { SEND_DELAY_MS, THIN } from "./constants";
 import { batchEstimateMs, tokenTooShort } from "./timing";
 import { fieldsUsed, formatBytes, formatDuration, plural, totalBytes } from "./preview";
-import { PreviewCard } from "./PreviewCard";
 import type { CsvState, WizardState } from "./state";
 import { card, cardTitle } from "./ui";
 
@@ -69,12 +68,14 @@ export function Review({ state, csv, from, files, validRows, expiresAt, now }: R
   );
 
   return (
-    <div className="grid grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] items-start gap-6 pb-8 max-[1080px]:grid-cols-1">
-      <section aria-labelledby="sum-h" className={cn(card, "grid gap-5 p-6 max-[720px]:p-4")}>
+    <section aria-labelledby="sum-h" className={cn(card, "mx-auto max-w-[720px] overflow-hidden")}>
+      <div className="flex min-h-[63px] items-center border-b border-line py-3.5 pr-4 pl-5 max-[720px]:pl-4">
         <h2 id="sum-h" className={cardTitle}>
           Summary
         </h2>
-        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-3.5 text-[15px] max-[460px]:grid-cols-1 max-[460px]:gap-y-1 max-[460px]:[&>dd]:mb-2.5">
+      </div>
+      <div className="grid gap-5 px-6 pt-[22px] pb-6 max-[720px]:p-4">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-3.5 text-[15px] max-[460px]:grid-cols-1 max-[460px]:gap-y-0.5 max-[460px]:[&>dd]:mb-2.5 max-[460px]:[&>dd:last-child]:mb-0">
           {row("From", from)}
           {row(
             "Recipients",
@@ -110,7 +111,7 @@ export function Review({ state, csv, from, files, validRows, expiresAt, now }: R
               "None"
             ),
           )}
-          {row("Fields", used.length ? used.join(", ") : "None, everyone gets the same email")}
+          {row("Fields used", used.length ? used.join(", ") : "None, everyone gets the same email")}
           {row(
             "Pace",
             <span className="num">
@@ -142,10 +143,8 @@ export function Review({ state, csv, from, files, validRows, expiresAt, now }: R
             </div>
           </div>
         )}
-      </section>
-
-      <PreviewCard csv={csv} from={from} subject={state.subject} body={state.body} className="sticky top-4 max-[1080px]:static" />
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -177,8 +176,7 @@ export function SendConfirm({ open, onOpenChange, from, validRows, skipped, onCo
             {label} from {from}?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-[15px]">
-            They go out one at a time, {SEND_DELAY_MS}
-            {THIN}ms apart. Sent emails can't be recalled.
+            They&rsquo;ll go out one by one from your Gmail account. Once sent, an email can&rsquo;t be taken back.
             {skipped > 0 &&
               ` ${plural(skipped, "row", "rows")} with an invalid email ${skipped === 1 ? "is" : "are"} skipped.`}
           </AlertDialogDescription>

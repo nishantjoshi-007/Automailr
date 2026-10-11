@@ -2,7 +2,7 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendEmail } from "@/utils/gmailSender";
 import { PAUSE_BEFORE_EXPIRY_MS, RATE_LIMIT_BACKOFF_MS, SEND_DELAY_MS } from "./constants";
-import { GMAIL_LIMIT, STOPPED, outcomeOf, outcomeTitle, useSender, verdictOf } from "./sender";
+import { GMAIL_LIMIT, SIGN_IN_EXPIRED, STOPPED, outcomeOf, outcomeTitle, useSender, verdictOf } from "./sender";
 import { freshState, type CsvState, type WizardState, type WizardUpdate } from "./state";
 
 vi.mock("@/utils/gmailSender", () => ({
@@ -365,6 +365,30 @@ describe("outcomeTitle", () => {
       { index: 0, email: "a@x.co", status: "sent" as const },
       { index: 1, email: "b@x.co", status: "notSent" as const, error: STOPPED },
     ];
-    expect(outcomeTitle(outcomeOf(results)).title).toBe("Stopped. 1 sent, 1 not sent.");
+    expect(outcomeTitle(outcomeOf(results))).toEqual({ title: "Stopped. 1 sent, 1 not sent.", sentence: "Stopped." });
+  });
+
+  it("asks for a fresh sign-in when the session ran out", () => {
+    const results = [
+      { index: 0, email: "a@x.co", status: "sent" as const },
+      { index: 1, email: "b@x.co", status: "notSent" as const, error: SIGN_IN_EXPIRED },
+    ];
+    expect(outcomeTitle(outcomeOf(results)).sentence).toBe("Sign in again, then send the ones not sent.");
+  });
+
+  it("offers the retry when some failed", () => {
+    const results = [
+      { index: 0, email: "a@x.co", status: "sent" as const },
+      { index: 1, email: "b@x.co", status: "failed" as const, error: "Gmail refused this message" },
+    ];
+    expect(outcomeTitle(outcomeOf(results))).toEqual({ title: "1 of 2 sent.", sentence: "1 failed. You can retry it below." });
+  });
+
+  it("has no status line when every email was sent", () => {
+    const results = [
+      { index: 0, email: "a@x.co", status: "sent" as const },
+      { index: 1, email: "", status: "skipped" as const, error: "Invalid email" },
+    ];
+    expect(outcomeTitle(outcomeOf(results))).toEqual({ title: "All 1 sent.", sentence: "" });
   });
 });

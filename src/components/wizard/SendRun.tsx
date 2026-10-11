@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock } from "lucide-react";
+import { Clock, RotateCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -7,8 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
-import { RESULTS_ROWS_SHOWN } from "./constants";
-import { outcomeOf, type RunProgress } from "./sender";
+import { RESULTS_ROWS_SHOWN, SEND_DELAY_MS, THIN } from "./constants";
+import { outcomeOf, outcomeTitle, type RunProgress } from "./sender";
 import type { RowResult } from "./state";
 import { card, seg, segBtn } from "./ui";
 
@@ -55,7 +55,7 @@ export function SendingView({ progress, from }: { progress: RunProgress; from: s
   const current = progress.current;
   const gone = progress.paused === "unauthorized" || expired;
   return (
-    <section aria-label="Sending progress" className={cn(card, "mb-8 grid max-w-[720px] gap-5 p-6 max-[720px]:p-4")}>
+    <section aria-label="Sending progress" className={cn(card, "mx-auto grid max-w-[720px] gap-5 p-6 max-[720px]:p-4")}>
       <p className="numeral text-[clamp(2.8rem,1.7rem+2.6vw,4.4rem)]">
         {done.toLocaleString("en")}
         <span className="text-ink-3"> / {progress.total.toLocaleString("en")}</span>
@@ -87,6 +87,12 @@ export function SendingView({ progress, from }: { progress: RunProgress; from: s
       <p aria-live="polite" className="num text-[15px] text-ink-2">
         {progress.sent.toLocaleString("en")} sent · {progress.failed.toLocaleString("en")} failed · {left.toLocaleString("en")} left
       </p>
+      {!progress.paused && (
+        <p className="num text-[14px] text-ink-3">
+          One email every {SEND_DELAY_MS}
+          {THIN}ms. Keep this tab open.
+        </p>
+      )}
     </section>
   );
 }
@@ -104,12 +110,17 @@ interface ResultsViewProps {
   results: RowResult[];
   from: string;
   onRetry: (indices: number[]) => void;
+  /** A retry run is in progress: the per-row buttons wait. */
+  retrying: boolean;
   onDownload: () => void;
   onNewBatch: () => void;
 }
 
-export function ResultsView({ results, from, onRetry, onDownload, onNewBatch }: ResultsViewProps) {
+const quietAction = "max-[720px]:h-10 max-[720px]:px-3.5 max-[720px]:text-[14.5px]";
+
+export function ResultsView({ results, from, onRetry, retrying, onDownload, onNewBatch }: ResultsViewProps) {
   const o = outcomeOf(results);
+  const { sentence } = outcomeTitle(o);
   // While the session is expired the wizard's banner carries the sign-in button.
   const { expired } = useAuth();
   const [filter, setFilter] = useState<Filter>(o.failed ? "failed" : o.notSent ? "notSent" : "all");
@@ -133,87 +144,121 @@ export function ResultsView({ results, from, onRetry, onDownload, onNewBatch }: 
   const stats: { label: string; value: number; tone: string }[] = [
     { label: "sent", value: o.sent, tone: "text-ink" },
     ...(o.failed ? [{ label: "failed", value: o.failed, tone: "text-neg" }] : []),
-    ...(o.notSent ? [{ label: "not sent", value: o.notSent, tone: "text-ink" }] : []),
+    ...(o.notSent ? [{ label: "not sent", value: o.notSent, tone: "text-ink-2" }] : []),
   ];
 
   return (
     <section aria-label="Results" className={cn(card, "mb-8 grid gap-6 p-6 max-[720px]:p-4")}>
-      <dl className="flex flex-wrap gap-x-12 gap-y-4">
-        {stats.map((s) => (
-          <div key={s.label} className="grid gap-1">
-            <dt className="order-2 text-[15px] text-ink-3">{s.label}</dt>
-            <dd className={cn("numeral order-1 text-[clamp(2.8rem,1.7rem+2.6vw,4.4rem)]", s.tone)}>{s.value.toLocaleString("en")}</dd>
-          </div>
-        ))}
-      </dl>
-
-      <div className="flex flex-wrap items-center gap-3">
-        {needAuth && !expired && (
-          <Button onClick={signIn} disabled={busy} aria-busy={busy || undefined}>
-            {busy ? "Opening Google…" : "Sign in again"}
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+        <div className="grid gap-3.5">
+          <dl className="flex flex-wrap gap-x-12 gap-y-4">
+            {stats.map((s) => (
+              <div key={s.label} className="grid gap-1">
+                <dt className="order-2 text-[15px] text-ink-3">{s.label}</dt>
+                <dd className={cn("numeral order-1 text-[clamp(2.8rem,1.7rem+2.6vw,4.4rem)]", s.tone)}>{s.value.toLocaleString("en")}</dd>
+              </div>
+            ))}
+          </dl>
+          {sentence && <p className="text-[15px] text-ink-2">{sentence}</p>}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" className={quietAction} onClick={onDownload}>
+            Download results (.csv)
           </Button>
-        )}
-        {o.failed > 0 && (
-          <Button onClick={() => onRetry(failedIdx)} disabled={needAuth}>
-            Retry {o.failed.toLocaleString("en")} failed
+          <Button variant="outline" className={quietAction} onClick={onNewBatch}>
+            Start a new batch
           </Button>
-        )}
-        {o.notSent > 0 && (
-          <Button variant={o.failed > 0 || needAuth ? "outline" : "default"} onClick={() => onRetry(notSentIdx)} disabled={needAuth}>
-            Send the {o.notSent.toLocaleString("en")} not sent
-          </Button>
-        )}
-        <Button variant="outline" onClick={onDownload}>
-          Download results (.csv)
-        </Button>
-        <Button variant="outline" onClick={onNewBatch}>
-          Start a new batch
-        </Button>
-        {authError && (
-          <p role="alert" className="w-full text-[14px] text-neg">
-            {authError}
-          </p>
-        )}
+        </div>
       </div>
 
       <div className="grid gap-3">
-        <div className={cn(seg, "justify-self-start")} role="group" aria-label="Show">
-          {(
-            [
-              ["all", "All"],
-              ["failed", "Failed"],
-              ["notSent", "Not sent"],
-            ] as const
-          ).map(([value, label]) => (
-            <button key={value} type="button" className={segBtn} aria-pressed={filter === value} onClick={() => setFilter(value)}>
-              {label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className={seg} role="group" aria-label="Show">
+            {(
+              [
+                ["all", "All"],
+                ["failed", "Failed"],
+                ["notSent", "Not sent"],
+              ] as const
+            ).map(([value, label]) => (
+              <button key={value} type="button" className={segBtn} aria-pressed={filter === value} onClick={() => setFilter(value)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="ml-auto flex flex-wrap items-center gap-3">
+            {needAuth && !expired && (
+              <Button onClick={signIn} disabled={busy} aria-busy={busy || undefined}>
+                {busy ? "Opening Google…" : "Sign in again"}
+              </Button>
+            )}
+            {o.notSent > 0 && (
+              <Button variant={o.failed > 0 || needAuth ? "outline" : "default"} onClick={() => onRetry(notSentIdx)} disabled={needAuth}>
+                Send the {o.notSent.toLocaleString("en")} not sent
+              </Button>
+            )}
+            {o.failed > 0 && (
+              <Button onClick={() => onRetry(failedIdx)} disabled={needAuth}>
+                Retry {o.failed.toLocaleString("en")} failed
+              </Button>
+            )}
+          </div>
+          {authError && (
+            <p role="alert" className="w-full text-[14px] text-neg">
+              {authError}
+            </p>
+          )}
         </div>
         <div className="overflow-x-auto rounded-md border border-line">
           <Table className="text-[14px]">
             <TableHeader className="bg-surface-2">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="h-9 px-4">Email</TableHead>
-                <TableHead className="h-9 px-4">Status</TableHead>
-                <TableHead className="h-9 px-4">Error</TableHead>
+                <TableHead className="h-9 px-4 max-[720px]:px-3">Email</TableHead>
+                <TableHead className="h-9 px-4 max-[720px]:px-3">Status</TableHead>
+                <TableHead className="h-9 px-4 max-[720px]:hidden">Error</TableHead>
+                <TableHead className="h-9 w-12 px-2">
+                  <span className="sr-only">Retry</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {shown.length === 0 && (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={3} className="px-4 py-6 text-center text-ink-3">
+                  <TableCell colSpan={4} className="px-4 py-6 text-center text-ink-3">
                     Nothing here.
                   </TableCell>
                 </TableRow>
               )}
               {shown.map((r) => (
                 <TableRow key={r.index}>
-                  <TableCell className="px-4 py-2.5 font-mono text-[13px] text-ink [overflow-wrap:anywhere]">{r.email || "(blank)"}</TableCell>
-                  <TableCell className="px-4 py-2.5">
-                    <Badge variant={STATUS[r.status].variant}>{STATUS[r.status].label}</Badge>
+                  <TableCell className="px-4 py-2.5 font-mono text-[13px] text-ink [overflow-wrap:anywhere] max-[720px]:px-3">
+                    {r.email || "(blank)"}
                   </TableCell>
-                  <TableCell className="px-4 py-2.5 text-ink-2 [overflow-wrap:anywhere]">{r.status === "sent" ? "" : r.error}</TableCell>
+                  <TableCell className="px-4 py-2.5 max-[720px]:px-3">
+                    <Badge variant={STATUS[r.status].variant}>{STATUS[r.status].label}</Badge>
+                    {/* Below 720 px the error sits under the badge instead of in its own column. */}
+                    {r.status !== "sent" && r.error && (
+                      <span className="mt-1 block text-[13px] whitespace-normal text-ink-2 [overflow-wrap:anywhere] min-[721px]:hidden">
+                        {r.error}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-ink-2 [overflow-wrap:anywhere] max-[720px]:hidden">
+                    {r.status === "sent" ? "" : r.error}
+                  </TableCell>
+                  <TableCell className="w-12 px-2 py-1.5 text-right">
+                    {(r.status === "failed" || r.status === "notSent") && (
+                      <button
+                        type="button"
+                        aria-label={`Retry ${r.email}`}
+                        disabled={retrying || needAuth}
+                        onClick={() => onRetry([r.index])}
+                        className="inline-grid size-8 place-items-center rounded-sm border border-line bg-surface text-ink-2 transition-[border-color,color] duration-150 hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:border-line disabled:text-line-strong"
+                      >
+                        <RotateCw aria-hidden="true" className="size-4" strokeWidth={1.8} />
+                      </button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

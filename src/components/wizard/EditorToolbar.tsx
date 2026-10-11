@@ -27,11 +27,13 @@ interface EditorToolbarProps {
   /** Whether the subject or message already has text (picking a template then asks first). */
   hasContent: boolean;
   onTemplate: (t: EmailTemplate) => void;
+  /** The AI polish button or the Original | Polished switch, first in the right group. */
+  polish?: ReactNode;
 }
 
 const tb =
   "grid size-9 place-items-center rounded-sm text-ink-2 transition-colors duration-150 hover:bg-surface hover:text-ink aria-pressed:bg-surface aria-pressed:text-accent-ink aria-pressed:shadow-[inset_0_0_0_1px_var(--color-line)] disabled:cursor-not-allowed disabled:opacity-40 max-[720px]:size-[34px]";
-const sep = "mx-1.5 h-5 w-px bg-line max-[720px]:mx-[3px]";
+const sep = "h-5 w-px bg-line max-[720px]:mx-[3px]";
 
 function ToolButton({ label, pressed, onClick, disabled, children }: { label: string; pressed?: boolean; onClick: () => void; disabled?: boolean; children: ReactNode }) {
   return (
@@ -51,7 +53,7 @@ function ToolButton({ label, pressed, onClick, disabled, children }: { label: st
   );
 }
 
-export function EditorToolbar({ editor, htmlMode, onHtmlMode, hasContent, onTemplate }: EditorToolbarProps) {
+export function EditorToolbar({ editor, htmlMode, onHtmlMode, hasContent, onTemplate, polish }: EditorToolbarProps) {
   const active = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -109,7 +111,11 @@ export function EditorToolbar({ editor, htmlMode, onHtmlMode, hasContent, onTemp
   };
 
   return (
-    <div role="toolbar" aria-label="Formatting" className="flex flex-wrap items-center gap-0.5 border-b border-line bg-surface-2 p-1.5">
+    <div
+      role="toolbar"
+      aria-label="Formatting"
+      className="flex flex-wrap items-center gap-0.5 rounded-t-[11px] border-b border-line bg-surface-2 p-1.5"
+    >
       <ToolButton label="Bold" pressed={active.bold} disabled={off} onClick={() => chain().toggleBold().run()}>
         <Bold {...icon} />
       </ToolButton>
@@ -119,7 +125,7 @@ export function EditorToolbar({ editor, htmlMode, onHtmlMode, hasContent, onTemp
       <ToolButton label="Strikethrough" pressed={active.strike} disabled={off} onClick={() => chain().toggleStrike().run()}>
         <Strikethrough {...icon} />
       </ToolButton>
-      <span className={sep} aria-hidden="true" />
+      <span className={cn(sep, polish ? "mx-1" : "mx-1.5")} aria-hidden="true" />
       <ToolButton label="Heading" pressed={active.heading} disabled={off} onClick={() => chain().toggleHeading({ level: 2 }).run()}>
         <Heading {...icon} />
       </ToolButton>
@@ -136,12 +142,21 @@ export function EditorToolbar({ editor, htmlMode, onHtmlMode, hasContent, onTemp
         <Link2 {...icon} />
       </ToolButton>
 
-      <div className="ml-auto flex items-center gap-1.5 max-[720px]:ml-0 max-[720px]:w-full max-[720px]:pt-1">
+      <div
+        className={cn(
+          "ml-auto flex flex-wrap items-center max-[720px]:ml-0 max-[720px]:w-full max-[720px]:pt-1",
+          polish ? "gap-1" : "gap-1.5",
+        )}
+      >
+        {polish}
         <Select value={templateId} onValueChange={pickTemplate}>
           <SelectTrigger
             id="tpl-trigger"
             aria-label="Start from a template"
-            className="h-9 w-auto min-w-[148px] gap-2 rounded-sm px-2.5 text-[14px] text-ink-2 max-[720px]:flex-1"
+            className={cn(
+              "h-9 w-auto max-w-[220px] rounded-sm text-[14px] text-ink-2 max-[720px]:max-w-none max-[720px]:min-w-0 max-[720px]:flex-1",
+              polish ? "min-w-0 gap-1 px-2" : "min-w-[148px] gap-2 px-2.5",
+            )}
           >
             <SelectValue placeholder="Templates" />
           </SelectTrigger>
@@ -158,7 +173,8 @@ export function EditorToolbar({ editor, htmlMode, onHtmlMode, hasContent, onTemp
           aria-pressed={htmlMode}
           onClick={() => onHtmlMode(!htmlMode)}
           className={cn(
-            "inline-flex h-9 items-center gap-1.5 rounded-sm border border-line bg-surface px-2.5 text-[14px] text-ink-2 transition-colors duration-150 hover:border-line-strong hover:text-ink",
+            "inline-flex h-9 items-center rounded-sm border border-line bg-surface text-[14px] text-ink-2 transition-colors duration-150 hover:border-line-strong hover:text-ink",
+            polish ? "gap-1 px-2" : "gap-1.5 px-2.5",
             htmlMode && "border-accent-hover bg-accent-soft text-accent-ink hover:text-accent-ink",
           )}
         >

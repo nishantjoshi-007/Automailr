@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App bar · Wizard refresh · Automailr</title>
+<meta name="theme-color" content="#f9fafa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c0f10" media="(prefers-color-scheme: dark)">
+<script>
+  /* Theme bootstrap, runs before first paint: ?theme= > saved choice > system setting. */
+  (function () {
+    var k = 'automailr-theme';
+    try {
+      var q = new URLSearchParams(location.search).get('theme');
+      if (q === 'light' || q === 'dark') localStorage.setItem(k, q);
+      else if (q === 'system') localStorage.removeItem(k);
+      var s = localStorage.getItem(k);
+      if (s === 'light' || s === 'dark') document.documentElement.setAttribute('data-theme', s);
+    } catch (e) {}
+  })();
+</script>
+<link rel="stylesheet" href="proposal.css">
+<style>
+.ab { container-type: inline-size; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--bg); }
+.ab.phone { width: 390px; max-width: 100%; }
+.ab-bar { position: relative; z-index: 3; background: var(--surface); border-bottom: 1px solid var(--line); }
+.ab-in { display: flex; align-items: center; gap: 10px; height: 64px; padding-inline: clamp(16px, 3cqw, 40px); }
+.ab-space { height: 200px; }
+.ab-space.short { height: 24px; }
+.ab .help { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--r-sm); color: var(--ink-2); text-decoration: none; font-weight: 500; font-size: 15px; }
+.ab .help:hover { background: var(--surface-2); color: var(--ink); }
+.ab .help.icon { padding: 0; width: 40px; height: 40px; justify-content: center; border-radius: var(--r-md); }
+.ml-auto { margin-left: auto; }
+.menu-item .theme-label-dark { display: none; }
+:root[data-theme="dark"] .menu-item .theme-label-dark { display: inline; }
+:root[data-theme="dark"] .menu-item .theme-label-light { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .menu-item .theme-label-dark { display: inline; }
+  :root:not([data-theme="light"]) .menu-item .theme-label-light { display: none; }
+}
+.menu-item.theme-btn .i-sun { display: none; }
+.user-b { display: inline-flex; align-items: center; gap: 10px; padding-left: 14px; margin-left: 4px; border-left: 1px solid var(--line); }
+.user-b .avatar { width: 36px; height: 36px; }
+.variant { margin-top: 44px; }
+.variant:first-of-type { margin-top: 0; }
+.widths { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.wlabel { font-size: 13.5px; color: var(--ink-3); margin-bottom: 6px; }
+.pc { margin-top: 12px; font-size: 13.5px; color: var(--ink-3); max-width: 90ch; }
+.pc b { color: var(--ink-2); font-weight: 600; }
+@container (max-width: 720px) {
+  .ab .help span.lbl-t { display: none; }
+  .ab .help { padding: 0; width: 40px; height: 40px; justify-content: center; }
+  .user-b { padding-left: 10px; margin-left: 0; }
+  .ab-in { gap: 8px; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#v-a">Skip to the variants</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-arrow-l" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  <symbol id="i-list-ol" viewBox="0 0 24 24"><path d="M10 6h11M10 12h11M10 18h11M4 4h1v5M4 9h2M6 19H4c0-1.2 2-1.8 2-3 0-.8-.7-1.2-1.4-1.1-.4.1-.6.3-.6.6"/></symbol>
+  <symbol id="i-quote" viewBox="0 0 24 24"><path d="M5 7h5v5c0 3-1.6 5-4.5 5.8M14 7h5v5c0 3-1.6 5-4.5 5.8"/></symbol>
+  <symbol id="i-bold" viewBox="0 0 24 24"><path d="M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z"/></symbol>
+  <symbol id="i-italic" viewBox="0 0 24 24"><path d="M19 4h-9M14 20H5M15 4 9 20"/></symbol>
+  <symbol id="i-strike" viewBox="0 0 24 24"><path d="M16 5H9.5a3.5 3.5 0 0 0-1.9 6.4M15 13.5a3.5 3.5 0 0 1-2.5 5.5H6M4 12h16"/></symbol>
+  <symbol id="i-heading" viewBox="0 0 24 24"><path d="M6 4v16M17 4v16M6 12h11"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5M12 16.5h.01"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.94 15.5a2 2 0 0 0-1.44-1.44l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0l1.58 6.13a2 2 0 0 0 1.44 1.44l6.13 1.58a.5.5 0 0 1 0 .96l-6.13 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/><path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+</svg>
+
+<div class="doc">
+<div class="doc-top">
+  <a class="back" href="index.html"><svg aria-hidden="true" class="i"><use href="#i-chev-l"/></svg>All screens</a>
+  <h1>5 · App bar</h1>
+  <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+</div>
+<ul class="doc-notes">
+  <li>A is chosen and now used on every screen page; B and C stay here for reference. Today the bar shows the avatar, the full email and a Sign out button, which crowds it on phones. Three ways to tidy it, each 64&#8239;px tall on <code>surface</code> with a <code>line</code> border.</li>
+  <li>Avatar menus are shown open. They open and close with a click, and Escape closes them.</li>
+</ul>
+<section class="variant" aria-labelledby="v-a">
+  <div class="opt-h"><h2 id="v-a">A: labelled Help, toggle, avatar menu</h2><span class="rec">Chosen</span></div>
+  <p class="opt-p">Brand on the left. On the right: Help with its label, the theme toggle, then a 36&#8239;px avatar button with a small chevron. The menu holds the email and Sign out.</p>
+  <div class="widths">
+    <div><p class="wlabel">1440&#8239;px</p><div class="ab"><div class="ab-bar"><div class="ab-in">
+      <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+      <a class="help" href="#"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg><span class="lbl-t">Help</span></a>
+      <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+      <div class="acct">
+        <button type="button" class="acct-btn" data-menu-btn aria-haspopup="menu" aria-expanded="true" aria-controls="menu-a-w" aria-label="Account: nishant@example.com">
+          <span class="avatar" aria-hidden="true">NJ</span><svg aria-hidden="true" class="i"><use href="#i-chev-d"/></svg>
+        </button>
+        <div class="menu" id="menu-a-w" role="menu">
+          <p class="menu-email">nishant@example.com</p><div class="menu-sep" role="separator"></div><button type="button" class="menu-item" role="menuitem"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg>Sign out</button>
+        </div>
+      </div>
+    </div></div><div class="ab-space"></div></div></div>
+    <div><p class="wlabel">390&#8239;px</p><div class="ab phone"><div class="ab-bar"><div class="ab-in">
+      <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+      <a class="help" href="#"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg><span class="lbl-t">Help</span></a>
+      <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+      <div class="acct">
+        <button type="button" class="acct-btn" data-menu-btn aria-haspopup="menu" aria-expanded="true" aria-controls="menu-a-p" aria-label="Account: nishant@example.com">
+          <span class="avatar" aria-hidden="true">NJ</span><svg aria-hidden="true" class="i"><use href="#i-chev-d"/></svg>
+        </button>
+        <div class="menu" id="menu-a-p" role="menu">
+          <p class="menu-email">nishant@example.com</p><div class="menu-sep" role="separator"></div><button type="button" class="menu-item" role="menuitem"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg>Sign out</button>
+        </div>
+      </div>
+    </div></div><div class="ab-space"></div></div></div>
+  </div>
+  <p class="pc"><b>Pros:</b> Help and the theme stay one click away; the email and sign-out leave the bar, so it fits a phone without squeezing. <b>Cons:</b> signing out takes two clicks.</p>
+</section>
+<section class="variant" aria-labelledby="v-b">
+  <div class="opt-h"><h2 id="v-b">B: everything icon-only</h2></div>
+  <p class="opt-p">Same order, all icons: Help, the theme toggle, the avatar and a sign-out icon button. The email is hidden.</p>
+  <div class="widths">
+    <div><p class="wlabel">1440&#8239;px</p><div class="ab"><div class="ab-bar"><div class="ab-in">
+      <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+      <a class="help icon" href="#" aria-label="Help" title="Help"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg></a>
+      <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+      <div class="user-b">
+        <span class="avatar" aria-hidden="true">NJ</span>
+        <button type="button" class="icon-btn" aria-label="Sign out of nishant@example.com" title="Sign out"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg></button>
+      </div>
+    </div></div><div class="ab-space short"></div></div></div>
+    <div><p class="wlabel">390&#8239;px</p><div class="ab phone"><div class="ab-bar"><div class="ab-in">
+      <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+      <a class="help icon" href="#" aria-label="Help" title="Help"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg></a>
+      <button type="button" class="icon-btn theme-btn" data-theme-toggle aria-pressed="false" aria-label="Switch to dark theme"><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg></button>
+      <div class="user-b">
+        <span class="avatar" aria-hidden="true">NJ</span>
+        <button type="button" class="icon-btn" aria-label="Sign out of nishant@example.com" title="Sign out"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg></button>
+      </div>
+    </div></div><div class="ab-space short"></div></div></div>
+  </div>
+  <p class="pc"><b>Pros:</b> no menu, every action is one click, and the bar is identical at both widths. <b>Cons:</b> unlabelled icons lean on tooltips, and the signed-in address is shown nowhere.</p>
+</section>
+<section class="variant" aria-labelledby="v-c">
+  <div class="opt-h"><h2 id="v-c">C: brand and avatar menu only</h2></div>
+  <p class="opt-p">Only the brand and the avatar button. Help and the theme switch move into the menu, above Sign out.</p>
+  <div class="widths">
+    <div><p class="wlabel">1440&#8239;px</p><div class="ab"><div class="ab-bar"><div class="ab-in">
+      <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+      <span class="ml-auto"></span>
+      <div class="acct">
+        <button type="button" class="acct-btn" data-menu-btn aria-haspopup="menu" aria-expanded="true" aria-controls="menu-c-w" aria-label="Account: nishant@example.com">
+          <span class="avatar" aria-hidden="true">NJ</span><svg aria-hidden="true" class="i"><use href="#i-chev-d"/></svg>
+        </button>
+        <div class="menu" id="menu-c-w" role="menu">
+          <p class="menu-email">nishant@example.com</p><div class="menu-sep" role="separator"></div>
+          <a class="menu-item" role="menuitem" href="#"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg>Help</a>
+          <button type="button" class="menu-item theme-btn" role="menuitem" data-theme-toggle><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg><span class="theme-label-light">Dark theme</span><span class="theme-label-dark">Light theme</span></button>
+          <div class="menu-sep" role="separator"></div><button type="button" class="menu-item" role="menuitem"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg>Sign out</button>
+        </div>
+      </div>
+    </div></div><div class="ab-space" style="height:260px"></div></div></div>
+    <div><p class="wlabel">390&#8239;px</p><div class="ab phone"><div class="ab-bar"><div class="ab-in">
+      <a class="brand" href="index.html" aria-label="Automailr home"><span class="tile"><svg class="mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 87.2L34.2 9.8 46 9.8 58.2 41.2A101.7 101.7 0 0 0 45.3 45.1L40.1 31.7 29.1 60A95.8 95.8 0 0 1 76.5 44.5L76 33.5 100 50 77.8 68.9 77.2 57.9A82.4 82.4 0 0 0 18.5 87.2ZM54.5 68.6A76.5 76.5 0 0 1 67.5 65L76.2 87.2 61.7 87.2Z"/></svg></span><span class="word" translate="no">Automailr</span></a>
+      <span class="ml-auto"></span>
+      <div class="acct">
+        <button type="button" class="acct-btn" data-menu-btn aria-haspopup="menu" aria-expanded="true" aria-controls="menu-c-p" aria-label="Account: nishant@example.com">
+          <span class="avatar" aria-hidden="true">NJ</span><svg aria-hidden="true" class="i"><use href="#i-chev-d"/></svg>
+        </button>
+        <div class="menu" id="menu-c-p" role="menu">
+          <p class="menu-email">nishant@example.com</p><div class="menu-sep" role="separator"></div>
+          <a class="menu-item" role="menuitem" href="#"><svg aria-hidden="true" class="i"><use href="#i-help"/></svg>Help</a>
+          <button type="button" class="menu-item theme-btn" role="menuitem" data-theme-toggle><svg aria-hidden="true" class="i i-moon"><use href="#i-moon"/></svg><svg aria-hidden="true" class="i i-sun"><use href="#i-sun"/></svg><span class="theme-label-light">Dark theme</span><span class="theme-label-dark">Light theme</span></button>
+          <div class="menu-sep" role="separator"></div><button type="button" class="menu-item" role="menuitem"><svg aria-hidden="true" class="i"><use href="#i-logout"/></svg>Sign out</button>
+        </div>
+      </div>
+    </div></div><div class="ab-space" style="height:260px"></div></div></div>
+  </div>
+  <p class="pc"><b>Pros:</b> the calmest bar of the three. <b>Cons:</b> Help and the theme switch are hidden behind a click, which breaks the “visible toggle in the top bar” rule from the playbook.</p>
+</section>
+</div>
+<script src="theme.js"></script>
+</body>
+</html>

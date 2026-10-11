@@ -14,3 +14,5 @@ export const hint = "text-[14px] text-ink-3";
 export const seg = "inline-flex rounded-[11px] border border-line bg-surface-2 p-[3px]";
 export const segBtn =
   "rounded-[8px] px-3.5 py-[7px] text-[14px] font-[550] text-ink-2 transition-colors duration-150 aria-pressed:bg-surface aria-pressed:text-ink aria-pressed:shadow-[0_0_0_1px_var(--color-line),0_1px_2px_oklch(0.2_0.012_220/0.08)]";
+/** The space between the stepper and the bottom bar, with its one card centred both ways (`.stage`). */
+export const stage = "grid flex-1 place-items-center pb-8 [&>*]:w-full";
