@@ -151,7 +151,7 @@ export function Message({ state, csv, from, files, onFiles, onMessage, onTemplat
           ? "Rewrites the subject and message with Google Gemini. Fields stay as they are, and you can switch back. Don't polish anything you wouldn't send to Google. For users 18 and over."
           : `Write at least ${ai.minChars} characters to use AI polish (${ai.charCount} of ${ai.minChars}).`
       }
-      tipClassName="max-[720px]:right-auto max-[720px]:left-0"
+      tipClassName="max-[720px]:right-auto max-[720px]:left-0 max-[720px]:max-w-[min(300px,calc(100vw-56px))]"
     >
       {(tip) => (
         <button

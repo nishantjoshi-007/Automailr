@@ -9,6 +9,9 @@ const linkClass = "py-1 text-ink-2 no-underline hover:text-ink hover:underline u
 function FooterLinks() {
   return (
     <nav aria-label="Footer" className="flex flex-wrap gap-x-[22px] gap-y-2">
+      <Link to="/" viewTransition className={linkClass}>
+        About
+      </Link>
       <Link to="/help" viewTransition className={linkClass}>
         Help
       </Link>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Navigate, useBlocker, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
+import { ToastHost } from "@/components/Toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -279,6 +280,8 @@ export function WizardShell() {
       </main>
 
       {bar}
+
+      <ToastHost />
 
       {csv && (
         <SendConfirm

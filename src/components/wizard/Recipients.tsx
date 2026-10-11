@@ -140,15 +140,17 @@ function RecipientsTable({ csv, onReplace, fileInput, errorLine }: TableProps) {
   return (
     <div className="grid grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] items-start gap-6 pb-8 max-[1080px]:grid-cols-1">
       <section aria-labelledby="csv-h" className={cn(card, "overflow-hidden")}>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line py-3.5 pr-4 pl-5 max-[720px]:pl-4">
-          <FileSpreadsheet aria-hidden="true" className="size-[18px] text-ink-3" strokeWidth={1.8} />
-          <h2 id="csv-h" className="min-w-0 truncate font-mono text-[15px] font-semibold">
-            {csv.fileName}
-          </h2>
-          <span className="num text-[14px] text-ink-3">
-            {plural(csv.rows.length, "row", "rows")} · {plural(csv.headers.length, "column", "columns")}
-          </span>
-          <Button variant="outline" size="sm" className="ml-auto" onClick={onReplace}>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 border-b border-line py-3.5 pr-4 pl-5 max-[720px]:pl-4">
+          <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-0.5">
+            <FileSpreadsheet aria-hidden="true" className="size-[18px] text-ink-3" strokeWidth={1.8} />
+            <h2 id="csv-h" className="min-w-0 truncate font-mono text-[15px] font-semibold">
+              {csv.fileName}
+            </h2>
+            <span className="num col-start-2 text-[13.5px] text-ink-3">
+              {plural(csv.rows.length, "row", "rows")} · {plural(csv.headers.length, "column", "columns")}
+            </span>
+          </div>
+          <Button variant="outline" size="sm" onClick={onReplace}>
             Replace file
           </Button>
           {fileInput}
